@@ -10,17 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_02_20_134638) do
+ActiveRecord::Schema[7.2].define(version: 2025_02_24_170604) do
   create_table "event_seeds", force: :cascade do |t|
-    t.integer "tournament_id", null: false
-    t.integer "player_id", null: false
     t.integer "event_id", null: false
-    t.string "event_name"
-    t.integer "seed_num", null: false
+    t.integer "player_id", null: false
+    t.integer "seed_num"
+    t.string "character_stock_icon"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_event_seeds_on_event_id"
     t.index ["player_id"], name: "index_event_seeds_on_player_id"
-    t.index ["tournament_id"], name: "index_event_seeds_on_tournament_id"
+  end
+
+  create_table "events", force: :cascade do |t|
+    t.integer "tournament_id", null: false
+    t.string "name"
+    t.string "slug"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tournament_id"], name: "index_events_on_tournament_id"
   end
 
   create_table "players", force: :cascade do |t|
@@ -49,6 +57,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_20_134638) do
     t.datetime "updated_at", null: false
   end
 
+  add_foreign_key "event_seeds", "events"
   add_foreign_key "event_seeds", "players"
-  add_foreign_key "event_seeds", "tournaments"
+  add_foreign_key "events", "tournaments"
 end

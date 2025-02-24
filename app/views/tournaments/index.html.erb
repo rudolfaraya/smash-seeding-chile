@@ -1,0 +1,55 @@
+<div class="container mx-auto p-4">
+  <h1 class="text-2xl font-bold mb-4">Lista de Torneos</h1>
+  <table class="min-w-full bg-white border border-black">
+    <thead>
+      <tr class="bg-gray-100 border-b border-black">
+        <th class="py-2 px-4 text-left font-semibold">Nombre</th>
+        <th class="py-2 px-4 text-left font-semibold">Fecha Inicio</th>
+        <th class="py-2 px-4 text-left font-semibold">Lugar</th>
+        <th class="py-2 px-4 text-left font-semibold">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @tournaments.each do |tournament| %>
+        <tr class="border-b border-black hover:bg-gray-50">
+          <td class="py-2 px-4"><%= tournament.name %></td>
+          <td class="py-2 px-4"><%= tournament.start_at.strftime('%Y-%m-%d %H:%M:%S UTC') %></td>
+          <td class="py-2 px-4"><%= tournament.venue_address %></td>
+          <td class="py-2 px-4">
+            <div class="flex space-x-2">
+              <!-- Botón para ver eventos (dropdown) -->
+              <button data-controller="dropdown" data-action="click->dropdown#toggle" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
+                Ver Eventos
+              </button>
+              <!-- Botón para sincronizar seeds y players -->
+              <%= link_to "Sincronizar Seeds", tournament_event_sync_seeds_path(tournament, tournament.events.first), 
+                          method: :post, 
+                          class: "bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600", 
+                          data: { turbo: true } %>
+            </div>
+            <!-- Dropdown para eventos -->
+            <div data-dropdown-target="menu" class="hidden absolute mt-2 bg-white border border-black rounded shadow-lg">
+              <% tournament.events.order(:name).each do |event| %>
+                <div class="px-4 py-2 hover:bg-gray-100">
+                  <%= link_to event.name, tournament_event_path(tournament, event), class: "text-blue-500 hover:underline" %>
+                  <!-- Botón para ver seeds del evento -->
+                  <%= link_to "Ver Seeds", tournament_event_seeds_path(tournament, event), 
+                              class: "ml-2 text-green-500 hover:underline", 
+                              data: { turbo: true } %>
+                </div>
+              <% end %>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<!-- Stimulus para el dropdown -->
+<%= stimulus_controller "dropdown", data: { 
+  menu_selector: ".hidden", 
+  toggle_class: "hidden" 
+} do |c| %>
+  <% c.action "toggle", "toggleClass(data.get('toggleClass'))" %>
+<% end %>

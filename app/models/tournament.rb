@@ -1,5 +1,5 @@
 class Tournament < ApplicationRecord
-  validates :id, uniqueness: true
-  has_many :event_seeds
+  has_many :events, dependent: :destroy
+  has_many :event_seeds, through: :events
   has_many :players, through: :event_seeds
 end

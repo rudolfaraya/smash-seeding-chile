@@ -61,3 +61,7 @@ end
 gem "httparty", "~> 0.22.0" # Para consultas a la API de Start.gg
 
 gem "nokogiri", "~> 1.18" # Para scraping de SSBWiki
+
+gem "dotenv-rails", "~> 3.1"
+
+gem "faraday", "~> 2.12"
