@@ -43,10 +43,10 @@ module StartGgQueries
         events(filter: { slug: $eventSlug }) {
           id
           name
-          seeds(query: { perPage: $perPage, page: $page }) {
+          standings(query: { perPage: $perPage, page: $page }) {  # Usa "standings" (ajusta según el esquema)
             nodes {
               id
-              seedNum
+              placement  # Podría ser seedNum o un campo similar
               entrant {
                 id
                 name

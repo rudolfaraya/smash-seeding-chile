@@ -11,45 +11,113 @@
     </thead>
     <tbody>
       <% @tournaments.each do |tournament| %>
-        <tr class="border-b border-black hover:bg-gray-50">
+        <tr class="border-b border-black hover:bg-gray-50 tournament-row" data-tournament-id="<%= tournament.id %>">
           <td class="py-2 px-4"><%= tournament.name %></td>
           <td class="py-2 px-4"><%= tournament.start_at.strftime('%Y-%m-%d %H:%M:%S UTC') %></td>
           <td class="py-2 px-4"><%= tournament.venue_address %></td>
           <td class="py-2 px-4">
             <div class="flex space-x-2">
               <!-- Botón para ver eventos (dropdown) -->
-              <button data-controller="dropdown" data-action="click->dropdown#toggle" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
+              <button onclick="toggleEvents(<%= tournament.id %>)" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 hover:cursor-pointer">
                 Ver Eventos
               </button>
-              <!-- Botón para sincronizar seeds y players -->
-              <%= link_to "Sincronizar Seeds", tournament_event_sync_seeds_path(tournament, tournament.events.first), 
-                          method: :post, 
-                          class: "bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600", 
-                          data: { turbo: true } %>
-            </div>
-            <!-- Dropdown para eventos -->
-            <div data-dropdown-target="menu" class="hidden absolute mt-2 bg-white border border-black rounded shadow-lg">
-              <% tournament.events.order(:name).each do |event| %>
-                <div class="px-4 py-2 hover:bg-gray-100">
-                  <%= link_to event.name, tournament_event_path(tournament, event), class: "text-blue-500 hover:underline" %>
-                  <!-- Botón para ver seeds del evento -->
-                  <%= link_to "Ver Seeds", tournament_event_seeds_path(tournament, event), 
-                              class: "ml-2 text-green-500 hover:underline", 
-                              data: { turbo: true } %>
-                </div>
-              <% end %>
             </div>
           </td>
         </tr>
+        <!-- Filas ocultas para los eventos del torneo -->
+        <% tournament.events.order(:name).each do |event| %>
+          <tr id="eventRow-<%= tournament.id %>-<%= event.id %>" class="event-row hidden border-b border-black hover:bg-gray-50" data-tournament-id="<%= tournament.id %>">
+            <td class="py-2 px-4 pl-12"><%= event.name %></td> <!-- Indentación para mostrar como subfila -->
+            <td class="py-2 px-4"></td> <!-- Columnas vacías para alinear con la tabla principal -->
+            <td class="py-2 px-4"></td>
+            <td class="py-2 px-4">
+              <div class="space-x-2">
+                <!-- Botón para ver seeds del evento -->
+                <%= link_to "Ver Seeds", seeds_tournament_event_path(tournament, event), 
+                            class: "text-green-500 hover:underline hover:cursor-pointer" %>
+                <!-- Botón para sincronizar seeds y players de este evento -->
+                <%= link_to "Sincronizar Seeds", sync_seeds_tournament_event_path(tournament, event), 
+                            method: :post, 
+                            class: "bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 hover:cursor-pointer" %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+        <% if tournament.events.empty? %>
+          <tr id="eventRow-<%= tournament.id %>-empty" class="event-row hidden border-b border-black" data-tournament-id="<%= tournament.id %>">
+            <td class="py-2 px-4 pl-12 text-gray-500" colspan="4">No hay eventos disponibles</td>
+          </tr>
+        <% end %>
       <% end %>
     </tbody>
   </table>
 </div>
 
-<!-- Stimulus para el dropdown -->
-<%= stimulus_controller "dropdown", data: { 
-  menu_selector: ".hidden", 
-  toggle_class: "hidden" 
-} do |c| %>
-  <% c.action "toggle", "toggleClass(data.get('toggleClass'))" %>
-<% end %>
+<style>
+  .event-row {
+    background-color: #ffffff; /* Blanco como la tabla principal */
+    display: table-row; /* Asegura que se renderice como fila de tabla */
+  }
+  .tournament-row:hover + .event-row:not(.hidden) {
+    background-color: #f3f4f6; /* Gris claro como hover en la tabla principal */
+  }
+  .event-row:hover {
+    background-color: #f3f4f6; /* Gris claro al hacer hover en las filas de eventos */
+  }
+  .hidden {
+    display: none; /* Asegura que hidden oculte las filas completamente */
+  }
+</style>
+
+<script>
+  function toggleEvents(tournamentId) {
+    //console.log("Toggle Events clicked for tournament ID:", tournamentId);
+    
+    // Ocultar los eventos de todos los torneos primero
+    const allEventRows = document.querySelectorAll("tr.event-row");
+    const allEmptyRows = document.querySelectorAll("tr[id^='eventRow-']");
+    allEventRows.forEach(row => {
+      if (!row.classList.contains('hidden')) {
+        //console.log("Hiding event row:", row.id);
+        row.classList.add('hidden');
+        row.style.display = 'none';
+      }
+    });
+    allEmptyRows.forEach(row => {
+      if (!row.classList.contains('hidden')) {
+        //console.log("Hiding empty row:", row.id);
+        row.classList.add('hidden');
+        row.style.display = 'none';
+      }
+    });
+
+    // Toggle los eventos del torneo actual
+    const eventRows = document.querySelectorAll(`tr.event-row[data-tournament-id="${tournamentId}"]`);
+    const emptyRow = document.getElementById(`eventRow-${tournamentId}-empty`);
+    const areHidden = eventRows.length > 0 ? Array.from(eventRows).every(row => row.classList.contains('hidden')) : emptyRow.classList.contains('hidden');
+
+    if (eventRows.length > 0) {
+      eventRows.forEach(row => {
+        //console.log("Toggling event row:", row.id, "Hidden:", row.classList.contains('hidden'), "Display:", window.getComputedStyle(row).display);
+        row.classList.toggle('hidden', !areHidden);
+        if (!row.classList.contains('hidden')) {
+          row.style.display = 'table-row'; // Forzar el display como fila de tabla
+        }
+      });
+    } else if (emptyRow) {
+      //console.log("Toggling empty row:", emptyRow.id, "Hidden:", emptyRow.classList.contains('hidden'), "Display:", window.getComputedStyle(emptyRow).display);
+      emptyRow.classList.toggle('hidden', !areHidden);
+      if (!emptyRow.classList.contains('hidden')) {
+        emptyRow.style.display = 'table-row'; // Forzar el display como fila de tabla
+      }
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    //console.log("DOM fully loaded, events script ready");
+    const buttons = document.querySelectorAll("button[onclick^='toggleEvents']");
+    buttons.forEach(button => {
+      //console.log("Found events button:", button);
+    });
+  });
+</script>

@@ -1,6 +1,6 @@
 class EventsController < ApplicationController
-  before_action :set_tournament, only: [:index, :show, :seeds, :sync_seeds]
-  before_action :set_event, only: [:show, :seeds, :sync_seeds]
+  before_action :set_tournament, only: [ :index, :show, :seeds, :sync_seeds ]
+  before_action :set_event, only: [ :show, :seeds, :sync_seeds ]
 
   def index
     @events = @tournament.events
@@ -14,10 +14,16 @@ class EventsController < ApplicationController
   end
 
   def sync_seeds
-    SyncEventSeeds.new(@event).call
-    redirect_to tournament_event_seeds_path(@tournament, @event), notice: "Seeds y jugadores sincronizados exitosamente."
-  rescue StandardError => e
-    redirect_to tournament_event_seeds_path(@tournament, @event), alert: "Error al sincronizar: #{e.message}"
+    if request.get?
+      redirect_to tournament_event_path(@tournament, @event), alert: "La sincronización de seeds debe realizarse mediante POST, no GET."
+    else
+      begin
+        SyncEventSeeds.new(@event).call
+        redirect_to tournament_event_seeds_path(@tournament, @event), notice: "Seeds y jugadores sincronizados exitosamente."
+      rescue StandardError => e
+        redirect_to tournament_event_seeds_path(@tournament, @event), alert: "Error al sincronizar: #{e.message}"
+      end
+    end
   end
 
   private

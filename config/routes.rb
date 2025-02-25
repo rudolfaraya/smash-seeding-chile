@@ -4,7 +4,7 @@ Rails.application.routes.draw do
     resources :events, only: [:index, :show] do
       member do
         get :seeds, to: "events#seeds" # Ruta para mostrar seeds
-        post :sync_seeds, to: "events#sync_seeds" # Ruta para sincronizar seeds y players
+        post :sync_seeds, to: "events#sync_seeds", as: :sync_seeds # Ruta para sincronizar seeds y players con helper explícito
       end
     end
   end
