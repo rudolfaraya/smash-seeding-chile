@@ -58,7 +58,7 @@ group :test do
   gem "selenium-webdriver"
 end
 
-gem "httparty", "~> 0.22.0" # Para consultas a la API de Start.gg
+gem "httparty", "~> 0.23.1" # Para consultas a la API de Start.gg
 
 gem "nokogiri", "~> 1.18" # Para scraping de SSBWiki
 
