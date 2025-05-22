@@ -1,56 +1,77 @@
 <div class="container mx-auto p-4">
-  <h1 class="text-2xl font-bold mb-4">Lista de Torneos</h1>
-  <table class="min-w-full bg-white border border-black">
-    <thead>
-      <tr class="bg-gray-100 border-b border-black">
-        <th class="py-2 px-4 text-left font-semibold">Nombre</th>
-        <th class="py-2 px-4 text-left font-semibold">Fecha Inicio</th>
-        <th class="py-2 px-4 text-left font-semibold">Lugar</th>
-        <th class="py-2 px-4 text-left font-semibold">Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @tournaments.each do |tournament| %>
-        <tr class="border-b border-black hover:bg-gray-50 tournament-row" data-tournament-id="<%= tournament.id %>">
-          <td class="py-2 px-4"><%= tournament.name %></td>
-          <td class="py-2 px-4"><%= tournament.start_at.strftime('%Y-%m-%d %H:%M:%S UTC') %></td>
-          <td class="py-2 px-4"><%= tournament.venue_address %></td>
-          <td class="py-2 px-4">
-            <div class="flex space-x-2">
-              <!-- Botón para ver eventos (dropdown) -->
-              <button onclick="toggleEvents(<%= tournament.id %>)" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 hover:cursor-pointer">
-                Ver Eventos
-              </button>
-            </div>
-          </td>
-        </tr>
-        <!-- Filas ocultas para los eventos del torneo -->
-        <% tournament.events.order(:name).each do |event| %>
-          <tr id="eventRow-<%= tournament.id %>-<%= event.id %>" class="event-row hidden border-b border-black hover:bg-gray-50" data-tournament-id="<%= tournament.id %>">
-            <td class="py-2 px-4 pl-12"><%= event.name %></td> <!-- Indentación para mostrar como subfila -->
-            <td class="py-2 px-4"></td> <!-- Columnas vacías para alinear con la tabla principal -->
-            <td class="py-2 px-4"></td>
-            <td class="py-2 px-4">
-              <div class="space-x-2">
-                <!-- Botón para ver seeds del evento -->
-                <%= link_to "Ver Seeds", seeds_tournament_event_path(tournament, event), 
-                            class: "text-green-500 hover:underline hover:cursor-pointer" %>
-                <!-- Botón para sincronizar seeds y players de este evento -->
-                <%= link_to "Sincronizar Seeds", sync_seeds_tournament_event_path(tournament, event), 
-                            method: :post, 
-                            class: "bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 hover:cursor-pointer" %>
-              </div>
-            </td>
-          </tr>
-        <% end %>
-        <% if tournament.events.empty? %>
-          <tr id="eventRow-<%= tournament.id %>-empty" class="event-row hidden border-b border-black" data-tournament-id="<%= tournament.id %>">
-            <td class="py-2 px-4 pl-12 text-gray-500" colspan="4">No hay eventos disponibles</td>
-          </tr>
-        <% end %>
+  <div class="flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-bold">Lista de Torneos</h1>
+    <div class="flex space-x-3">
+      <%= link_to sync_new_tournaments_tournaments_path, class: "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center", 
+          data: { 
+            controller: "sync-operation",
+            sync_operation_target: "button",
+            action: "click->sync-operation#startSync",
+            turbo_method: :post
+          } do %>
+        <div data-sync-operation-target="spinner" class="hidden mr-2">
+          <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+        <div data-sync-operation-target="content" class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Sincronizar Nuevos Torneos
+        </div>
       <% end %>
-    </tbody>
-  </table>
+      
+      <%= link_to sync_tournaments_path, class: "bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 flex items-center",
+          data: { 
+            controller: "sync-operation",
+            sync_operation_target: "button",
+            action: "click->sync-operation#startSync",
+            turbo_method: :post
+          } do %>
+        <div data-sync-operation-target="spinner" class="hidden mr-2">
+          <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+        <div data-sync-operation-target="content" class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Sincronizar Todos
+        </div>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- Formulario de búsqueda -->
+  <div class="mb-6">
+    <%= form_with url: tournaments_path, method: :get, class: "flex items-center", data: { controller: "search", search_target: "form", turbo_frame: "tournaments_results" } do |f| %>
+      <div class="relative flex-grow">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+          </svg>
+        </div>
+        <%= f.text_field :query, value: @query, placeholder: "Buscar torneos por nombre...", 
+            class: "block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-blue-500 focus:border-blue-500",
+            data: { 
+              search_target: "input", 
+              action: "input->search#search"
+            } %>
+      </div>
+      <%= f.submit "Buscar", class: "ml-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-3" %>
+      <% if @query.present? %>
+        <%= link_to "Limpiar", tournaments_path, class: "ml-2 text-gray-700 bg-gray-200 hover:bg-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-4 py-3", data: { turbo_frame: "tournaments_results" } %>
+      <% end %>
+    <% end %>
+  </div>
+  
+  <%= turbo_frame_tag "tournaments_results" do %>
+    <%= render "tournaments_list", tournaments: @tournaments %>
+  <% end %>
 </div>
 
 <style>
@@ -66,6 +87,21 @@
   }
   .hidden {
     display: none; /* Asegura que hidden oculte las filas completamente */
+  }
+  
+  /* Estilos para los estados de sincronización */
+  @keyframes pulse-error {
+    0% { background-color: #ffffff; }
+    50% { background-color: #fee2e2; }
+    100% { background-color: #ffffff; }
+  }
+  
+  .sync-error {
+    animation: pulse-error 1s ease-in-out;
+  }
+  
+  .cursor-not-allowed {
+    cursor: not-allowed;
   }
 </style>
 
@@ -113,11 +149,16 @@
     }
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    //console.log("DOM fully loaded, events script ready");
+  // Inicializar eventos cuando se carga el DOM
+  function initializeEvents() {
+    console.log("Inicializando eventos para los botones de torneos");
     const buttons = document.querySelectorAll("button[onclick^='toggleEvents']");
     buttons.forEach(button => {
       //console.log("Found events button:", button);
     });
-  });
+  }
+
+  // Escuchar tanto el evento DOMContentLoaded inicial como las actualizaciones de Turbo Frame
+  document.addEventListener("DOMContentLoaded", initializeEvents);
+  document.addEventListener("turbo:frame-render", initializeEvents);
 </script>

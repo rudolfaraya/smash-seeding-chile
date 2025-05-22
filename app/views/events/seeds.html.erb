@@ -1,0 +1,42 @@
+<div class="container mx-auto p-4">
+  <h1 class="text-2xl font-bold mb-2">Seeding for <%= @event.name %></h1>
+  <p class="mb-2">Tournament: <%= link_to @event.tournament.name, tournament_path(@event.tournament), class: "text-blue-500 hover:underline" %></p>
+  
+  <% if @event.respond_to?(:seeds_last_synced_at) && @event.seeds_last_synced_at.present? %>
+    <p class="mb-4 text-sm text-gray-600">
+      <span class="font-semibold">Última sincronización:</span> <%= @event.seeds_last_synced_at.strftime('%d/%m/%Y %H:%M') %>
+      <%= link_to "Forzar sincronización", sync_seeds_tournament_event_path(@event.tournament, @event, force: true), 
+                  class: "ml-3 text-sm text-blue-500 hover:underline" %>
+    </p>
+  <% end %>
+
+  <% if @seeds.any? %>
+    <table class="min-w-full bg-white border border-black">
+      <thead>
+        <tr class="bg-gray-100 border-b border-black">
+          <th class="py-2 px-4 text-left font-semibold">Seed</th>
+          <th class="py-2 px-4 text-left font-semibold">Player</th>
+          <th class="py-2 px-4 text-left font-semibold">Entrant Name</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @seeds.each do |event_seed| %>
+          <tr class="border-b border-black hover:bg-gray-50">
+            <td class="py-2 px-4"><%= event_seed.seed_num %></td>
+            <td class="py-2 px-4"><%= event_seed.player&.name || "N/A" %></td>
+            <td class="py-2 px-4"><%= event_seed.player&.entrant_name || "N/A" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="mb-4">No seeding information available for this event yet. Try synchronizing the seeds.</p>
+    <%= link_to "Sincronizar Seeds", sync_seeds_tournament_event_path(@event.tournament, @event), 
+                class: "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600" %>
+  <% end %>
+
+  <div class="mt-6">
+    <%= link_to "Back to Event", tournament_event_path(@event.tournament, @event), class: "bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" %>
+    <%= link_to "Back to Tournaments", tournaments_path, class: "bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-2" %>
+  </div>
+</div>

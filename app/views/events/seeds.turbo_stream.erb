@@ -1,0 +1,20 @@
+<% 
+  # Obtener todos los torneos con datos actualizados para la vista
+  # Mantener el orden original por fecha de inicio
+  @tournaments = Tournament.includes(events: {event_seeds: :player})
+                .order(start_at: :desc)
+                
+  # Aplicar el filtro de búsqueda si existe
+  @query = session[:tournaments_query]
+  if @query.present?
+    @tournaments = @tournaments.where("LOWER(name) LIKE LOWER(?)", "%#{@query}%")
+  end
+%>
+
+<%= turbo_stream.replace "tournaments_results" do %>
+  <%= render "tournaments/tournaments_list", tournaments: @tournaments %>
+<% end %>
+
+<%= turbo_stream.replace "flash" do %>
+  <%= render "shared/flash" %>
+<% end %> 

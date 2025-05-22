@@ -6,14 +6,13 @@ class SyncSmashData
   end
 
   def call
-    # ync_tournaments
+    sync_tournaments
     sync_events
   end
 
-  private
-
   def sync_tournaments
     Rails.logger.info "Sincronizando torneos..."
+    count_before = Tournament.count
     StartGgQueries.fetch_tournaments(@client, per_page: 25).each do |data|
       Tournament.find_or_create_by(id: data["id"]) do |t|
         t.name = data["name"]
@@ -23,11 +22,15 @@ class SyncSmashData
         t.venue_address = data["venueAddress"]
       end
     end
-    Rails.logger.info "Guardados #{Tournament.count} torneos."
+    count_after = Tournament.count
+    new_tournaments = count_after - count_before
+    Rails.logger.info "Sincronización completada. Se agregaron #{new_tournaments} nuevos torneos. Total: #{count_after} torneos."
+    new_tournaments
   end
 
   def sync_events
     Rails.logger.info "Sincronizando eventos..."
+    count_before = Event.count
     Tournament.order(start_at: :desc).each do |tournament|
       Rails.logger.info "Procesando torneo: #{tournament.name} (Fecha: #{tournament.start_at})"
       begin
@@ -44,8 +47,101 @@ class SyncSmashData
       end
       sleep 5 # Retraso entre torneos para evitar rate limits
     end
-    Rails.logger.info "Guardados #{Event.count} eventos."
+    count_after = Event.count
+    new_events = count_after - count_before
+    Rails.logger.info "Sincronización completada. Se agregaron #{new_events} nuevos eventos. Total: #{Event.count} eventos."
+    new_events
   end
+
+  # Método para sincronizar eventos de un torneo específico
+  def sync_events_for_tournament(tournament)
+    Rails.logger.info "Sincronizando eventos para el torneo específico: #{tournament.name}"
+    count_before = tournament.events.count
+    
+    begin
+      events_data = fetch_events(tournament.slug)
+      events_data.each do |event_data|
+        Event.find_or_create_by(tournament: tournament, slug: event_data["slug"]) do |event|
+          event.name = event_data["name"]
+          event.id = event_data["id"]
+        end
+      end
+    rescue StandardError => e
+      Rails.logger.error "Error procesando eventos para torneo #{tournament.name}: #{e.message}"
+      raise
+    end
+    
+    count_after = tournament.events.reload.count
+    new_events = count_after - count_before
+    Rails.logger.info "Sincronización de eventos completada para el torneo #{tournament.name}. Se agregaron #{new_events} nuevos eventos."
+    new_events
+  end
+
+  # Método atómico para sincronizar torneos y sus eventos inmediatamente
+  def sync_tournaments_and_events_atomic
+    Rails.logger.info "Sincronizando torneos y eventos de forma atómica..."
+    count_before = Tournament.count
+    nuevos_torneos = 0
+    
+    # Obtenemos los datos de torneos desde la API
+    torneo_data_list = StartGgQueries.fetch_tournaments(@client, per_page: 25)
+    
+    torneo_data_list.each do |torneo_data|
+      # Verificar si el torneo ya existe
+      tournament = Tournament.find_by(id: torneo_data["id"])
+      
+      if tournament.nil?
+        # Si es un torneo nuevo, comenzamos una transacción para el torneo y sus eventos
+        ActiveRecord::Base.transaction do
+          # Crear el torneo
+          tournament = Tournament.create!(
+            id: torneo_data["id"],
+            name: torneo_data["name"],
+            slug: torneo_data["slug"],
+            start_at: torneo_data["startAt"] ? Time.at(torneo_data["startAt"]) : nil,
+            end_at: torneo_data["endAt"] ? Time.at(torneo_data["endAt"]) : nil,
+            venue_address: torneo_data["venueAddress"]
+          )
+          
+          # Incrementar contador
+          nuevos_torneos += 1
+          
+          # Obtener y crear eventos para este torneo inmediatamente
+          Rails.logger.info "Procesando eventos para el nuevo torneo: #{tournament.name}"
+          
+          begin
+            # Esperar un poco para no exceder rate limits
+            sleep 1
+            
+            # Obtener eventos desde la API
+            events_data = fetch_events(tournament.slug)
+            
+            # Crear cada evento
+            events_data.each do |event_data|
+              Event.create!(
+                id: event_data["id"],
+                name: event_data["name"],
+                slug: event_data["slug"],
+                tournament: tournament
+              )
+            end
+            
+            Rails.logger.info "Se crearon #{events_data.count} eventos para el torneo #{tournament.name}"
+          rescue StandardError => e
+            Rails.logger.error "Error al procesar eventos para el torneo #{tournament.name}: #{e.message}"
+            # Hacemos que la transacción falle para mantener la atomicidad
+            raise ActiveRecord::Rollback, "Error al crear eventos para torneo #{tournament.name}: #{e.message}"
+          end
+        end
+      end
+    end
+    
+    count_after = Tournament.count
+    Rails.logger.info "Sincronización atómica completada. Se agregaron #{nuevos_torneos} nuevos torneos con sus eventos. Total: #{count_after} torneos."
+    nuevos_torneos
+  end
+
+  private
 
   def fetch_events(slug)
     response = @client.query(StartGgQueries::EVENTS_QUERY, { tournamentSlug: slug }, "TournamentEvents")

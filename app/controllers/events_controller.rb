@@ -11,17 +11,111 @@ class EventsController < ApplicationController
 
   def seeds
     @seeds = @event.event_seeds.order(seed_num: :asc)
+    
+    respond_to do |format|
+      format.html
+      format.turbo_stream { render :seeds }
+    end
   end
 
   def sync_seeds
-    if request.get?
-      redirect_to tournament_event_path(@tournament, @event), alert: "La sincronización de seeds debe realizarse mediante POST, no GET."
-    else
-      begin
-        SyncEventSeeds.new(@event).call
-        redirect_to tournament_event_seeds_path(@tournament, @event), notice: "Seeds y jugadores sincronizados exitosamente."
-      rescue StandardError => e
-        redirect_to tournament_event_seeds_path(@tournament, @event), alert: "Error al sincronizar: #{e.message}"
+    # Verificar si el evento fue sincronizado recientemente (últimas 24 horas)
+    if @event.respond_to?(:seeds_last_synced_at) && 
+       @event.seeds_last_synced_at.present? && 
+       @event.seeds_last_synced_at > 24.hours.ago &&
+       @event.event_seeds.exists? &&
+       !params[:force]
+      
+      respond_to do |format|
+        # Si ya fue sincronizado recientemente y tiene seeds, redirigir sin volver a sincronizar
+        format.html { 
+          redirect_to seeds_tournament_event_path(@tournament, @event), 
+                      notice: "Seeds ya sincronizados (última sincronización: #{@event.seeds_last_synced_at.strftime('%d/%m/%Y %H:%M')}). Utiliza el parámetro force=true para forzar la sincronización."
+        }
+        format.turbo_stream {
+          flash.now[:notice] = "Seeds ya sincronizados (última sincronización: #{@event.seeds_last_synced_at.strftime('%d/%m/%Y %H:%M')}). Utiliza el parámetro force=true para forzar la sincronización."
+          
+          # Obtener todos los torneos con datos actualizados para la vista
+          # Mantener el orden original por fecha de inicio
+          @tournaments = Tournament.includes(events: {event_seeds: :player})
+                        .order(start_at: :desc)
+          
+          # Aplicar el filtro de búsqueda si existe
+          @query = session[:tournaments_query]
+          if @query.present?
+            @tournaments = @tournaments.where("LOWER(name) LIKE LOWER(?)", "%#{@query}%")
+          end
+          
+          render turbo_stream: [
+            turbo_stream.replace("tournaments_results", 
+              partial: "tournaments/tournaments_list", 
+              locals: { tournaments: @tournaments }),
+            turbo_stream.replace("flash", 
+              partial: "shared/flash")
+          ]
+        }
+      end
+      return
+    end
+    
+    begin
+      SyncEventSeeds.new(@event).call
+      
+      # Actualizar el timestamp de sincronización si el modelo soporta este campo
+      if @event.respond_to?(:seeds_last_synced_at)
+        @event.update(seeds_last_synced_at: Time.current)
+      end
+      
+      respond_to do |format|
+        format.html { redirect_to seeds_tournament_event_path(@tournament, @event), notice: "Seeds y jugadores sincronizados exitosamente." }
+        format.turbo_stream {
+          flash.now[:notice] = "Seeds y jugadores de #{@event.name} sincronizados exitosamente"
+          
+          # Obtener todos los torneos con datos actualizados para la vista
+          # Mantener el orden original por fecha de inicio
+          @tournaments = Tournament.includes(events: {event_seeds: :player})
+                        .order(start_at: :desc)
+          
+          # Aplicar el filtro de búsqueda si existe
+          @query = session[:tournaments_query]
+          if @query.present?
+            @tournaments = @tournaments.where("LOWER(name) LIKE LOWER(?)", "%#{@query}%")
+          end
+          
+          render turbo_stream: [
+            turbo_stream.replace("tournaments_results", 
+              partial: "tournaments/tournaments_list", 
+              locals: { tournaments: @tournaments }),
+            turbo_stream.replace("flash", 
+              partial: "shared/flash")
+          ]
+        }
+      end
+    rescue StandardError => e
+      respond_to do |format|
+        format.html { redirect_to seeds_tournament_event_path(@tournament, @event), alert: "Error al sincronizar: #{e.message}" }
+        format.turbo_stream {
+          flash.now[:alert] = "Error al sincronizar seeds: #{e.message}"
+          
+          # Obtener todos los torneos con datos actualizados para la vista
+          # Mantener el orden original por fecha de inicio
+          @tournaments = Tournament.includes(events: {event_seeds: :player})
+                        .order(start_at: :desc)
+          
+          # Aplicar el filtro de búsqueda si existe
+          @query = session[:tournaments_query]
+          if @query.present?
+            @tournaments = @tournaments.where("LOWER(name) LIKE LOWER(?)", "%#{@query}%")
+          end
+          
+          render turbo_stream: [
+            turbo_stream.replace("tournaments_results", 
+              partial: "tournaments/tournaments_list", 
+              locals: { tournaments: @tournaments }),
+            turbo_stream.replace("flash", 
+              partial: "shared/flash")
+          ]
+        }
       end
     end
   end

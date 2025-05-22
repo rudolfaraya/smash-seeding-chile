@@ -1,0 +1,156 @@
+<% if tournaments.any? %>
+<table class="min-w-full bg-white border border-black">
+  <thead>
+    <tr class="bg-gray-100 border-b border-black">
+      <th class="py-2 px-4 text-left font-semibold">Nombre</th>
+      <th class="py-2 px-4 text-left font-semibold">Fecha Inicio</th>
+      <th class="py-2 px-4 text-left font-semibold">Lugar</th>
+        <th class="py-2 px-4 text-left font-semibold">Estado</th>
+      <th class="py-2 px-4 text-left font-semibold">Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% tournaments.each do |tournament| %>
+        <% 
+          # Calculamos estadísticas aprovechando las asociaciones ya cargadas
+          total_events = tournament.events.size
+          synced_events = tournament.events.count { |e| e.respond_to?(:seeds_last_synced_at) && e.seeds_last_synced_at.present? }
+          sync_percentage = total_events > 0 ? (synced_events.to_f / total_events * 100).to_i : 0
+          sync_emoji = case sync_percentage
+                       when 0 then "❌"
+                       when 1..50 then "⚠️"
+                       when 51..99 then "🔄"
+                       else "✅"
+                       end
+        %>
+      <tr class="border-b border-black hover:bg-gray-50 tournament-row" data-tournament-id="<%= tournament.id %>">
+        <td class="py-2 px-4"><%= tournament.name %></td>
+        <td class="py-2 px-4"><%= tournament.start_at.strftime('%Y-%m-%d %H:%M:%S UTC') %></td>
+        <td class="py-2 px-4"><%= tournament.venue_address %></td>
+          <td class="py-2 px-4">
+            <div class="flex items-center">
+              <span class="mr-2"><%= sync_emoji %></span>
+              <% if total_events > 0 %>
+                <span><%= synced_events %>/<%= total_events %> eventos sincronizados</span>
+              <% else %>
+                <span class="text-gray-500">Sin eventos</span>
+              <% end %>
+            </div>
+          </td>
+        <td class="py-2 px-4">
+          <div class="flex space-x-2">
+            <!-- Botón para ver eventos (dropdown) -->
+            <button onclick="toggleEvents(<%= tournament.id %>)" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 hover:cursor-pointer">
+              Ver Eventos
+            </button>
+            
+            <!-- Botón para sincronizar eventos solo si el torneo no tiene eventos -->
+            <% if tournament.events.empty? %>
+              <%= link_to sync_events_tournament_path(tournament), class: "bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 flex items-center", 
+                  data: { 
+                    controller: "sync-operation",
+                    sync_operation_target: "button",
+                    action: "click->sync-operation#startSync",
+                    turbo_method: :post,
+                    turbo_frame: "tournaments_results"
+                  } do %>
+                <div data-sync-operation-target="spinner" class="hidden mr-1">
+                  <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+                <div data-sync-operation-target="content">
+                  Sincronizar Eventos
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        </td>
+      </tr>
+      <!-- Filas ocultas para los eventos del torneo -->
+      <% tournament.events.order(:name).each do |event| %>
+          <% 
+            # Determinar estado de sincronización del evento
+            # Aprovechamos las asociaciones ya cargadas
+            event_synced = event.respond_to?(:seeds_last_synced_at) && event.seeds_last_synced_at.present?
+            event_has_seeds = event.association(:event_seeds).loaded? ? !event.event_seeds.empty? : event.event_seeds.exists?
+            event_emoji = if event_synced && event_has_seeds
+                            "✅"
+                          elsif event_has_seeds
+                            "🔄"
+                          else
+                            "❌"
+                          end
+          %>
+        <tr id="eventRow-<%= tournament.id %>-<%= event.id %>" class="event-row hidden border-b border-black hover:bg-gray-50" data-tournament-id="<%= tournament.id %>">
+            <td class="py-2 px-4 pl-12">
+              <div class="flex items-center">
+                <span class="mr-2"><%= event_emoji %></span>
+                <%= event.name %>
+              </div>
+            </td>
+            <td class="py-2 px-4">
+              <% if event_synced %>
+                <span class="text-xs text-gray-500">Actualizado: <%= event.seeds_last_synced_at.strftime('%d/%m/%Y %H:%M') %></span>
+              <% end %>
+            </td>
+            <td class="py-2 px-4">
+              <% if event_has_seeds %>
+                <span class="text-xs text-gray-500"><%= event.event_seeds.count %> seeds</span>
+              <% end %>
+            </td>
+          <td class="py-2 px-4"></td>
+          <td class="py-2 px-4">
+            <div class="space-x-2">
+              <!-- Botón para ver seeds del evento - deshabilitado si no hay seeds -->
+              <% if event_has_seeds %>
+                <%= link_to "Ver Seeds", seeds_tournament_event_path(tournament, event), 
+                            class: "text-green-500 hover:underline hover:cursor-pointer",
+                            data: { turbo: false } %>
+              <% else %>
+                <span class="text-gray-400 cursor-not-allowed">Ver Seeds</span>
+              <% end %>
+              
+              <!-- Botón para sincronizar seeds - solo visible si no están sincronizados -->
+              <% unless event_synced && event_has_seeds %>
+                <%= link_to sync_seeds_tournament_event_path(tournament, event), 
+                          class: "bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 hover:cursor-pointer flex items-center",
+                          data: { 
+                            controller: "sync-operation",
+                            sync_operation_target: "button",
+                            action: "click->sync-operation#startSync",
+                            turbo_method: :post,
+                            turbo_frame: "tournaments_results"
+                          } do %>
+                  <div data-sync-operation-target="spinner" class="hidden mr-1">
+                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                  <div data-sync-operation-target="content">
+                    Sincronizar Seeds
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+      <% if tournament.events.empty? %>
+        <tr id="eventRow-<%= tournament.id %>-empty" class="event-row hidden border-b border-black" data-tournament-id="<%= tournament.id %>">
+            <td class="py-2 px-4 pl-12 text-gray-500" colspan="5">No hay eventos disponibles</td>
+        </tr>
+      <% end %>
+    <% end %>
+  </tbody>
+</table>
+<% else %>
+  <div class="bg-white p-6 rounded-lg shadow-md text-center">
+    <p class="text-xl text-gray-700 mb-4">No se encontraron torneos <%= @query.present? ? "que coincidan con '#{@query}'" : "" %></p>
+    <% if @query.present? %>
+      <%= link_to "Ver todos los torneos", tournaments_path, class: "text-blue-500 hover:underline", data: { turbo_frame: "tournaments_results" } %>
+    <% end %>
+  </div>
+<% end %> 
