@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_02_24_170604) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_22_051307) do
   create_table "event_seeds", force: :cascade do |t|
     t.integer "event_id", null: false
     t.integer "player_id", null: false
@@ -28,6 +28,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_24_170604) do
     t.string "slug"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "seeds_last_synced_at"
     t.index ["tournament_id"], name: "index_events_on_tournament_id"
   end
 
@@ -40,7 +41,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_24_170604) do
     t.string "city"
     t.string "state"
     t.string "country"
-    t.string "gender_pronoum"
+    t.string "gender_pronoun"
     t.string "birthday"
     t.string "twitter_handle"
     t.datetime "created_at", null: false
