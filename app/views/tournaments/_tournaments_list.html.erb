@@ -105,9 +105,15 @@
             <div class="space-x-2">
               <!-- Botón para ver seeds del evento - deshabilitado si no hay seeds -->
               <% if event_has_seeds %>
-                <%= link_to "Ver Seeds", seeds_tournament_event_path(tournament, event), 
-                            class: "text-green-500 hover:underline hover:cursor-pointer",
-                            data: { turbo: false } %>
+                <button 
+                  data-controller="seed-loader"
+                  data-seed-loader-url-value="<%= seeds_tournament_event_path(tournament, event) %>"
+                  data-seed-loader-tournament-id-value="<%= tournament.id %>"
+                  data-seed-loader-event-id-value="<%= event.id %>"
+                  data-action="click->seed-loader#toggle"
+                  class="text-green-500 hover:underline hover:cursor-pointer">
+                  Ver Seeds
+                </button>
               <% else %>
                 <span class="text-gray-400 cursor-not-allowed">Ver Seeds</span>
               <% end %>
@@ -133,6 +139,18 @@
                     Sincronizar Seeds
                   </div>
                 <% end %>
+              <% end %>
+            </div>
+          </td>
+        </tr>
+        <!-- Fila para mostrar seeds (inicialmente oculta) -->
+        <tr id="seedsRow-<%= tournament.id %>-<%= event.id %>" class="seeds-row hidden border-b border-black" data-tournament-id="<%= tournament.id %>" data-event-id="<%= event.id %>">
+          <td colspan="5" class="py-2 px-4">
+            <div id="event-seeds-<%= event.id %>" class="pl-12">
+              <% if event_has_seeds %>
+                <!-- El contenido se cargará dinámicamente con Stimulus -->
+              <% else %>
+                <p class="text-gray-500">No hay seeds disponibles para este evento.</p>
               <% end %>
             </div>
           </td>

@@ -1,0 +1,46 @@
+<% if seeds.any? %>
+  <div class="mb-4">
+    <div class="flex justify-between items-center mb-2">
+      <div>
+        <h3 class="text-lg font-semibold">Seeds para <%= event.name %></h3>
+        <% if event.respond_to?(:seeds_last_synced_at) && event.seeds_last_synced_at.present? %>
+          <p class="text-xs text-gray-500">Actualizado: <%= event.seeds_last_synced_at.strftime('%d/%m/%Y %H:%M') %></p>
+        <% end %>
+      </div>
+      
+      <%= link_to sync_seeds_tournament_event_path(tournament, event, force: true), 
+                class: "text-xs text-blue-500 hover:underline", 
+                data: { turbo_method: :post } do %>
+        Forzar sincronización
+      <% end %>
+    </div>
+    
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white border border-gray-300">
+        <thead>
+          <tr class="bg-gray-100 border-b border-gray-300">
+            <th class="py-2 px-4 text-left font-semibold">Seed</th>
+            <th class="py-2 px-4 text-left font-semibold">Jugador</th>
+            <th class="py-2 px-4 text-left font-semibold">Nombre en Torneo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% seeds.each do |event_seed| %>
+            <tr class="border-b border-gray-300">
+              <td class="py-2 px-4"><%= event_seed.seed_num %></td>
+              <td class="py-2 px-4"><%= event_seed.player&.name || "N/A" %></td>
+              <td class="py-2 px-4"><%= event_seed.player&.entrant_name || "N/A" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% else %>
+  <div class="p-4 text-center">
+    <p class="text-gray-500">No hay información de seeds disponible para este evento.</p>
+    <%= link_to "Sincronizar Seeds", sync_seeds_tournament_event_path(tournament, event), 
+              class: "mt-2 inline-block bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600",
+              data: { turbo_method: :post } %>
+  </div>
+<% end %> 

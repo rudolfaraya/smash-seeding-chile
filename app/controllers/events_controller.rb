@@ -13,7 +13,17 @@ class EventsController < ApplicationController
     @seeds = @event.event_seeds.order(seed_num: :asc)
     
     respond_to do |format|
-      format.html
+      format.html {
+        # Si es una petición AJAX (desde nuestro controlador Stimulus)
+        if request.xhr?
+          render partial: "events/seeds_list", 
+                locals: { seeds: @seeds, event: @event, tournament: @tournament }, 
+                layout: false
+        else
+          # Renderizar la vista completa normalmente
+          render :seeds
+        end
+      }
       format.turbo_stream { render :seeds }
     end
   end

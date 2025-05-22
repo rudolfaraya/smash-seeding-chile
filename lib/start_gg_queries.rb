@@ -43,23 +43,86 @@ module StartGgQueries
         events(filter: { slug: $eventSlug }) {
           id
           name
-          seeds(query: { perPage: $perPage, page: $page }) {
+          phases {
+            id
+            name
+            phaseGroups(query: { perPage: $perPage, page: $page }) {
+              nodes {
+                id
+                displayIdentifier
+                seeds(query: { perPage: 100 }) {
+                  nodes {
+                    id
+                    seedNum
+                    entrant {
+                      id
+                      name
+                      participants {
+                        player {
+                          id
+                          user {
+                            id
+                            slug
+                            name
+                            discriminator
+                            bio
+                            birthday
+                            genderPronoun
+                            location {
+                              city
+                              state
+                              country
+                            }
+                            authorizations(types: [TWITTER]) { externalUsername }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+              pageInfo {
+                total
+                totalPages
+              }
+            }
+          }
+        }
+      }
+    }
+  GRAPHQL
+
+  # Consulta alternativa que obtiene seeds directamente a través de entrants
+  EVENT_SEEDING_QUERY = <<~GRAPHQL
+    query EventSeeding($tournamentSlug: String!, $eventSlug: String!, $perPage: Int, $page: Int) {
+      tournament(slug: $tournamentSlug) {
+        id
+        name
+        events(filter: { slug: $eventSlug }) {
+          id
+          name
+          entrants(query: { perPage: $perPage, page: $page }) {
             nodes {
               id
-              seedNum
-              entrant {
-                id
-                name
-                participants {
-                  player {
+              name
+              initialSeedNum
+              participants {
+                player {
+                  id
+                  user {
                     id
-                    user {
-                      id
-                      slug
-                      name
-                      discriminator
-                      authorizations(types: [TWITTER]) { externalUsername }
+                    slug
+                    name
+                    discriminator
+                    bio
+                    birthday
+                    genderPronoun
+                    location {
+                      city
+                      state
+                      country
                     }
+                    authorizations(types: [TWITTER]) { externalUsername }
                   }
                 }
               }
