@@ -43,10 +43,10 @@ module StartGgQueries
         events(filter: { slug: $eventSlug }) {
           id
           name
-          standings(query: { perPage: $perPage, page: $page }) {  # Usa "standings" (ajusta según el esquema)
+          seeds(query: { perPage: $perPage, page: $page }) {
             nodes {
               id
-              placement  # Podría ser seedNum o un campo similar
+              seedNum
               entrant {
                 id
                 name
@@ -58,17 +58,16 @@ module StartGgQueries
                       slug
                       name
                       discriminator
-                      bio
-                      location { city state country }
-                      genderPronoun
-                      birthday
                       authorizations(types: [TWITTER]) { externalUsername }
                     }
                   }
                 }
               }
             }
-            pageInfo { totalPages }
+            pageInfo {
+              total
+              totalPages
+            }
           }
         }
       }

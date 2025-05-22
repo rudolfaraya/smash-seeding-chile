@@ -48,7 +48,7 @@ class SyncEventSeeds
   def fetch_seeds_sequentially(tournament_slug, event_slug, requests_per_minute = 80)
     seeds = []
     page = 1
-    per_page = 1 # Procesar un seed por solicitud para minimizar objetos y respetar rate limiting
+    per_page = 50 # Procesar un seed por solicitud para minimizar objetos y respetar rate limiting
     total_pages = nil
 
     loop do
@@ -60,11 +60,11 @@ class SyncEventSeeds
                                 page: page }, 
                               "EventParticipants")
         event = response["data"]["tournament"]["events"].first
-        data = event["standings"] || event["sets"] # Usa "standings" o "sets" según el esquema
+        data = event["seeds"] # Usa "standings" o "sets" según el esquema
         data["nodes"].each do |node|
           seeds << {
             id: node["id"],
-            seedNum: node["placement"] || node["seedNum"] || nil, # Ajusta según el campo real
+            seedNum: node["seedNum"], # Ajusta según el campo real
             entrant: node["entrant"] || (node["entrant1"] || node["entrant2"])
           }
         end
