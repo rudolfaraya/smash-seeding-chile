@@ -51,6 +51,18 @@
                 <div class="text-sm text-slate-400">
                   <%= player.entrant_name.present? ? player.entrant_name : 'Sin entrant name' %>
                 </div>
+                
+                <!-- Personajes de Smash -->
+                <% if player.smash_characters.any? %>
+                  <div class="flex items-center mt-2 space-x-1">
+                    <% player.smash_characters.each do |char_data| %>
+                      <%= smash_character_icon(char_data[:character], char_data[:skin], 
+                            class: 'smash-character-icon', 
+                            width: 24, 
+                            height: 24) %>
+                    <% end %>
+                  </div>
+                <% end %>
               </div>
             </div>
           </td>
@@ -107,6 +119,17 @@
           </td>
           <td class="py-4 px-6">
             <div class="flex space-x-3">
+              <!-- Botón para editar personajes de Smash -->
+              <button 
+                onclick="openSmashCharacterModal(<%= player.id %>)" 
+                class="inline-flex items-center px-2 py-1 border border-green-500 text-green-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 cursor-pointer text-xs" 
+                title="Editar personajes de Smash">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                </svg>
+                <span>Personajes</span>
+              </button>
+              
               <!-- Botón para ver eventos (dropdown) -->
               <% if total_events > 0 %>
                 <button 
@@ -472,6 +495,7 @@
     will-change: transform, opacity;
   }
 </style>
+
 <% else %>
   <div class="bg-slate-800 p-8 rounded-lg shadow-md text-center border border-slate-600">
     <div class="flex flex-col items-center justify-center">

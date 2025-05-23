@@ -7,26 +7,97 @@ class PlayersController < ApplicationController
     # Guardar el término de búsqueda en la sesión
     session[:players_query] = @query
     
-    # Estrategia de ordenamiento sin group que interfiera con includes
-    @players = Player.includes(event_seeds: { event: :tournament })
+    # Usar el método helper para preparar los datos
+    @players = prepare_players_data
+
+    Rails.logger.info "=== Found #{@players.size} players, responding with format: #{request.format} ==="
+
+    respond_to do |format|
+      format.html do 
+        Rails.logger.info "=== Responding with HTML ==="
+        if params[:partial] == 'true'
+          render partial: 'players_list', locals: { players: @players }
+        else
+          render :index
+        end
+      end
+      format.turbo_stream { Rails.logger.info "=== Responding with TURBO_STREAM ===" }
+    end
+  end
+
+  def search
+    redirect_to players_path(query: params[:query])
+  end
+
+  def update_smash_characters
+    @player = Player.find(params[:id])
+    
+    # Parámetros permitidos para personajes de Smash
+    character_params = params.permit(:character_1, :skin_1, :character_2, :skin_2, :character_3, :skin_3)
+    
+    if @player.update(character_params)
+      respond_to do |format|
+        format.json { render json: { success: true, message: 'Personajes actualizados correctamente' } }
+        format.turbo_stream { 
+          # Preparar datos para la recarga
+          @query = session[:players_query]
+          @players = prepare_players_data
+          
+          render turbo_stream: turbo_stream.replace("players_results", 
+            partial: "players_list", 
+            locals: { players: @players }
+          )
+        }
+      end
+    else
+      respond_to do |format|
+        format.json { render json: { success: false, error: @player.errors.full_messages.join(', ') } }
+        format.turbo_stream { render json: { success: false, error: @player.errors.full_messages.join(', ') } }
+      end
+    end
+  end
+
+  def current_characters
+    @player = Player.find(params[:id])
+    
+    render json: {
+      success: true,
+      character_1: @player.character_1,
+      skin_1: @player.skin_1,
+      character_2: @player.character_2,
+      skin_2: @player.skin_2,
+      character_3: @player.character_3,
+      skin_3: @player.skin_3
+    }
+  rescue ActiveRecord::RecordNotFound
+    render json: { success: false, error: 'Jugador no encontrado' }
+  end
+
+  private
+
+  def player_params
+    params.require(:player).permit(:character_1, :skin_1, :character_2, :skin_2, :character_3, :skin_3)
+  end
+
+  def prepare_players_data
+    # Reutilizar la misma lógica del método index
+    players = Player.includes(event_seeds: { event: :tournament })
     
     # Filtrar por nombre si se proporciona un término de búsqueda
     if @query.present?
-      @players = @players.where(
+      players = players.where(
         "LOWER(players.name) LIKE LOWER(?) OR LOWER(players.entrant_name) LIKE LOWER(?) OR LOWER(players.twitter_handle) LIKE LOWER(?)", 
         "%#{@query}%", "%#{@query}%", "%#{@query}%"
       )
     end
 
     # Obtener solo jugadores que tienen al menos un event_seed
-    @players = @players.joins(:event_seeds).distinct
+    players = players.joins(:event_seeds).distinct
     
     # Convertir a array para hacer el ordenamiento en memoria y preservar los includes
-    players_array = @players.to_a
+    players_array = players.to_a
     
-    # Ordenamiento personalizado en memoria:
-    # 1) Por inscripción más reciente a un evento (última participación)
-    # 2) Por mayor cantidad de eventos (de más a menos)
+    # Ordenamiento personalizado en memoria
     players_array.sort! do |a, b|
       # Obtener fechas de eventos más recientes
       latest_a = a.event_seeds.map { |es| es.event.tournament.start_at }.max
@@ -47,28 +118,9 @@ class PlayersController < ApplicationController
     page = (params[:page] || 1).to_i
     per_page = 100
     total_count = players_array.size
-    offset = (page - 1) * per_page
     
     # Simular la funcionalidad de Kaminari
-    @players = Kaminari.paginate_array(players_array, total_count: total_count)
-                      .page(page).per(per_page)
-
-    Rails.logger.info "=== Found #{@players.size} players, responding with format: #{request.format} ==="
-
-    respond_to do |format|
-      format.html do 
-        Rails.logger.info "=== Responding with HTML ==="
-        if params[:partial] == 'true'
-          render partial: 'players_list', locals: { players: @players }
-        else
-          render :index
-        end
-      end
-      format.turbo_stream { Rails.logger.info "=== Responding with TURBO_STREAM ===" }
-    end
-  end
-
-  def search
-    redirect_to players_path(query: params[:query])
+    Kaminari.paginate_array(players_array, total_count: total_count)
+            .page(page).per(per_page)
   end
 end 

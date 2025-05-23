@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_22_051307) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_23_200158) do
   create_table "event_seeds", force: :cascade do |t|
     t.integer "event_id", null: false
     t.integer "player_id", null: false
@@ -46,6 +46,15 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_22_051307) do
     t.string "twitter_handle"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "character_1"
+    t.integer "skin_1", default: 1
+    t.string "character_2"
+    t.integer "skin_2", default: 1
+    t.string "character_3"
+    t.integer "skin_3", default: 1
+    t.index ["character_1"], name: "index_players_on_character_1"
+    t.index ["character_2"], name: "index_players_on_character_2"
+    t.index ["character_3"], name: "index_players_on_character_3"
   end
 
   create_table "tournaments", force: :cascade do |t|

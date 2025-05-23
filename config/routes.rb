@@ -35,5 +35,9 @@ Rails.application.routes.draw do
     collection do
       get :search
     end
+    member do
+      patch :update_smash_characters
+      get :current_characters
+    end
   end
 end

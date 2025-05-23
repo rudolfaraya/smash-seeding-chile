@@ -58,4 +58,287 @@
   <%= turbo_frame_tag "players_results" do %>
     <%= render "players_list", players: @players %>
   <% end %>
-</div> 
+</div>
+
+<!-- Modal para editar personajes de Smash (fuera del turbo frame) -->
+<div id="smashCharacterModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[9999] flex items-center justify-center" style="z-index: 9999;">
+  <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-600 p-6 w-full max-w-2xl mx-4 relative z-[10000]" style="z-index: 10000;">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold text-slate-100">Editar Personajes de Smash</h3>
+      <button onclick="closeSmashCharacterModal()" class="text-slate-400 hover:text-slate-200 p-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    
+    <form id="smashCharacterForm" class="space-y-4">
+      <input type="hidden" id="playerId" name="player_id">
+      
+      <!-- Personaje 1 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-700 rounded-lg">
+        <div>
+          <label class="block text-sm font-medium text-slate-200 mb-2">Personaje Principal</label>
+          <select id="character_1" name="character_1" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            <option value="">Seleccionar personaje...</option>
+            <% smash_character_options.each do |name, key| %>
+              <option value="<%= key %>"><%= name %></option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-200 mb-2">Skin</label>
+          <select id="skin_1" name="skin_1" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            <% smash_skin_options.each do |name, value| %>
+              <option value="<%= value %>"><%= name %></option>
+            <% end %>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Personaje 2 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-700 rounded-lg">
+        <div>
+          <label class="block text-sm font-medium text-slate-200 mb-2">Personaje Secundario</label>
+          <select id="character_2" name="character_2" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            <option value="">Seleccionar personaje...</option>
+            <% smash_character_options.each do |name, key| %>
+              <option value="<%= key %>"><%= name %></option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-200 mb-2">Skin</label>
+          <select id="skin_2" name="skin_2" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            <% smash_skin_options.each do |name, value| %>
+              <option value="<%= value %>"><%= name %></option>
+            <% end %>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Personaje 3 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-700 rounded-lg">
+        <div>
+          <label class="block text-sm font-medium text-slate-200 mb-2">Personaje Terciario</label>
+          <select id="character_3" name="character_3" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            <option value="">Seleccionar personaje...</option>
+            <% smash_character_options.each do |name, key| %>
+              <option value="<%= key %>"><%= name %></option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-200 mb-2">Skin</label>
+          <select id="skin_3" name="skin_3" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            <% smash_skin_options.each do |name, value| %>
+              <option value="<%= value %>"><%= name %></option>
+            <% end %>
+          </select>
+        </div>
+      </div>
+      
+      <div class="flex justify-end space-x-3 pt-4">
+        <button type="button" onclick="closeSmashCharacterModal()" class="px-4 py-2 border border-slate-500 text-slate-300 rounded-md hover:bg-slate-700 transition-colors">
+          Cancelar
+        </button>
+        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+          Guardar Personajes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Funciones globales para el modal de personajes de Smash
+function openSmashCharacterModal(playerId) {
+  console.log("=== Abriendo modal para jugador:", playerId, "===");
+  
+  // Verificar que el modal existe
+  const modal = document.getElementById('smashCharacterModal');
+  if (!modal) {
+    console.error("❌ Modal no encontrado en el DOM");
+    return;
+  }
+  
+  console.log("✅ Modal encontrado:", modal);
+  
+  // Primero mostrar el modal directamente para verificar que funciona
+  document.getElementById('playerId').value = playerId;
+  modal.classList.remove('hidden');
+  
+  console.log("✅ Modal debería estar visible ahora. Classes:", modal.className);
+  
+  // Luego cargar datos actuales del jugador via AJAX
+  fetch(`/players/${playerId}/current_characters`, {
+    method: 'GET',
+    headers: {
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+      'Accept': 'application/json'
+    }
+  })
+  .then(response => {
+    console.log("📡 Respuesta del servidor:", response.status);
+    return response.json();
+  })
+  .then(data => {
+    console.log("📦 Datos recibidos:", data);
+    if (data.success) {
+      // Rellenar formulario con datos actuales
+      document.getElementById('character_1').value = data.character_1 || '';
+      document.getElementById('skin_1').value = data.skin_1 || '1';
+      document.getElementById('character_2').value = data.character_2 || '';
+      document.getElementById('skin_2').value = data.skin_2 || '1';
+      document.getElementById('character_3').value = data.character_3 || '';
+      document.getElementById('skin_3').value = data.skin_3 || '1';
+      console.log("✅ Formulario rellenado con datos del servidor");
+    } else {
+      console.warn("⚠️ Error cargando datos, usando valores por defecto:", data.error);
+    }
+  })
+  .catch(error => {
+    console.error('❌ Error cargando datos del jugador:', error);
+  });
+}
+
+function closeSmashCharacterModal() {
+  document.getElementById('smashCharacterModal').classList.add('hidden');
+}
+
+// Evento del formulario (usando delegación para funcionar con turbo)
+document.addEventListener('submit', function(e) {
+  if (e.target.id === 'smashCharacterForm') {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const playerId = formData.get('player_id');
+    
+    // Enviar datos via AJAX con Turbo Stream para actualización automática
+    fetch(`/players/${playerId}/update_smash_characters`, {
+      method: 'PATCH',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Accept': 'text/vnd.turbo-stream.html',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        character_1: formData.get('character_1'),
+        skin_1: formData.get('skin_1'),
+        character_2: formData.get('character_2'),
+        skin_2: formData.get('skin_2'),
+        character_3: formData.get('character_3'),
+        skin_3: formData.get('skin_3')
+      })
+    })
+    .then(response => {
+      if (response.headers.get('Content-Type')?.includes('turbo-stream')) {
+        // Es una respuesta turbo-stream, procesarla
+        return response.text().then(html => {
+          closeSmashCharacterModal();
+          console.log("✅ Personajes actualizados con Turbo Stream");
+          
+          // Turbo procesará automáticamente la respuesta
+          Turbo.renderStreamMessage(html);
+          return { success: true };
+        });
+      } else {
+        // Es una respuesta JSON (fallback)
+        return response.json();
+      }
+    })
+    .then(data => {
+      if (data.success) {
+        // Ya manejado arriba para turbo-stream
+        if (!data.turbo_stream_processed) {
+          closeSmashCharacterModal();
+          console.log("✅ Personajes actualizados con JSON fallback");
+          
+          // Fallback: recargar turbo frame manualmente
+          const turboFrame = document.getElementById('players_results');
+          if (turboFrame) {
+            const currentSrc = turboFrame.getAttribute('src') || window.location.pathname;
+            const url = new URL(currentSrc, window.location.origin);
+            url.searchParams.set('_reload', Date.now());
+            
+            const searchParams = new URLSearchParams(window.location.search);
+            if (searchParams.get('query')) {
+              url.searchParams.set('query', searchParams.get('query'));
+            }
+            
+            turboFrame.setAttribute('src', url.toString());
+            console.log("🔄 Recargando turbo frame con URL:", url.toString());
+          } else {
+            console.log("⚠️ Turbo frame no encontrado, recargando página completa");
+            window.location.reload();
+          }
+        }
+      } else {
+        alert('Error al guardar los personajes: ' + (data.error || 'Error desconocido'));
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error al guardar los personajes');
+    });
+  }
+});
+
+// Cerrar modal al hacer clic fuera de él
+document.addEventListener('click', function(e) {
+  const modal = document.getElementById('smashCharacterModal');
+  if (e.target === modal) {
+    closeSmashCharacterModal();
+  }
+});
+
+// Cerrar modal con tecla Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeSmashCharacterModal();
+  }
+});
+</script>
+
+<style>
+/* Estilos personalizados para los selects del modal */
+#smashCharacterModal select {
+  background-color: #475569 !important; /* slate-600 */
+  color: #f1f5f9 !important; /* slate-100 */
+  border-color: #64748b !important; /* slate-500 */
+}
+
+#smashCharacterModal select:focus {
+  background-color: #475569 !important;
+  border-color: #ef4444 !important; /* red-500 */
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+}
+
+#smashCharacterModal select option {
+  background-color: #475569 !important; /* slate-600 */
+  color: #f1f5f9 !important; /* slate-100 */
+  padding: 8px !important;
+}
+
+#smashCharacterModal select option:hover,
+#smashCharacterModal select option:checked {
+  background-color: #334155 !important; /* slate-700 */
+  color: #f1f5f9 !important;
+}
+
+/* Mejorar contraste de labels */
+#smashCharacterModal label {
+  color: #f1f5f9 !important; /* slate-100 */
+  font-weight: 500 !important;
+}
+
+/* Estilo para iconos de personajes más suave */
+.smash-character-icon {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.smash-character-icon:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+</style> 
