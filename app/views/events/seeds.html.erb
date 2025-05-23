@@ -4,7 +4,7 @@
   
   <% if @event.respond_to?(:seeds_last_synced_at) && @event.seeds_last_synced_at.present? %>
     <p class="mb-4 text-sm text-gray-600">
-      <span class="font-semibold">Última sincronización:</span> <%= @event.seeds_last_synced_at.strftime('%d/%m/%Y %H:%M') %>
+      <span class="font-semibold">Última sincronización:</span> <%= format_datetime_cl(@event.seeds_last_synced_at) %>
       <%= link_to "Forzar sincronización", sync_seeds_tournament_event_path(@event.tournament, @event, force: true), 
                   class: "ml-3 text-sm text-blue-500 hover:underline" %>
     </p>

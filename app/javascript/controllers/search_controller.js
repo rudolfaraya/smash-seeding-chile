@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 // Este controlador maneja la búsqueda en tiempo real con Turbo Frames
 export default class extends Controller {
-  static targets = ["input", "form"]
+  static targets = ["input"]
   static values = {
     debounce: { type: Number, default: 300 }
   }
@@ -12,11 +12,18 @@ export default class extends Controller {
     console.log("Controlador de búsqueda conectado")
   }
   
-  search() {
+  // Búsqueda inmediata al enviar formulario (Enter)
+  preventSubmit(event) {
+    event.preventDefault()
+    clearTimeout(this.timeout)
+    this.element.requestSubmit()
+  }
+  
+  // Búsqueda con debounce al escribir
+  debouncedSubmit() {
     clearTimeout(this.timeout)
     this.timeout = setTimeout(() => {
-      // Con Turbo Frames, el foco se mantiene automáticamente
-      this.formTarget.requestSubmit()
+      this.element.requestSubmit()
     }, this.debounceValue)
   }
 } 

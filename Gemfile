@@ -65,3 +65,5 @@ gem "nokogiri", "~> 1.18" # Para scraping de SSBWiki
 gem "dotenv-rails", "~> 3.1"
 
 gem "faraday", "~> 2.12"
+
+gem "kaminari", "~> 1.2" # Para paginación

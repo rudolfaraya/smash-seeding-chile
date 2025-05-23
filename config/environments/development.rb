@@ -64,6 +64,9 @@ Rails.application.configure do
   # Suppress logger output for asset requests.
   config.assets.quiet = true
 
+  # Optimizar assets para evitar warnings de preload innecesarios
+  config.assets.preload = []
+
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true
 

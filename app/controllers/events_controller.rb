@@ -55,10 +55,10 @@ class EventsController < ApplicationController
         # Si ya fue sincronizado recientemente y tiene seeds, redirigir sin volver a sincronizar
         format.html { 
           redirect_to seeds_tournament_event_path(@tournament, @event), 
-                      notice: "Seeds ya sincronizados (última sincronización: #{@event.seeds_last_synced_at.strftime('%d/%m/%Y %H:%M')}). Utiliza el parámetro force=true para forzar la sincronización."
+                      notice: "Seeds ya sincronizados (última sincronización: #{helpers.format_datetime_cl(@event.seeds_last_synced_at)}). Utiliza el parámetro force=true para forzar la sincronización."
         }
         format.turbo_stream {
-          flash.now[:notice] = "Seeds ya sincronizados (última sincronización: #{@event.seeds_last_synced_at.strftime('%d/%m/%Y %H:%M')}). Utiliza el parámetro force=true para forzar la sincronización."
+          flash.now[:notice] = "Seeds ya sincronizados (última sincronización: #{helpers.format_datetime_cl(@event.seeds_last_synced_at)}). Utiliza el parámetro force=true para forzar la sincronización."
           
           # Obtener todos los torneos con datos actualizados para la vista
           # Mantener el orden original por fecha de inicio

@@ -7,83 +7,60 @@ class SyncSmashData
 
   def call
     sync_tournaments
-    sync_events
   end
 
+  # Sincronizar todos los torneos y priorizar eventos faltantes
   def sync_tournaments
-    Rails.logger.info "Sincronizando torneos..."
-    count_before = Tournament.count
-    StartGgQueries.fetch_tournaments(@client, per_page: 25).each do |data|
-      Tournament.find_or_create_by(id: data["id"]) do |t|
-        t.name = data["name"]
-        t.slug = data["slug"]
-        t.start_at = Time.at(data["startAt"]) if data["startAt"]
-        t.end_at = Time.at(data["endAt"]) if data["endAt"]
-        t.venue_address = data["venueAddress"]
-      end
-    end
-    count_after = Tournament.count
-    new_tournaments = count_after - count_before
-    Rails.logger.info "Sincronización completada. Se agregaron #{new_tournaments} nuevos torneos. Total: #{count_after} torneos."
-    new_tournaments
-  end
-
-  def sync_events
-    Rails.logger.info "Sincronizando eventos..."
-    count_before = Event.count
-    Tournament.order(start_at: :desc).each do |tournament|
-      Rails.logger.info "Procesando torneo: #{tournament.name} (Fecha: #{tournament.start_at})"
-      begin
-        events_data = fetch_events(tournament.slug)
-        events_data.each do |event_data|
-          Event.find_or_create_by(tournament: tournament, slug: event_data["slug"]) do |event|
-            event.name = event_data["name"]
-            event.id = event_data["id"]
-          end
-        rescue StandardError => e
-          Rails.logger.error "Error procesando eventos para torneo #{tournament.name}: #{e.message}"
-          next
-        end
-      end
-      sleep 5 # Retraso entre torneos para evitar rate limits
-    end
-    count_after = Event.count
-    new_events = count_after - count_before
-    Rails.logger.info "Sincronización completada. Se agregaron #{new_events} nuevos eventos. Total: #{Event.count} eventos."
-    new_events
-  end
-
-  # Método para sincronizar eventos de un torneo específico
-  def sync_events_for_tournament(tournament)
-    Rails.logger.info "Sincronizando eventos para el torneo específico: #{tournament.name}"
-    count_before = tournament.events.count
+    Rails.logger.info "Sincronizando todos los torneos y priorizando eventos faltantes..."
     
-    begin
-      events_data = fetch_events(tournament.slug)
-      events_data.each do |event_data|
-        Event.find_or_create_by(tournament: tournament, slug: event_data["slug"]) do |event|
-          event.name = event_data["name"]
-          event.id = event_data["id"]
-        end
-      end
-    rescue StandardError => e
-      Rails.logger.error "Error procesando eventos para torneo #{tournament.name}: #{e.message}"
-      raise
-    end
+    # Primero sincronizar eventos faltantes en torneos existentes
+    sync_missing_events_for_existing_tournaments
     
-    count_after = tournament.events.reload.count
-    new_events = count_after - count_before
-    Rails.logger.info "Sincronización de eventos completada para el torneo #{tournament.name}. Se agregaron #{new_events} nuevos eventos."
-    new_events
+    # Luego sincronizar todos los torneos nuevos
+    sync_all_tournaments_with_events
   end
 
-  # Método atómico para sincronizar torneos y sus eventos inmediatamente
+  # Sincronizar solo torneos nuevos (posteriores a la fecha del último torneo)
   def sync_tournaments_and_events_atomic
-    Rails.logger.info "Sincronizando torneos y eventos de forma atómica..."
+    Rails.logger.info "Sincronizando solo torneos nuevos..."
+    
+    # Obtener la fecha del último torneo en la base de datos
+    last_tournament = Tournament.order(start_at: :desc).first
+    last_tournament_date = last_tournament&.start_at
+    
+    if last_tournament_date
+      Rails.logger.info "Buscando torneos posteriores a: #{last_tournament_date}"
+    else
+      Rails.logger.info "No hay torneos en la base de datos, sincronizando todos"
+    end
+    
+    sync_new_tournaments_since_date(last_tournament_date)
+  end
+
+  # Sincronizar eventos faltantes en torneos que no tengan eventos
+  def sync_missing_events_for_existing_tournaments
+    Rails.logger.info "Sincronizando eventos faltantes en torneos existentes..."
+    
+    # Buscar torneos que no tengan eventos sincronizados
+    tournaments_without_events = Tournament.left_joins(:events)
+                                          .where(events: { id: nil })
+                                          .order(start_at: :desc)
+    
+    Rails.logger.info "Encontrados #{tournaments_without_events.count} torneos sin eventos"
+    
+    tournaments_without_events.each do |tournament|
+      sync_events_for_single_tournament(tournament)
+      sleep 2 # Pausa entre torneos para evitar rate limits
+    end
+  end
+
+  # Sincronizar todos los torneos con sus eventos uno a uno
+  def sync_all_tournaments_with_events
+    Rails.logger.info "Sincronizando todos los torneos desde la API..."
     count_before = Tournament.count
     nuevos_torneos = 0
     
-    # Obtenemos los datos de torneos desde la API
+    # Obtener todos los torneos desde la API
     torneo_data_list = StartGgQueries.fetch_tournaments(@client, per_page: 25)
     
     torneo_data_list.each do |torneo_data|
@@ -91,54 +68,101 @@ class SyncSmashData
       tournament = Tournament.find_by(id: torneo_data["id"])
       
       if tournament.nil?
-        # Si es un torneo nuevo, comenzamos una transacción para el torneo y sus eventos
-        ActiveRecord::Base.transaction do
-          # Crear el torneo
-          tournament = Tournament.create!(
-            id: torneo_data["id"],
-            name: torneo_data["name"],
-            slug: torneo_data["slug"],
-            start_at: torneo_data["startAt"] ? Time.at(torneo_data["startAt"]) : nil,
-            end_at: torneo_data["endAt"] ? Time.at(torneo_data["endAt"]) : nil,
-            venue_address: torneo_data["venueAddress"]
-          )
-          
-          # Incrementar contador
-          nuevos_torneos += 1
-          
-          # Obtener y crear eventos para este torneo inmediatamente
-          Rails.logger.info "Procesando eventos para el nuevo torneo: #{tournament.name}"
-          
-          begin
-            # Esperar un poco para no exceder rate limits
-            sleep 1
-            
-            # Obtener eventos desde la API
-            events_data = fetch_events(tournament.slug)
-            
-            # Crear cada evento
-            events_data.each do |event_data|
-              Event.create!(
-                id: event_data["id"],
-                name: event_data["name"],
-                slug: event_data["slug"],
-                tournament: tournament
-              )
-            end
-            
-            Rails.logger.info "Se crearon #{events_data.count} eventos para el torneo #{tournament.name}"
-          rescue StandardError => e
-            Rails.logger.error "Error al procesar eventos para el torneo #{tournament.name}: #{e.message}"
-            # Hacemos que la transacción falle para mantener la atomicidad
-            raise ActiveRecord::Rollback, "Error al crear eventos para torneo #{tournament.name}: #{e.message}"
-          end
-        end
+        # Procesar torneo nuevo uno a uno
+        nuevos_torneos += sync_single_tournament_with_events(torneo_data)
+        sleep 2 # Pausa entre torneos
       end
     end
     
     count_after = Tournament.count
-    Rails.logger.info "Sincronización atómica completada. Se agregaron #{nuevos_torneos} nuevos torneos con sus eventos. Total: #{count_after} torneos."
+    Rails.logger.info "Sincronización completada. Se agregaron #{nuevos_torneos} nuevos torneos. Total: #{count_after} torneos."
     nuevos_torneos
+  end
+
+  # Sincronizar torneos nuevos desde una fecha específica
+  def sync_new_tournaments_since_date(since_date)
+    Rails.logger.info "Sincronizando torneos desde: #{since_date || 'el inicio'}"
+    count_before = Tournament.count
+    nuevos_torneos = 0
+    
+    # Obtener todos los torneos desde la API
+    torneo_data_list = StartGgQueries.fetch_tournaments(@client, per_page: 25)
+    
+    # Filtrar solo torneos posteriores a la fecha especificada
+    if since_date
+      torneo_data_list = torneo_data_list.select do |torneo_data|
+        tournament_date = torneo_data["startAt"] ? Time.at(torneo_data["startAt"]) : nil
+        tournament_date && tournament_date > since_date
+      end
+    end
+    
+    Rails.logger.info "Encontrados #{torneo_data_list.count} torneos nuevos para sincronizar"
+    
+    torneo_data_list.each do |torneo_data|
+      # Verificar si el torneo ya existe
+      tournament = Tournament.find_by(id: torneo_data["id"])
+      
+      if tournament.nil?
+        # Procesar torneo nuevo uno a uno
+        nuevos_torneos += sync_single_tournament_with_events(torneo_data)
+        sleep 2 # Pausa entre torneos
+      end
+    end
+    
+    count_after = Tournament.count
+    Rails.logger.info "Sincronización de nuevos torneos completada. Se agregaron #{nuevos_torneos} torneos. Total: #{count_after} torneos."
+    nuevos_torneos
+  end
+
+  # Sincronizar un solo torneo con sus eventos de forma atómica
+  def sync_single_tournament_with_events(torneo_data)
+    ActiveRecord::Base.transaction do
+      # Crear el torneo
+      tournament = Tournament.create!(
+        id: torneo_data["id"],
+        name: torneo_data["name"],
+        slug: torneo_data["slug"],
+        start_at: torneo_data["startAt"] ? Time.at(torneo_data["startAt"]) : nil,
+        end_at: torneo_data["endAt"] ? Time.at(torneo_data["endAt"]) : nil,
+        venue_address: torneo_data["venueAddress"]
+      )
+      
+      Rails.logger.info "✅ Creado torneo: #{tournament.name} (#{tournament.start_at})"
+      
+      # Sincronizar eventos para este torneo inmediatamente
+      sync_events_for_single_tournament(tournament)
+      
+      return 1 # Retorna 1 torneo creado
+    end
+  rescue StandardError => e
+    Rails.logger.error "❌ Error al crear torneo #{torneo_data['name']}: #{e.message}"
+    return 0 # No se creó ningún torneo
+  end
+
+  # Sincronizar eventos para un torneo específico
+  def sync_events_for_single_tournament(tournament)
+    Rails.logger.info "  🔄 Sincronizando eventos para: #{tournament.name}"
+    count_before = tournament.events.count
+    
+    begin
+      events_data = fetch_events(tournament.slug)
+      
+      events_data.each do |event_data|
+        Event.find_or_create_by(tournament: tournament, slug: event_data["slug"]) do |event|
+          event.name = event_data["name"]
+          event.id = event_data["id"]
+        end
+      end
+      
+      count_after = tournament.events.reload.count
+      new_events = count_after - count_before
+      Rails.logger.info "  ✅ Se crearon #{new_events} eventos para #{tournament.name}"
+      
+      return new_events
+    rescue StandardError => e
+      Rails.logger.error "  ❌ Error al sincronizar eventos para #{tournament.name}: #{e.message}"
+      return 0
+    end
   end
 
   private

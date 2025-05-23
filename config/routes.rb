@@ -2,8 +2,8 @@ Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   resources :tournaments do
     collection do
-      get :sync # Ruta para sincronizar torneos y eventos
-      get :sync_new_tournaments # Nueva ruta para sincronizar solo nuevos torneos
+      post :sync # Ruta para sincronizar torneos y eventos
+      post :sync_new_tournaments # Nueva ruta para sincronizar solo nuevos torneos
     end
     
     member do
