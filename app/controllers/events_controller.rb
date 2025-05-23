@@ -12,6 +12,21 @@ class EventsController < ApplicationController
   def seeds
     @seeds = @event.event_seeds.order(seed_num: :asc)
     
+    # Verificar explícitamente que estamos mostrando los seeds del evento correcto
+    event_id = params[:event_id] || request.headers['Event-Id']
+    if event_id.present? && event_id.to_i != @event.id
+      # Si el evento solicitado no coincide con el de la URL, redirigir o enviar error
+      respond_to do |format|
+        format.html { 
+          flash[:alert] = "Error de sincronización de eventos. Por favor inténtalo de nuevo."
+          redirect_to tournaments_path
+        }
+        format.json { render json: { error: "ID de evento no coincide" }, status: :bad_request }
+        format.text { render plain: "Error: ID de evento no coincide", status: :bad_request }
+      end
+      return
+    end
+    
     respond_to do |format|
       format.html {
         # Si es una petición AJAX (desde nuestro controlador Stimulus)

@@ -1,74 +1,84 @@
-<div class="container mx-auto p-4">
-  <div class="flex justify-between items-center mb-4">
-    <h1 class="text-2xl font-bold">Lista de Torneos</h1>
-    <div class="flex space-x-3">
-      <%= link_to sync_new_tournaments_tournaments_path, class: "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center", 
-          data: { 
-            controller: "sync-operation",
-            sync_operation_target: "button",
-            action: "click->sync-operation#startSync",
-            turbo_method: :post
-          } do %>
+<div class="container mx-auto py-6">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-slate-100 mb-4 md:mb-0 flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-red-500 info-icon" viewBox="0 0 20 20" fill="currentColor" style="filter: drop-shadow(0 0 3px #f87171);">
+        <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd" />
+      </svg>
+      Torneos de Smash
+    </h1>
+    
+    <div class="flex space-x-4">
+      <%= link_to sync_new_tournaments_tournaments_path, 
+                class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-slate-50 bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200 cursor-pointer",
+                data: { controller: "sync-operation", sync_operation_target: "button", action: "click->sync-operation#startSync", turbo_method: :post, turbo_frame: "tournaments_results" } do %>
         <div data-sync-operation-target="spinner" class="hidden mr-2">
-          <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <svg class="animate-spin h-3 w-3 text-slate-50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
         </div>
         <div data-sync-operation-target="content" class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z" />
+            <path d="M9 13h2v5a1 1 0 11-2 0v-5z" />
           </svg>
-          Sincronizar Nuevos Torneos
+          Sincronizar Nuevos
         </div>
       <% end %>
-      
-      <%= link_to sync_tournaments_path, class: "bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 flex items-center",
-          data: { 
-            controller: "sync-operation",
-            sync_operation_target: "button",
-            action: "click->sync-operation#startSync",
-            turbo_method: :post
-          } do %>
+
+      <%= link_to sync_tournaments_path, 
+                class: "inline-flex items-center px-4 py-2 border border-blue-600 text-sm font-medium rounded-md shadow-sm text-blue-400 bg-slate-800 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer",
+                data: { controller: "sync-operation", sync_operation_target: "button", action: "click->sync-operation#startSync", turbo_method: :post, turbo_frame: "tournaments_results" } do %>
         <div data-sync-operation-target="spinner" class="hidden mr-2">
-          <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <svg class="animate-spin h-3 w-3 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
         </div>
         <div data-sync-operation-target="content" class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
           </svg>
-          Sincronizar Todos
+          Sincronizar Todo
         </div>
       <% end %>
     </div>
   </div>
-  
-  <!-- Formulario de búsqueda -->
-  <div class="mb-6">
-    <%= form_with url: tournaments_path, method: :get, class: "flex items-center", data: { controller: "search", search_target: "form", turbo_frame: "tournaments_results" } do |f| %>
-      <div class="relative flex-grow">
-        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+
+  <div class="mb-6 bg-slate-800 rounded-lg shadow-md border border-slate-600 p-5">
+    <%= form_with(url: tournaments_path, method: :get, data: { controller: "search", turbo_frame: "tournaments_results", action: "submit->search#preventSubmit input->search#debouncedSubmit" }) do |f| %>
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
           </svg>
         </div>
-        <%= f.text_field :query, value: @query, placeholder: "Buscar torneos por nombre...", 
-            class: "block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-blue-500 focus:border-blue-500",
-            data: { 
-              search_target: "input", 
-              action: "input->search#search"
-            } %>
+        <%= f.text_field :query, 
+                      value: params[:query], 
+                      placeholder: "Buscar torneos...", 
+                      class: "pl-10 focus:ring-red-500 focus:border-red-500 block w-full shadow-sm text-sm border-slate-600 bg-slate-700 text-slate-200 rounded-md py-3 tracking-wide",
+                      autocomplete: "off",
+                      data: { search_target: "input" } %>
+        <% if params[:query].present? %>
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+            <%= link_to tournaments_path, class: "text-slate-400 hover:text-slate-300 cursor-pointer", data: { turbo_frame: "tournaments_results" } do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+            <% end %>
+          </div>
+        <% end %>
       </div>
-      <%= f.submit "Buscar", class: "ml-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-3" %>
-      <% if @query.present? %>
-        <%= link_to "Limpiar", tournaments_path, class: "ml-2 text-gray-700 bg-gray-200 hover:bg-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-4 py-3", data: { turbo_frame: "tournaments_results" } %>
-      <% end %>
+      
+      <div class="flex items-center mt-2 text-sm text-slate-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+        </svg>
+        <span class="text-xs tracking-wide">La búsqueda se realiza automáticamente mientras escribes</span>
+      </div>
     <% end %>
   </div>
-  
+
   <%= turbo_frame_tag "tournaments_results" do %>
     <%= render "tournaments_list", tournaments: @tournaments %>
   <% end %>
@@ -76,24 +86,49 @@
 
 <style>
   .event-row {
-    background-color: #ffffff; /* Blanco como la tabla principal */
+    background-color: #334155; /* slate-700 */
     display: table-row; /* Asegura que se renderice como fila de tabla */
   }
-  .tournament-row:hover + .event-row:not(.hidden) {
-    background-color: #f3f4f6; /* Gris claro como hover en la tabla principal */
+  
+  /* Ajustes generales para mejorar legibilidad */
+  body {
+    letter-spacing: 0.015em;
   }
-  .event-row:hover {
-    background-color: #f3f4f6; /* Gris claro al hacer hover en las filas de eventos */
+  
+  .text-xs {
+    font-size: 0.74rem;
+    line-height: 1.1rem;
   }
-  .hidden {
-    display: none; /* Asegura que hidden oculte las filas completamente */
+  
+  .text-sm {
+    font-size: 0.82rem;
+    line-height: 1.25rem;
+  }
+  
+  /* Cursor pointer para todos los elementos clickeables */
+  button, a, [role="button"], .cursor-pointer,
+  input[type="submit"], input[type="button"], input[type="reset"] {
+    cursor: pointer !important;
+  }
+  
+  /* Incremento del espaciado entre iconos y texto */
+  .mr-1 {
+    margin-right: 0.375rem !important;
+  }
+  
+  .mr-2 {
+    margin-right: 0.625rem !important;
+  }
+  
+  .mr-3 {
+    margin-right: 0.875rem !important;
   }
   
   /* Estilos para los estados de sincronización */
   @keyframes pulse-error {
-    0% { background-color: #ffffff; }
-    50% { background-color: #fee2e2; }
-    100% { background-color: #ffffff; }
+    0% { background-color: #1e293b; }
+    50% { background-color: #7f1d1d; }
+    100% { background-color: #1e293b; }
   }
   
   .sync-error {
@@ -101,64 +136,77 @@
   }
   
   .cursor-not-allowed {
-    cursor: not-allowed;
+    cursor: not-allowed !important;
+  }
+  
+  /* Efectos especiales para botones e iconos */
+  .bg-red-600 {
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+  }
+  .bg-red-600:hover {
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+  }
+  
+  .bg-blue-600, .border-blue-600 {
+    box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
+  }
+  .bg-blue-600:hover, .border-blue-600:hover {
+    box-shadow: 0 0 12px rgba(37, 99, 235, 0.6);
+  }
+  
+  .text-red-500, .text-red-400 {
+    text-shadow: 0 0 5px rgba(239, 68, 68, 0.4);
+  }
+  
+  .text-blue-500, .text-blue-400 {
+    text-shadow: 0 0 5px rgba(59, 130, 246, 0.4);
+  }
+  
+  /* Mejora de espaciado en tablas */
+  th, td {
+    padding-top: 0.625rem !important;
+    padding-bottom: 0.625rem !important;
   }
 </style>
 
 <script>
+  // Precarga los recursos críticos para evitar bloqueos durante la carga
+  document.addEventListener('DOMContentLoaded', function() {
+    // Establecer un pequeño tiempo para permitir el renderizado inicial
+    setTimeout(function() {
+      // Forzar reflow para aplicar estilos pendientes 
+      document.body.offsetHeight;
+    }, 0);
+  });
+
+  // Función antigua reemplazada por toggleEventsNew en _tournaments_list.html.erb
+  // Se mantiene vacía para compatibilidad, pero ya no hace nada
   function toggleEvents(tournamentId) {
-    //console.log("Toggle Events clicked for tournament ID:", tournamentId);
-    
-    // Ocultar los eventos de todos los torneos primero
-    const allEventRows = document.querySelectorAll("tr.event-row");
-    const allEmptyRows = document.querySelectorAll("tr[id^='eventRow-']");
-    allEventRows.forEach(row => {
-      if (!row.classList.contains('hidden')) {
-        //console.log("Hiding event row:", row.id);
-        row.classList.add('hidden');
-        row.style.display = 'none';
-      }
-    });
-    allEmptyRows.forEach(row => {
-      if (!row.classList.contains('hidden')) {
-        //console.log("Hiding empty row:", row.id);
-        row.classList.add('hidden');
-        row.style.display = 'none';
-      }
-    });
-
-    // Toggle los eventos del torneo actual
-    const eventRows = document.querySelectorAll(`tr.event-row[data-tournament-id="${tournamentId}"]`);
-    const emptyRow = document.getElementById(`eventRow-${tournamentId}-empty`);
-    const areHidden = eventRows.length > 0 ? Array.from(eventRows).every(row => row.classList.contains('hidden')) : emptyRow.classList.contains('hidden');
-
-    if (eventRows.length > 0) {
-      eventRows.forEach(row => {
-        //console.log("Toggling event row:", row.id, "Hidden:", row.classList.contains('hidden'), "Display:", window.getComputedStyle(row).display);
-        row.classList.toggle('hidden', !areHidden);
-        if (!row.classList.contains('hidden')) {
-          row.style.display = 'table-row'; // Forzar el display como fila de tabla
-        }
-      });
-    } else if (emptyRow) {
-      //console.log("Toggling empty row:", emptyRow.id, "Hidden:", emptyRow.classList.contains('hidden'), "Display:", window.getComputedStyle(emptyRow).display);
-      emptyRow.classList.toggle('hidden', !areHidden);
-      if (!emptyRow.classList.contains('hidden')) {
-        emptyRow.style.display = 'table-row'; // Forzar el display como fila de tabla
-      }
+    console.log("Función antigua toggleEvents llamada para torneo:", tournamentId);
+    // La nueva implementación está en _tournaments_list.html.erb
+    // Redirigir a la nueva función para mantener compatibilidad
+    const newButton = document.getElementById(`toggle-events-${tournamentId}`);
+    if (newButton) {
+      newButton.click();
     }
   }
 
-  // Inicializar eventos cuando se carga el DOM
+  // La inicialización de eventos se trasladó a _tournaments_list.html.erb
   function initializeEvents() {
-    console.log("Inicializando eventos para los botones de torneos");
-    const buttons = document.querySelectorAll("button[onclick^='toggleEvents']");
-    buttons.forEach(button => {
-      //console.log("Found events button:", button);
-    });
+    console.log("Inicialización antigua llamada - reemplazada por nueva implementación");
+    // La inicialización ahora se realiza en _tournaments_list.html.erb
   }
 
   // Escuchar tanto el evento DOMContentLoaded inicial como las actualizaciones de Turbo Frame
   document.addEventListener("DOMContentLoaded", initializeEvents);
   document.addEventListener("turbo:frame-render", initializeEvents);
+  
+  // Prevenir bloqueos añadiendo event listeners de forma eficiente
+  document.addEventListener('turbo:load', function() {
+    // Limpiar cualquier proceso pendiente
+    if (window.pendingAnimations) {
+      window.pendingAnimations.forEach(clearTimeout);
+    }
+    window.pendingAnimations = [];
+  });
 </script>

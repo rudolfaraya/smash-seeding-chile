@@ -1,0 +1,67 @@
+/* 
+ * Reglas globales para limitar el tamaño de iconos e imágenes 
+ * Asegura que ningún icono sea desproporcionadamente grande
+ */
+
+/* Regla general para todos los iconos e imágenes */
+img, svg {
+  max-width: 40px;
+  max-height: 40px;
+}
+
+/* Íconos SVG en línea */
+svg.inline-icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+}
+
+/* Iconos específicos por tipo */
+
+/* Marcadores de mapa y ubicación */
+img[src*="location"], 
+img[src*="marker"], 
+img[src*="pin"], 
+.location-icon {
+  max-width: 32px !important;
+  max-height: 32px !important;
+}
+
+/* Estrellas y seeds */
+img[src*="star"], 
+.star-icon {
+  max-width: 32px !important;
+  max-height: 32px !important;
+}
+
+/* Avatares y perfiles de usuario */
+.avatar-circle, 
+img[src*="avatar"], 
+img[src*="user"], 
+img[src*="profile"] {
+  max-width: 32px;
+  max-height: 32px;
+  border-radius: 50%;
+}
+
+/* Iconos de reloj o tiempo */
+img[src*="clock"], 
+img[src*="time"], 
+.time-icon {
+  max-width: 24px;
+  max-height: 24px;
+}
+
+/* Iconos de información general */
+img[src*="info"], 
+.info-icon {
+  max-width: 32px;
+  max-height: 32px;
+}
+
+/* Iconos para las tablas de datos */
+.table img,
+.table svg {
+  max-width: 18px;
+  max-height: 18px;
+} 
