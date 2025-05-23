@@ -62,9 +62,9 @@
 
 <!-- Modal para editar personajes de Smash (fuera del turbo frame) -->
 <div id="smashCharacterModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[9999] flex items-center justify-center" style="z-index: 9999;">
-  <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-600 p-6 w-full max-w-2xl mx-4 relative z-[10000]" style="z-index: 10000;">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-lg font-semibold text-slate-100">Editar Personajes de Smash</h3>
+  <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-600 p-6 w-full max-w-7xl mx-4 relative z-[10000] max-h-[90vh] overflow-y-auto" style="z-index: 10000;">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-semibold text-slate-100">Editar Personajes de Smash</h3>
       <button onclick="closeSmashCharacterModal()" class="text-slate-400 hover:text-slate-200 p-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -75,74 +75,180 @@
     <form id="smashCharacterForm" class="space-y-4">
       <input type="hidden" id="playerId" name="player_id">
       
-      <!-- Personaje 1 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-700 rounded-lg">
-        <div>
-          <label class="block text-sm font-medium text-slate-200 mb-2">Personaje Principal</label>
-          <select id="character_1" name="character_1" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
-            <option value="">Seleccionar personaje...</option>
-            <% smash_character_options.each do |name, key| %>
-              <option value="<%= key %>"><%= name %></option>
-            <% end %>
-          </select>
+      <!-- Grid horizontal de 3 personajes -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Personaje 1 -->
+        <div class="p-4 bg-slate-700 rounded-lg">
+          <h4 class="text-base font-medium text-slate-200 mb-4 flex items-center justify-center">
+            <span class="bg-red-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold mr-2">1</span>
+            Principal
+          </h4>
+          
+          <!-- Vista previa del personaje seleccionado -->
+          <div id="character_1_preview" class="mb-4 p-3 bg-slate-600 rounded-lg hidden">
+            <div class="flex flex-col items-center space-y-2">
+              <div id="character_1_icon" class="flex-shrink-0"></div>
+              <div class="text-center">
+                <p id="character_1_name" class="text-slate-200 font-medium text-sm"></p>
+                <p id="character_1_skin_text" class="text-slate-400 text-xs"></p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-200 mb-1">Personaje</label>
+              <select id="character_1" name="character_1" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-2 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500" onchange="updateCharacterPreview(1)">
+                <option value="">Seleccionar...</option>
+                <% smash_character_options.each do |name, key| %>
+                  <option value="<%= key %>"><%= name %></option>
+                <% end %>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-200 mb-1">Skin</label>
+              <select id="skin_1" name="skin_1" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-2 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 mb-2" onchange="updateCharacterPreview(1)">
+                <% smash_skin_options.each do |name, value| %>
+                  <option value="<%= value %>"><%= name %></option>
+                <% end %>
+              </select>
+              
+              <!-- Mini galería de skins -->
+              <div id="skins_gallery_1" class="hidden">
+                <p class="text-xs text-slate-400 mb-1">Skins:</p>
+                <div class="grid grid-cols-4 gap-1">
+                  <% (1..8).each do |skin_num| %>
+                    <button type="button" 
+                            class="skin-selector border-2 border-transparent hover:border-red-400 rounded p-1 transition-colors" 
+                            data-character-slot="1" 
+                            data-skin="<%= skin_num %>"
+                            onclick="selectSkin(1, <%= skin_num %>)">
+                      <div class="w-6 h-6 bg-slate-600 rounded border skin-icon-<%= skin_num %>"></div>
+                    </button>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-200 mb-2">Skin</label>
-          <select id="skin_1" name="skin_1" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
-            <% smash_skin_options.each do |name, value| %>
-              <option value="<%= value %>"><%= name %></option>
-            <% end %>
-          </select>
+        
+        <!-- Personaje 2 -->
+        <div class="p-4 bg-slate-700 rounded-lg">
+          <h4 class="text-base font-medium text-slate-200 mb-4 flex items-center justify-center">
+            <span class="bg-blue-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold mr-2">2</span>
+            Secundario
+          </h4>
+          
+          <!-- Vista previa del personaje seleccionado -->
+          <div id="character_2_preview" class="mb-4 p-3 bg-slate-600 rounded-lg hidden">
+            <div class="flex flex-col items-center space-y-2">
+              <div id="character_2_icon" class="flex-shrink-0"></div>
+              <div class="text-center">
+                <p id="character_2_name" class="text-slate-200 font-medium text-sm"></p>
+                <p id="character_2_skin_text" class="text-slate-400 text-xs"></p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-200 mb-1">Personaje</label>
+              <select id="character_2" name="character_2" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-2 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="updateCharacterPreview(2)">
+                <option value="">Seleccionar...</option>
+                <% smash_character_options.each do |name, key| %>
+                  <option value="<%= key %>"><%= name %></option>
+                <% end %>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-200 mb-1">Skin</label>
+              <select id="skin_2" name="skin_2" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-2 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-2" onchange="updateCharacterPreview(2)">
+                <% smash_skin_options.each do |name, value| %>
+                  <option value="<%= value %>"><%= name %></option>
+                <% end %>
+              </select>
+              
+              <!-- Mini galería de skins -->
+              <div id="skins_gallery_2" class="hidden">
+                <p class="text-xs text-slate-400 mb-1">Skins:</p>
+                <div class="grid grid-cols-4 gap-1">
+                  <% (1..8).each do |skin_num| %>
+                    <button type="button" 
+                            class="skin-selector border-2 border-transparent hover:border-blue-400 rounded p-1 transition-colors" 
+                            data-character-slot="2" 
+                            data-skin="<%= skin_num %>"
+                            onclick="selectSkin(2, <%= skin_num %>)">
+                      <div class="w-6 h-6 bg-slate-600 rounded border skin-icon-<%= skin_num %>"></div>
+                    </button>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Personaje 3 -->
+        <div class="p-4 bg-slate-700 rounded-lg">
+          <h4 class="text-base font-medium text-slate-200 mb-4 flex items-center justify-center">
+            <span class="bg-green-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold mr-2">3</span>
+            Terciario
+          </h4>
+          
+          <!-- Vista previa del personaje seleccionado -->
+          <div id="character_3_preview" class="mb-4 p-3 bg-slate-600 rounded-lg hidden">
+            <div class="flex flex-col items-center space-y-2">
+              <div id="character_3_icon" class="flex-shrink-0"></div>
+              <div class="text-center">
+                <p id="character_3_name" class="text-slate-200 font-medium text-sm"></p>
+                <p id="character_3_skin_text" class="text-slate-400 text-xs"></p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-200 mb-1">Personaje</label>
+              <select id="character_3" name="character_3" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-2 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" onchange="updateCharacterPreview(3)">
+                <option value="">Seleccionar...</option>
+                <% smash_character_options.each do |name, key| %>
+                  <option value="<%= key %>"><%= name %></option>
+                <% end %>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-200 mb-1">Skin</label>
+              <select id="skin_3" name="skin_3" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-2 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 mb-2" onchange="updateCharacterPreview(3)">
+                <% smash_skin_options.each do |name, value| %>
+                  <option value="<%= value %>"><%= name %></option>
+                <% end %>
+              </select>
+              
+              <!-- Mini galería de skins -->
+              <div id="skins_gallery_3" class="hidden">
+                <p class="text-xs text-slate-400 mb-1">Skins:</p>
+                <div class="grid grid-cols-4 gap-1">
+                  <% (1..8).each do |skin_num| %>
+                    <button type="button" 
+                            class="skin-selector border-2 border-transparent hover:border-green-400 rounded p-1 transition-colors" 
+                            data-character-slot="3" 
+                            data-skin="<%= skin_num %>"
+                            onclick="selectSkin(3, <%= skin_num %>)">
+                      <div class="w-6 h-6 bg-slate-600 rounded border skin-icon-<%= skin_num %>"></div>
+                    </button>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       
-      <!-- Personaje 2 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-700 rounded-lg">
-        <div>
-          <label class="block text-sm font-medium text-slate-200 mb-2">Personaje Secundario</label>
-          <select id="character_2" name="character_2" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
-            <option value="">Seleccionar personaje...</option>
-            <% smash_character_options.each do |name, key| %>
-              <option value="<%= key %>"><%= name %></option>
-            <% end %>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-200 mb-2">Skin</label>
-          <select id="skin_2" name="skin_2" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
-            <% smash_skin_options.each do |name, value| %>
-              <option value="<%= value %>"><%= name %></option>
-            <% end %>
-          </select>
-        </div>
-      </div>
-      
-      <!-- Personaje 3 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-700 rounded-lg">
-        <div>
-          <label class="block text-sm font-medium text-slate-200 mb-2">Personaje Terciario</label>
-          <select id="character_3" name="character_3" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
-            <option value="">Seleccionar personaje...</option>
-            <% smash_character_options.each do |name, key| %>
-              <option value="<%= key %>"><%= name %></option>
-            <% end %>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-200 mb-2">Skin</label>
-          <select id="skin_3" name="skin_3" class="w-full bg-slate-600 border border-slate-500 text-slate-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500">
-            <% smash_skin_options.each do |name, value| %>
-              <option value="<%= value %>"><%= name %></option>
-            <% end %>
-          </select>
-        </div>
-      </div>
-      
-      <div class="flex justify-end space-x-3 pt-4">
-        <button type="button" onclick="closeSmashCharacterModal()" class="px-4 py-2 border border-slate-500 text-slate-300 rounded-md hover:bg-slate-700 transition-colors">
+      <div class="flex justify-end space-x-3 pt-4 border-t border-slate-600 mt-6">
+        <button type="button" onclick="closeSmashCharacterModal()" class="px-6 py-2 border border-slate-500 text-slate-300 rounded-md hover:bg-slate-700 transition-colors">
           Cancelar
         </button>
-        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+        <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
           Guardar Personajes
         </button>
       </div>
@@ -164,13 +270,16 @@ function openSmashCharacterModal(playerId) {
   
   console.log("✅ Modal encontrado:", modal);
   
-  // Primero mostrar el modal directamente para verificar que funciona
+  // Limpiar formulario antes de mostrar el modal
+  resetModalForm();
+  
+  // Mostrar el modal
   document.getElementById('playerId').value = playerId;
   modal.classList.remove('hidden');
   
   console.log("✅ Modal debería estar visible ahora. Classes:", modal.className);
   
-  // Luego cargar datos actuales del jugador via AJAX
+  // Cargar datos actuales del jugador via AJAX
   fetch(`/players/${playerId}/current_characters`, {
     method: 'GET',
     headers: {
@@ -193,6 +302,17 @@ function openSmashCharacterModal(playerId) {
       document.getElementById('character_3').value = data.character_3 || '';
       document.getElementById('skin_3').value = data.skin_3 || '1';
       console.log("✅ Formulario rellenado con datos del servidor");
+      
+      // Actualizar vistas previas
+      setTimeout(() => {
+        [1, 2, 3].forEach(slot => {
+          const character = data[`character_${slot}`];
+          if (character) {
+            updateCharacterPreview(slot);
+          }
+        });
+        console.log("✅ Vistas previas actualizadas");
+      }, 50);
     } else {
       console.warn("⚠️ Error cargando datos, usando valores por defecto:", data.error);
     }
@@ -203,7 +323,48 @@ function openSmashCharacterModal(playerId) {
 }
 
 function closeSmashCharacterModal() {
-  document.getElementById('smashCharacterModal').classList.add('hidden');
+  const modal = document.getElementById('smashCharacterModal');
+  modal.classList.add('hidden');
+  
+  // Limpiar completamente el formulario y las vistas previas
+  resetModalForm();
+  console.log("✅ Modal cerrado y formulario limpiado");
+}
+
+// Nueva función para resetear completamente el modal
+function resetModalForm() {
+  console.log("🧹 Limpiando formulario del modal...");
+  
+  // Limpiar todos los selects
+  ['character_1', 'character_2', 'character_3'].forEach(id => {
+    const select = document.getElementById(id);
+    if (select) select.value = '';
+  });
+  
+  ['skin_1', 'skin_2', 'skin_3'].forEach(id => {
+    const select = document.getElementById(id);
+    if (select) select.value = '1';
+  });
+  
+  // Ocultar todas las vistas previas
+  [1, 2, 3].forEach(slot => {
+    const preview = document.getElementById(`character_${slot}_preview`);
+    const gallery = document.getElementById(`skins_gallery_${slot}`);
+    
+    if (preview) preview.classList.add('hidden');
+    if (gallery) gallery.classList.add('hidden');
+    
+    // Limpiar contenido de las vistas previas
+    const iconDiv = document.getElementById(`character_${slot}_icon`);
+    const nameP = document.getElementById(`character_${slot}_name`);
+    const skinTextP = document.getElementById(`character_${slot}_skin_text`);
+    
+    if (iconDiv) iconDiv.innerHTML = '';
+    if (nameP) nameP.textContent = '';
+    if (skinTextP) skinTextP.textContent = '';
+  });
+  
+  console.log("✅ Formulario y vistas previas limpiados");
 }
 
 // Evento del formulario (usando delegación para funcionar con turbo)
@@ -298,6 +459,180 @@ document.addEventListener('keydown', function(e) {
     closeSmashCharacterModal();
   }
 });
+
+// Mapeo de personajes para obtener nombres legibles
+const characterNames = {
+  'mario': 'Mario',
+  'donkey_kong': 'Donkey Kong', 
+  'link': 'Link',
+  'samus': 'Samus',
+  'dark_samus': 'Dark Samus',
+  'yoshi': 'Yoshi',
+  'kirby': 'Kirby',
+  'fox': 'Fox',
+  'pikachu': 'Pikachu',
+  'luigi': 'Luigi',
+  'ness': 'Ness',
+  'captain_falcon': 'Captain Falcon',
+  'jigglypuff': 'Jigglypuff',
+  'peach': 'Peach',
+  'daisy': 'Daisy',
+  'bowser': 'Bowser',
+  'ice_climbers': 'Ice Climbers',
+  'sheik': 'Sheik',
+  'zelda': 'Zelda',
+  'dr_mario': 'Dr. Mario',
+  'pichu': 'Pichu',
+  'falco': 'Falco',
+  'marth': 'Marth',
+  'lucina': 'Lucina',
+  'young_link': 'Young Link',
+  'ganondorf': 'Ganondorf',
+  'mewtwo': 'Mewtwo',
+  'roy': 'Roy',
+  'chrom': 'Chrom',
+  'mr_game_and_watch': 'Mr. Game & Watch',
+  'meta_knight': 'Meta Knight',
+  'pit': 'Pit',
+  'dark_pit': 'Dark Pit',
+  'zero_suit_samus': 'Zero Suit Samus',
+  'wario': 'Wario',
+  'snake': 'Snake',
+  'ike': 'Ike',
+  'pokemon_trainer': 'Pokémon Trainer',
+  'diddy_kong': 'Diddy Kong',
+  'lucas': 'Lucas',
+  'sonic': 'Sonic',
+  'king_dedede': 'King Dedede',
+  'olimar': 'Olimar',
+  'lucario': 'Lucario',
+  'rob': 'R.O.B.',
+  'toon_link': 'Toon Link',
+  'wolf': 'Wolf',
+  'villager': 'Villager',
+  'mega_man': 'Mega Man',
+  'wii_fit_trainer': 'Wii Fit Trainer',
+  'rosalina_luma': 'Rosalina & Luma',
+  'little_mac': 'Little Mac',
+  'greninja': 'Greninja',
+  'palutena': 'Palutena',
+  'pac_man': 'Pac-Man',
+  'robin': 'Robin',
+  'shulk': 'Shulk',
+  'bowser_jr': 'Bowser Jr.',
+  'duck_hunt': 'Duck Hunt',
+  'ryu': 'Ryu',
+  'ken': 'Ken',
+  'cloud': 'Cloud',
+  'corrin': 'Corrin',
+  'bayonetta': 'Bayonetta',
+  'inkling': 'Inkling',
+  'ridley': 'Ridley',
+  'simon': 'Simon',
+  'richter': 'Richter',
+  'king_k_rool': 'King K. Rool',
+  'isabelle': 'Isabelle',
+  'incineroar': 'Incineroar',
+  'piranha_plant': 'Piranha Plant',
+  'joker': 'Joker',
+  'hero': 'Hero',
+  'banjo_kazooie': 'Banjo & Kazooie',
+  'terry': 'Terry',
+  'byleth': 'Byleth',
+  'min_min': 'Min Min',
+  'steve': 'Steve',
+  'sephiroth': 'Sephiroth',
+  'pyra_mythra': 'Pyra/Mythra',
+  'kazuya': 'Kazuya',
+  'sora': 'Sora'
+};
+
+// Función para actualizar la vista previa del personaje
+function updateCharacterPreview(slot) {
+  const characterSelect = document.getElementById(`character_${slot}`);
+  const skinSelect = document.getElementById(`skin_${slot}`);
+  const previewDiv = document.getElementById(`character_${slot}_preview`);
+  const iconDiv = document.getElementById(`character_${slot}_icon`);
+  const nameP = document.getElementById(`character_${slot}_name`);
+  const skinTextP = document.getElementById(`character_${slot}_skin_text`);
+  const skinsGallery = document.getElementById(`skins_gallery_${slot}`);
+  
+  const character = characterSelect.value;
+  const skin = skinSelect.value || 1;
+  
+  if (character) {
+    // Mostrar vista previa
+    previewDiv.classList.remove('hidden');
+    
+    // Actualizar icono
+    const iconPath = `/assets/smash/characters/${character}_${skin}.png`;
+    iconDiv.innerHTML = `<img src="${iconPath}" alt="${characterNames[character]} Skin ${skin}" 
+                         class="w-12 h-12 border border-slate-700 rounded-md bg-slate-800 shadow-sm"
+                         style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));"
+                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'48\\' height=\\'48\\' viewBox=\\'0 0 48 48\\'%3E%3Crect width=\\'48\\' height=\\'48\\' fill=\\'%2364748b\\'/%3E%3Ctext x=\\'24\\' y=\\'30\\' text-anchor=\\'middle\\' fill=\\'%23f1f5f9\\' font-size=\\'16\\' font-weight=\\'bold\\'%3E${character.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E';">`;
+    
+    // Actualizar nombre y skin
+    nameP.textContent = characterNames[character] || character.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    skinTextP.textContent = `Skin ${skin}`;
+    
+    // Mostrar galería de skins
+    skinsGallery.classList.remove('hidden');
+    updateSkinsGallery(slot, character);
+  } else {
+    // Ocultar vista previa
+    previewDiv.classList.add('hidden');
+    skinsGallery.classList.add('hidden');
+  }
+}
+
+// Función para actualizar la galería de skins
+function updateSkinsGallery(slot, character) {
+  const skinsGallery = document.getElementById(`skins_gallery_${slot}`);
+  const skinButtons = skinsGallery.querySelectorAll('.skin-selector');
+  const currentSkin = document.getElementById(`skin_${slot}`).value || 1;
+  
+  skinButtons.forEach((button, index) => {
+    const skinNum = index + 1;
+    const iconDiv = button.querySelector('div');
+    
+    // Actualizar icono de la skin
+    const iconPath = `/assets/smash/characters/${character}_${skinNum}.png`;
+    iconDiv.innerHTML = `<img src="${iconPath}" alt="${characterNames[character]} Skin ${skinNum}" 
+                         class="w-full h-full object-cover rounded"
+                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'24\\' height=\\'24\\' viewBox=\\'0 0 24 24\\'%3E%3Crect width=\\'24\\' height=\\'24\\' fill=\\'%2364748b\\'/%3E%3Ctext x=\\'12\\' y=\\'15\\' text-anchor=\\'middle\\' fill=\\'%23f1f5f9\\' font-size=\\'10\\' font-weight=\\'bold\\'%3E${skinNum}%3C/text%3E%3C/svg%3E';">`;
+    
+    // Resaltar skin actual
+    if (skinNum == currentSkin) {
+      button.classList.remove('border-transparent');
+      if (slot == 1) button.classList.add('border-red-400');
+      else if (slot == 2) button.classList.add('border-blue-400');
+      else button.classList.add('border-green-400');
+    } else {
+      button.classList.add('border-transparent');
+      button.classList.remove('border-red-400', 'border-blue-400', 'border-green-400');
+    }
+  });
+}
+
+// Función para seleccionar una skin desde la galería
+function selectSkin(slot, skinNum) {
+  const skinSelect = document.getElementById(`skin_${slot}`);
+  skinSelect.value = skinNum;
+  
+  // Actualizar vista previa
+  updateCharacterPreview(slot);
+}
+
+// Inicializar vistas previas cuando se carga el modal
+function initializeCharacterPreviews() {
+  // Actualizar todas las vistas previas existentes
+  [1, 2, 3].forEach(slot => {
+    const characterSelect = document.getElementById(`character_${slot}`);
+    if (characterSelect && characterSelect.value) {
+      updateCharacterPreview(slot);
+    }
+  });
+}
 </script>
 
 <style>
