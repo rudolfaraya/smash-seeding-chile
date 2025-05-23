@@ -51,20 +51,20 @@ module StartGgQueries
                 id
                 displayIdentifier
                 seeds(query: { perPage: 100 }) {
-                  nodes {
+            nodes {
+              id
+              seedNum
+              entrant {
+                id
+                name
+                participants {
+                  player {
                     id
-                    seedNum
-                    entrant {
+                    user {
                       id
+                      slug
                       name
-                      participants {
-                        player {
-                          id
-                          user {
-                            id
-                            slug
-                            name
-                            discriminator
+                      discriminator
                             bio
                             birthday
                             genderPronoun
@@ -73,8 +73,8 @@ module StartGgQueries
                               state
                               country
                             }
-                            authorizations(types: [TWITTER]) { externalUsername }
-                          }
+                      authorizations(types: [TWITTER]) { externalUsername }
+                    }
                         }
                       }
                     }

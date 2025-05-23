@@ -15,7 +15,7 @@ class SyncEventSeeds
     rescue StandardError => e
       Rails.logger.warn "Error al obtener seeds mediante entrants: #{e.message}. Intentando método alternativo..."
       # Si falla, intentar con el método de phases y groups
-      seeds_data = fetch_seeds_sequentially(@event.tournament.slug, @event.slug)
+    seeds_data = fetch_seeds_sequentially(@event.tournament.slug, @event.slug)
     end
     
     if seeds_data.empty?
@@ -25,11 +25,11 @@ class SyncEventSeeds
     
     seeds_data.each do |seed_data|
       begin
-        entrant = seed_data["entrant"]
-        next unless entrant && entrant["participants"].present?
+      entrant = seed_data["entrant"]
+      next unless entrant && entrant["participants"].present?
 
-        player_data = entrant["participants"].first["player"]
-        user = player_data["user"] || {}
+      player_data = entrant["participants"].first["player"]
+      user = player_data["user"] || {}
         
         Rails.logger.info "Procesando jugador: #{entrant["name"]} (User ID: #{user["id"] || 'No disponible'})"
         
@@ -58,7 +58,7 @@ class SyncEventSeeds
         end
         
         # Buscar o crear el jugador
-        player = Player.find_or_create_by(user_id: user["id"]) do |p|
+      player = Player.find_or_create_by(user_id: user["id"]) do |p|
           # Asignar atributos básicos
           player_attributes.each do |attr, value|
             begin
@@ -76,13 +76,13 @@ class SyncEventSeeds
         
         # Crear o actualizar el EventSeed
         event_seed = EventSeed.find_or_create_by(event: @event, player: player) do |es|
-          es.seed_num = seed_data["seedNum"] || nil
+        es.seed_num = seed_data["seedNum"] || nil
           es.character_stock_icon = nil
-        end
+      end
         
         Rails.logger.info "EventSeed creado/actualizado: #{event_seed.id} - Seed #{event_seed.seed_num}"
-      rescue StandardError => e
-        Rails.logger.error "Error procesando seed para evento #{@event.name}: #{e.message}"
+    rescue StandardError => e
+      Rails.logger.error "Error procesando seed para evento #{@event.name}: #{e.message}"
         Rails.logger.error e.backtrace.join("\n")
         # No hacemos raise para continuar con el siguiente seed
         next
@@ -186,8 +186,8 @@ class SyncEventSeeds
         Rails.logger.info "Enviando solicitud a Start.gg con URL: https://api.start.gg/gql/alpha"
         variables = { 
           tournamentSlug: tournament_slug, 
-          eventSlug: event_slug, 
-          perPage: per_page, 
+                                eventSlug: event_slug, 
+                                perPage: per_page, 
           page: page 
         }
         request_body = { 
@@ -231,8 +231,8 @@ class SyncEventSeeds
                 "id" => seed["id"],
                 "seedNum" => seed["seedNum"],
                 "entrant" => seed["entrant"]
-              }
-            end
+          }
+        end
           end
         end
         

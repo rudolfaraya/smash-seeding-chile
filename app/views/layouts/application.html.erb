@@ -158,11 +158,13 @@
   </head>
 
   <body class="bg-slate-900">
+    <%= render "shared/navigation" %>
+    
     <%= turbo_frame_tag "flash" do %>
       <%= render "shared/flash" %>
     <% end %>
 
-    <main class="container mx-auto mt-28 px-5 flex flex-col">
+    <main class="container mx-auto pt-20 px-5 flex flex-col">
       <%= yield %>
     </main>
   </body>
