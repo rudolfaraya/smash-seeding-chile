@@ -1,4 +1,5 @@
 require_relative "../../lib/start_gg_queries"
+require 'set'
 
 class SyncSmashData
   def initialize
@@ -79,16 +80,82 @@ class SyncSmashData
     nuevos_torneos
   end
 
-  # Sincronizar torneos nuevos desde una fecha específica
+  # Sincronizar torneos nuevos desde una fecha específica (OPTIMIZADO)
   def sync_new_tournaments_since_date(since_date)
-    Rails.logger.info "Sincronizando torneos desde: #{since_date || 'el inicio'}"
+    Rails.logger.info "🚀 Sincronizando torneos nuevos desde: #{since_date || 'el inicio'}"
     count_before = Tournament.count
     nuevos_torneos = 0
     
-    # Obtener todos los torneos desde la API
+    # Obtener IDs de torneos existentes en la base de datos para verificación rápida
+    existing_tournament_ids = Tournament.pluck(:id).to_set
+    Rails.logger.info "📋 Torneos existentes en BD: #{existing_tournament_ids.count}"
+    
+    begin
+      # Usar el nuevo método optimizado que filtra en la API
+      torneo_data_list = StartGgQueries.fetch_tournaments_since_date(@client, since_date, 25)
+      Rails.logger.info "🎯 Torneos obtenidos de la API: #{torneo_data_list.count}"
+      
+      # Filtrar solo torneos que NO existen en la base de datos
+      torneos_nuevos = torneo_data_list.reject do |torneo_data|
+        existing_tournament_ids.include?(torneo_data["id"])
+      end
+      
+      Rails.logger.info "✨ Torneos realmente nuevos para procesar: #{torneos_nuevos.count}"
+      
+      if torneos_nuevos.empty?
+        Rails.logger.info "💭 No hay torneos nuevos para sincronizar"
+        return 0
+      end
+      
+      # Procesar solo los torneos realmente nuevos
+      torneos_nuevos.each_with_index do |torneo_data, index|
+        Rails.logger.info "⚡ Procesando torneo #{index + 1}/#{torneos_nuevos.count}: #{torneo_data['name']}"
+        
+        # Verificar una vez más que no existe (por si acaso)
+        unless Tournament.exists?(id: torneo_data["id"])
+          nuevos_torneos += sync_single_tournament_with_events(torneo_data)
+          
+          # Pausa progresiva: más corta para pocos torneos, más larga para muchos
+          if torneos_nuevos.count <= 5
+            sleep 1.5
+          elsif torneos_nuevos.count <= 15
+            sleep 2
+          else
+            sleep 2.5
+          end
+        else
+          Rails.logger.warn "⚠️  Torneo #{torneo_data['name']} ya existe, saltando"
+        end
+      end
+      
+    rescue StandardError => e
+      Rails.logger.error "❌ Error en sincronización optimizada: #{e.message}"
+      # Intentar con método de respaldo si falla
+      Rails.logger.info "🔄 Intentando con método de respaldo..."
+      return sync_new_tournaments_since_date_fallback(since_date)
+    end
+    
+    count_after = Tournament.count
+    Rails.logger.info "🎉 Sincronización completada exitosamente!"
+    Rails.logger.info "📊 Resumen:"
+    Rails.logger.info "   • Torneos nuevos agregados: #{nuevos_torneos}"
+    Rails.logger.info "   • Total torneos antes: #{count_before}"
+    Rails.logger.info "   • Total torneos después: #{count_after}"
+    Rails.logger.info "   • Diferencia real: #{count_after - count_before}"
+    
+    nuevos_torneos
+  end
+
+  # Método de respaldo para sincronización de nuevos torneos
+  def sync_new_tournaments_since_date_fallback(since_date)
+    Rails.logger.info "🔄 Usando método de respaldo para sincronización"
+    count_before = Tournament.count
+    nuevos_torneos = 0
+    
+    # Obtener todos los torneos y filtrar manualmente
     torneo_data_list = StartGgQueries.fetch_tournaments(@client, per_page: 25)
     
-    # Filtrar solo torneos posteriores a la fecha especificada
+    # Filtrar por fecha si se especifica
     if since_date
       torneo_data_list = torneo_data_list.select do |torneo_data|
         tournament_date = torneo_data["startAt"] ? Time.at(torneo_data["startAt"]) : nil
@@ -96,21 +163,18 @@ class SyncSmashData
       end
     end
     
-    Rails.logger.info "Encontrados #{torneo_data_list.count} torneos nuevos para sincronizar"
+    Rails.logger.info "📄 Torneos filtrados por fecha: #{torneo_data_list.count}"
     
+    # Filtrar solo torneos que no existen en la base de datos
     torneo_data_list.each do |torneo_data|
-      # Verificar si el torneo ya existe
-      tournament = Tournament.find_by(id: torneo_data["id"])
-      
-      if tournament.nil?
-        # Procesar torneo nuevo uno a uno
+      unless Tournament.exists?(id: torneo_data["id"])
         nuevos_torneos += sync_single_tournament_with_events(torneo_data)
-        sleep 2 # Pausa entre torneos
+        sleep 2
       end
     end
     
     count_after = Tournament.count
-    Rails.logger.info "Sincronización de nuevos torneos completada. Se agregaron #{nuevos_torneos} torneos. Total: #{count_after} torneos."
+    Rails.logger.info "✅ Sincronización de respaldo completada: #{nuevos_torneos} nuevos torneos agregados"
     nuevos_torneos
   end
 

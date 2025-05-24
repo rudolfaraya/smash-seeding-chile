@@ -1,41 +1,101 @@
-<div class="container mx-auto p-4">
-  <h1 class="text-2xl font-bold mb-2">Seeding for <%= @event.name %></h1>
-  <p class="mb-2">Tournament: <%= link_to @event.tournament.name, tournament_path(@event.tournament), class: "text-blue-500 hover:underline" %></p>
-  
-  <% if @event.respond_to?(:seeds_last_synced_at) && @event.seeds_last_synced_at.present? %>
-    <p class="mb-4 text-sm text-gray-600">
-      <span class="font-semibold">Última sincronización:</span> <%= format_datetime_cl(@event.seeds_last_synced_at) %>
-      <%= link_to "Forzar sincronización", sync_seeds_tournament_event_path(@event.tournament, @event, force: true), 
-                  class: "ml-3 text-sm text-blue-500 hover:underline" %>
+<div class="container mx-auto py-6">
+  <div class="bg-slate-800 rounded-lg shadow-lg border border-slate-600 p-6">
+    <h1 class="text-2xl lg:text-3xl font-bold mb-4 text-slate-100 flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-red-500" viewBox="0 0 20 20" fill="currentColor" style="filter: drop-shadow(0 0 3px #f87171);">
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.799-2.034c-.784-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      </svg>
+      Seeds - <%= @event.name %>
+    </h1>
+    <p class="mb-4 text-slate-300">
+      <strong>Torneo:</strong> 
+      <%= link_to @event.tournament.name, tournament_path(@event.tournament), 
+          class: "text-blue-400 hover:text-blue-300 transition-colors duration-200" %>
     </p>
-  <% end %>
+  
+    <% if @event.respond_to?(:seeds_last_synced_at) && @event.seeds_last_synced_at.present? %>
+      <div class="mb-6 p-4 bg-slate-700 rounded-lg border border-slate-600">
+        <p class="text-sm text-slate-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+          </svg>
+          <span class="font-semibold">Última sincronización:</span> <%= format_datetime_cl(@event.seeds_last_synced_at) %>
+          <span class="text-xs text-slate-400 ml-2">(Total: <%= @seeds.count %> seeds)</span>
+          <%= link_to "Forzar sincronización", sync_seeds_tournament_event_path(@event.tournament, @event, force: true), 
+                      method: :post,
+                      class: "ml-3 text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200",
+                      data: { 
+                        confirm: "¿Estás seguro? Esto eliminará todos los seeds actuales y los volverá a sincronizar desde start.gg",
+                        turbo_method: :post
+                      } %>
+        </p>
+      </div>
+    <% end %>
 
-  <% if @seeds.any? %>
-    <table class="min-w-full bg-white border border-black">
-      <thead>
-        <tr class="bg-gray-100 border-b border-black">
-          <th class="py-2 px-4 text-left font-semibold">Seed</th>
-          <th class="py-2 px-4 text-left font-semibold">Player</th>
-          <th class="py-2 px-4 text-left font-semibold">Entrant Name</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @seeds.each do |event_seed| %>
-          <tr class="border-b border-black hover:bg-gray-50">
-            <td class="py-2 px-4"><%= event_seed.seed_num %></td>
-            <td class="py-2 px-4"><%= event_seed.player&.name || "N/A" %></td>
-            <td class="py-2 px-4"><%= event_seed.player&.entrant_name || "N/A" %></td>
-          </tr>
+    <% if @seeds.any? %>
+      <div class="overflow-hidden shadow-lg rounded-lg border border-slate-600 bg-slate-800">
+        <div class="px-6 py-2 bg-slate-900 border-b border-slate-600">
+          <p class="text-xs text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+            </svg>
+            Datos actualizados: <%= Time.current.strftime("%d/%m/%Y %H:%M:%S") %>
+          </p>
+        </div>
+        <table class="min-w-full bg-slate-800 divide-y divide-slate-600">
+          <thead>
+            <tr class="bg-gradient-to-r from-slate-900 to-blue-900 border-b-2 border-red-500">
+              <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider">Seed</th>
+              <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider">Jugador</th>
+              <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider">Entrant Name</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-600">
+            <% @seeds.each_with_index do |event_seed, index| %>
+              <tr class="<%= index % 2 == 0 ? 'bg-slate-800' : 'bg-slate-900' %> hover:bg-slate-700 transition-colors duration-150">
+                <td class="py-3 px-6">
+                  <div class="flex items-center justify-center h-8 w-8 rounded-full bg-red-900 text-red-200 text-sm font-bold border border-red-500" style="text-shadow: 0 0 3px #f87171;">
+                    #<%= event_seed.seed_num %>
+                  </div>
+                </td>
+                <td class="py-3 px-6 text-slate-200 font-medium"><%= event_seed.player&.name || "N/A" %></td>
+                <td class="py-3 px-6 text-slate-300"><%= event_seed.player&.entrant_name || "N/A" %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="bg-slate-700 rounded-lg border border-slate-600 p-6 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-500 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="mb-4 text-slate-300">No hay información de seeds disponible para este evento.</p>
+        <%= link_to sync_seeds_tournament_event_path(@event.tournament, @event), 
+                    class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-slate-50 bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 cursor-pointer" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+          </svg>
+          Sincronizar Seeds
         <% end %>
-      </tbody>
-    </table>
-  <% else %>
-    <p class="mb-4">No seeding information available for this event yet. Try synchronizing the seeds.</p>
-    <%= link_to "Sincronizar Seeds", sync_seeds_tournament_event_path(@event.tournament, @event), 
-                class: "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600" %>
-  <% end %>
+      </div>
+    <% end %>
 
-  <div class="mt-6">
-    <%= link_to "Back to Event", tournament_event_path(@event.tournament, @event), class: "bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" %>
+    <div class="mt-6 flex justify-between items-center">
+      <%= link_to tournaments_path, 
+          class: "inline-flex items-center px-4 py-2 border border-slate-600 text-sm font-medium rounded-md shadow-sm text-slate-200 bg-slate-700 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors duration-200 cursor-pointer" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+        </svg>
+        Volver a Torneos
+      <% end %>
+      
+      <%= link_to seeds_tournament_event_path(@tournament, @event), 
+          class: "inline-flex items-center px-3 py-2 border border-blue-600 text-sm font-medium rounded-md shadow-sm text-blue-400 bg-slate-800 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+        </svg>
+        Refrescar
+      <% end %>
+    </div>
   </div>
 </div>

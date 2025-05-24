@@ -8,23 +8,17 @@
     </h1>
     
     <div class="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-      <%= link_to sync_new_tournaments_tournaments_path, 
-                class: "inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-slate-50 bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200 cursor-pointer",
-                data: { controller: "sync-operation", sync_operation_target: "button", action: "click->sync-operation#startSync", turbo_method: :post, turbo_frame: "tournaments_results" } do %>
-        <div data-sync-operation-target="spinner" class="hidden mr-2">
-          <svg class="animate-spin h-3 w-3 text-slate-50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </div>
-        <div data-sync-operation-target="content" class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-3 sm:w-3 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z" />
-            <path d="M9 13h2v5a1 1 0 11-2 0v-5z" />
-          </svg>
-          <span class="hidden sm:inline">Sincronizar Nuevos</span>
-          <span class="sm:hidden">Sync Nuevos</span>
-        </div>
+      <%= link_to sync_new_tournaments_tournaments_path,
+                  method: :post,
+                  class: "flex items-center bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 shadow-sm cursor-pointer",
+                  data: { 
+                    turbo_method: :post,
+                    confirm: "¿Sincronizar solo torneos nuevos? (Verificará eficientemente qué torneos no están en la base de datos)"
+                  } do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+        </svg>
+        Sincronizar Nuevos Torneos ⚡
       <% end %>
 
       <%= link_to sync_tournaments_path, 

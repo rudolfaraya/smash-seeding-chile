@@ -1,13 +1,21 @@
 require_relative "../../lib/start_gg_queries"
+require 'set'
 
 class SyncEventSeeds
-  def initialize(event)
+  def initialize(event, force: false)
     @event = event
     @client = StartGgClient.new
+    @force = force
   end
 
   def call
-    Rails.logger.info "Sincronizando seeds y jugadores para el evento: #{@event.name}"
+    Rails.logger.info "Sincronizando seeds y jugadores para el evento: #{@event.name} (force: #{@force})"
+    
+    # Si es una sincronización forzada, limpiar seeds existentes
+    if @force
+      Rails.logger.info "Sincronización forzada: eliminando #{@event.event_seeds.count} seeds existentes"
+      @event.event_seeds.destroy_all
+    end
     
     # Intentar primero con la consulta de entrants (más directa)
     begin
@@ -15,7 +23,7 @@ class SyncEventSeeds
     rescue StandardError => e
       Rails.logger.warn "Error al obtener seeds mediante entrants: #{e.message}. Intentando método alternativo..."
       # Si falla, intentar con el método de phases y groups
-    seeds_data = fetch_seeds_sequentially(@event.tournament.slug, @event.slug)
+      seeds_data = fetch_seeds_sequentially(@event.tournament.slug, @event.slug)
     end
     
     if seeds_data.empty?
@@ -23,13 +31,25 @@ class SyncEventSeeds
       raise "No se encontraron seeds para el evento. Verifica que el evento tenga participantes con seeding."
     end
     
+    # Para evitar duplicados, mantener un registro de los seeds procesados
+    processed_seeds = Set.new
+    
     seeds_data.each do |seed_data|
       begin
-      entrant = seed_data["entrant"]
-      next unless entrant && entrant["participants"].present?
+        entrant = seed_data["entrant"]
+        next unless entrant && entrant["participants"].present?
 
-      player_data = entrant["participants"].first["player"]
-      user = player_data["user"] || {}
+        player_data = entrant["participants"].first["player"]
+        user = player_data["user"] || {}
+        
+        # Crear un identificador único para evitar duplicados
+        unique_key = "#{user["id"]}_#{entrant["id"]}"
+        
+        if processed_seeds.include?(unique_key)
+          Rails.logger.warn "Seed duplicado saltado: #{entrant["name"]} (#{unique_key})"
+          next
+        end
+        processed_seeds << unique_key
         
         Rails.logger.info "Procesando jugador: #{entrant["name"]} (User ID: #{user["id"] || 'No disponible'})"
         
@@ -58,7 +78,7 @@ class SyncEventSeeds
         end
         
         # Buscar o crear el jugador
-      player = Player.find_or_create_by(user_id: user["id"]) do |p|
+        player = Player.find_or_create_by(user_id: user["id"]) do |p|
           # Asignar atributos básicos
           player_attributes.each do |attr, value|
             begin
@@ -76,20 +96,28 @@ class SyncEventSeeds
         
         # Crear o actualizar el EventSeed
         event_seed = EventSeed.find_or_create_by(event: @event, player: player) do |es|
-        es.seed_num = seed_data["seedNum"] || nil
+          es.seed_num = seed_data["seedNum"] || nil
           es.character_stock_icon = nil
-      end
+        end
+        
+        # Actualizar el seed_num si ha cambiado
+        if event_seed.seed_num != (seed_data["seedNum"] || nil)
+          Rails.logger.info "Actualizando seed_num de #{event_seed.seed_num} a #{seed_data["seedNum"]} para #{player.entrant_name}"
+          event_seed.update!(seed_num: seed_data["seedNum"] || nil)
+        end
         
         Rails.logger.info "EventSeed creado/actualizado: #{event_seed.id} - Seed #{event_seed.seed_num}"
-    rescue StandardError => e
-      Rails.logger.error "Error procesando seed para evento #{@event.name}: #{e.message}"
+      rescue StandardError => e
+        Rails.logger.error "Error procesando seed para evento #{@event.name}: #{e.message}"
         Rails.logger.error e.backtrace.join("\n")
         # No hacemos raise para continuar con el siguiente seed
         next
       end
     end
     
-    Rails.logger.info "Guardados #{EventSeed.where(event: @event).count} seeds para el evento #{@event.name}."
+    final_count = EventSeed.where(event: @event).count
+    Rails.logger.info "Sincronización completada: #{final_count} seeds para el evento #{@event.name}"
+    final_count
   end
 
   private

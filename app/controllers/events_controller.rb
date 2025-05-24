@@ -75,7 +75,8 @@ class EventsController < ApplicationController
     end
     
     begin
-      SyncEventSeeds.new(@event).call
+      force = params[:force].present?
+      SyncEventSeeds.new(@event, force: force).call
       
       # Actualizar el timestamp de sincronización si el modelo soporta este campo
       if @event.respond_to?(:seeds_last_synced_at)
@@ -83,9 +84,19 @@ class EventsController < ApplicationController
       end
       
       respond_to do |format|
-        format.html { redirect_to seeds_tournament_event_path(@tournament, @event), notice: "Seeds y jugadores sincronizados exitosamente." }
+        format.html { 
+          if force
+            redirect_to seeds_tournament_event_path(@tournament, @event), notice: "Seeds sincronizados forzadamente y actualizados exitosamente." 
+          else
+            redirect_to seeds_tournament_event_path(@tournament, @event), notice: "Seeds y jugadores sincronizados exitosamente." 
+          end
+        }
         format.turbo_stream {
-          flash.now[:notice] = "Seeds y jugadores de #{@event.name} sincronizados exitosamente"
+          if force
+            flash.now[:notice] = "Seeds de #{@event.name} sincronizados forzadamente y actualizados exitosamente"
+          else
+            flash.now[:notice] = "Seeds y jugadores de #{@event.name} sincronizados exitosamente"
+          end
           
           load_tournaments_with_filters
           

@@ -60,23 +60,23 @@ class TournamentsController < ApplicationController
   def sync_new_tournaments
     begin
       service = SyncSmashData.new
-      # Usar el nuevo método que busca solo torneos posteriores a la fecha del último torneo
+      # Usar el nuevo método optimizado que busca solo torneos posteriores al último registrado
       nuevos_torneos = service.sync_tournaments_and_events_atomic
       
       respond_to do |format|
         if nuevos_torneos > 0
-          format.html { redirect_to tournaments_path, notice: "Se han sincronizado #{nuevos_torneos} nuevos torneos (posteriores al último registrado) con sus eventos exitosamente." }
+          format.html { redirect_to tournaments_path, notice: "✅ Sincronización optimizada completada: #{nuevos_torneos} nuevos torneos agregados (solo torneos que no existían en la base de datos)." }
           format.turbo_stream { 
-            flash.now[:notice] = "Se han sincronizado #{nuevos_torneos} nuevos torneos (posteriores al último registrado) con sus eventos exitosamente."
+            flash.now[:notice] = "✅ Sincronización optimizada: #{nuevos_torneos} nuevos torneos agregados (solo torneos posteriores al último registrado que no existían en BD)."
             load_tournaments_with_session_filters
             render turbo_stream: turbo_stream.replace("tournaments_results", 
               partial: "tournaments/tournaments_list",
               locals: { tournaments: @tournaments })
           }
         else
-          format.html { redirect_to tournaments_path, notice: "No se encontraron torneos nuevos posteriores al último registrado para sincronizar." }
+          format.html { redirect_to tournaments_path, notice: "✨ Base de datos actualizada: no se encontraron torneos nuevos posteriores al último registrado." }
           format.turbo_stream { 
-            flash.now[:notice] = "No se encontraron torneos nuevos posteriores al último registrado para sincronizar."
+            flash.now[:notice] = "✨ Base de datos actualizada: no se encontraron torneos nuevos para sincronizar (verificación optimizada completada)."
             load_tournaments_with_session_filters
             render turbo_stream: turbo_stream.replace("tournaments_results", 
               partial: "tournaments/tournaments_list",
@@ -86,9 +86,9 @@ class TournamentsController < ApplicationController
       end
     rescue StandardError => e
       respond_to do |format|
-        format.html { redirect_to tournaments_path, alert: "Error al sincronizar nuevos torneos: #{e.message}" }
+        format.html { redirect_to tournaments_path, alert: "❌ Error en sincronización optimizada: #{e.message}" }
         format.turbo_stream {
-          flash.now[:alert] = "Error al sincronizar nuevos torneos: #{e.message}"
+          flash.now[:alert] = "❌ Error en sincronización optimizada de nuevos torneos: #{e.message}"
           load_tournaments_with_session_filters
           render turbo_stream: turbo_stream.replace("tournaments_results", 
             partial: "tournaments/tournaments_list",
