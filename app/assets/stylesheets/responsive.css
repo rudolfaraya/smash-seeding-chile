@@ -1,0 +1,217 @@
+/* Mejoras responsive para móviles y tablets */
+
+/* Optimizaciones generales para móviles */
+@media (max-width: 767px) {
+  /* Navegación responsive */
+  .navigation {
+    padding: 0.5rem 1rem;
+  }
+  /* Contenedor principal con padding reducido */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Títulos más pequeños en móvil */
+  h1 {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+  
+  /* Botones más grandes para touch */
+  button, .btn {
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+  }
+  
+  /* Inputs más grandes para touch */
+  input, select, textarea {
+    min-height: 44px;
+    font-size: 16px; /* Previene zoom en iOS */
+  }
+  
+  /* Cards con menos padding en móvil */
+  .tournament-card, .player-card {
+    margin-bottom: 1rem;
+  }
+  
+  /* Tablas ocultas en móvil */
+  table {
+    display: none !important;
+  }
+  
+  /* Mejora de espaciado en formularios */
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  /* Texto más legible en móvil */
+  .text-xs {
+    font-size: 0.8rem !important;
+  }
+  
+  .text-sm {
+    font-size: 0.9rem !important;
+  }
+  
+  /* Paginación responsive */
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .pagination a, .pagination span {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Ocultar algunos elementos de paginación en móvil */
+  .pagination .gap {
+    display: none;
+  }
+}
+
+/* Optimizaciones para tablets */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Ajustes específicos para tablets */
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  
+  /* Botones con tamaño intermedio */
+  button, .btn {
+    min-height: 40px;
+  }
+  
+  /* Cards con espaciado intermedio */
+  .tournament-card, .player-card {
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* Mejoras para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  /* Padding aún más reducido */
+  .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  /* Títulos aún más pequeños */
+  h1 {
+    font-size: 1.25rem !important;
+    line-height: 1.75rem !important;
+  }
+  
+  /* Cards con padding reducido */
+  .tournament-card .p-4, .player-card .p-4 {
+    padding: 0.75rem !important;
+  }
+  
+  /* Botones de ancho completo */
+  .btn-mobile-full {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Mejoras de accesibilidad touch */
+@media (hover: none) and (pointer: coarse) {
+  /* Dispositivos touch */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Hover states removidos en touch */
+  .hover\:bg-slate-700:hover {
+    background-color: inherit;
+  }
+  
+  /* Focus states más visibles en touch */
+  button:focus, a:focus, input:focus, select:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+}
+
+/* Optimizaciones para landscape en móvil */
+@media (max-width: 767px) and (orientation: landscape) {
+  /* Altura reducida para aprovechar espacio horizontal */
+  .tournament-card, .player-card {
+    padding: 0.5rem;
+  }
+  
+  /* Títulos más compactos */
+  h1 {
+    font-size: 1.125rem !important;
+    line-height: 1.5rem !important;
+  }
+}
+
+/* Mejoras para scroll suave */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevenir zoom horizontal en móvil */
+@media (max-width: 767px) {
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Contenido que puede desbordarse */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Mejoras para dark mode en móvil */
+@media (prefers-color-scheme: dark) {
+  /* Asegurar contraste adecuado */
+  .text-slate-400 {
+    color: #94a3b8 !important;
+  }
+  
+  .text-slate-300 {
+    color: #cbd5e1 !important;
+  }
+}
+
+/* Animaciones reducidas para usuarios que prefieren menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mejoras específicas para iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  /* Fix para viewport height en iOS */
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Fix para inputs en iOS */
+  input, select, textarea {
+    -webkit-appearance: none;
+    border-radius: 0.375rem;
+  }
+}
+
+/* Mejoras para Android Chrome */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  /* Optimizaciones específicas para Chrome móvil */
+  select {
+    background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 0.65rem auto;
+  }
+} 

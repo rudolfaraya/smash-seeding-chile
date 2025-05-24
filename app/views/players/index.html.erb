@@ -1,19 +1,20 @@
 <div class="container mx-auto py-6">
-  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold text-slate-100 mb-4 md:mb-0 flex items-center">
+  <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 space-y-4 lg:space-y-0">
+    <h1 class="text-2xl lg:text-3xl font-bold text-slate-100 flex items-center">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-red-500 info-icon" viewBox="0 0 20 20" fill="currentColor" style="filter: drop-shadow(0 0 3px #f87171);">
         <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
       </svg>
       Jugadores de Smash
     </h1>
     
-    <div class="flex space-x-4">
+    <div class="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
       <%= link_to tournaments_path, 
-                class: "inline-flex items-center px-4 py-2 border border-blue-600 text-sm font-medium rounded-md shadow-sm text-blue-400 bg-slate-800 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer" do %>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                class: "inline-flex items-center px-3 sm:px-4 py-2 border border-blue-600 text-sm font-medium rounded-md shadow-sm text-blue-400 bg-slate-800 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-3 sm:w-3 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd" />
         </svg>
-        Ver Torneos
+        <span class="hidden sm:inline">Ver Torneos</span>
+        <span class="sm:hidden">Torneos</span>
       <% end %>
     </div>
   </div>
@@ -28,7 +29,7 @@
         </div>
         <%= f.text_field :query, 
                       value: params[:query], 
-                      placeholder: "Buscar jugadores por nombre, entrant name o twitter...", 
+                      placeholder: "Buscar jugadores...", 
                       class: "pl-10 focus:ring-red-500 focus:border-red-500 block w-full shadow-sm text-sm border-slate-600 bg-slate-700 text-slate-200 rounded-md py-3 tracking-wide",
                       autocomplete: "off",
                       data: { 

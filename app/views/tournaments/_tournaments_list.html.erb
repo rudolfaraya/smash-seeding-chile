@@ -1,5 +1,6 @@
 <% if tournaments.any? %>
-<div class="overflow-hidden shadow-lg rounded-lg border border-slate-600 bg-slate-800">
+<!-- Vista Desktop: Tabla tradicional -->
+<div class="hidden md:block overflow-hidden shadow-lg rounded-lg border border-slate-600 bg-slate-800">
   <table class="min-w-full bg-slate-800 divide-y divide-slate-600">
     <thead>
       <tr class="bg-gradient-to-r from-slate-900 to-blue-900 border-b-2 border-red-500">
@@ -297,6 +298,217 @@
   </table>
 </div>
 
+<!-- Vista Mobile: Cards responsivas -->
+<div class="md:hidden space-y-4">
+  <% tournaments.each_with_index do |tournament, index| %>
+    <% 
+      # Calcular estadísticas de sincronización
+      total_events = tournament.events.count
+      synced_events = tournament.events.count { |e| e.respond_to?(:seeds_last_synced_at) && e.seeds_last_synced_at.present? }
+      sync_percentage = total_events > 0 ? (synced_events.to_f / total_events * 100).to_i : 0
+      sync_emoji = case sync_percentage
+                  when 0 then "❌"
+                  when 1..50 then "⚠️"
+                  when 51..99 then "🔄"
+                  else "✅"
+                  end
+    %>
+    
+    <div class="bg-slate-800 rounded-lg border border-slate-600 shadow-lg tournament-card" data-tournament-id="<%= tournament.id %>">
+      <!-- Header del card -->
+      <div class="p-4 border-b border-slate-700">
+        <div class="flex items-start justify-between">
+          <div class="flex-1 min-w-0">
+            <h3 class="text-lg font-semibold text-slate-100 truncate mb-1">
+              <%= tournament.name %>
+            </h3>
+            <div class="flex items-center text-sm text-slate-400 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+              </svg>
+              <span class="truncate"><%= format_datetime_cl(tournament.start_at) %></span>
+            </div>
+          </div>
+          <% if tournament.start_gg_url_or_generate.present? %>
+            <%= link_to tournament.start_gg_url_or_generate, 
+                target: "_blank", 
+                rel: "noopener noreferrer",
+                class: "flex-shrink-0 inline-flex items-center text-orange-400 hover:text-orange-300 transition-colors duration-200 ml-2",
+                title: "Ver en start.gg" do %>
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zM8.5 8.5c0-.828.672-1.5 1.5-1.5s1.5.672 1.5 1.5-.672 1.5-1.5 1.5-1.5-.672-1.5-1.5zm7 7c0 .828-.672 1.5-1.5 1.5s-1.5-.672-1.5-1.5.672-1.5 1.5-1.5 1.5.672 1.5 1.5zm-2-3.5c0-.828.672-1.5 1.5-1.5s1.5.672 1.5 1.5-.672 1.5-1.5 1.5-1.5-.672-1.5-1.5z"/>
+              </svg>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+      
+      <!-- Información del torneo -->
+      <div class="p-4 space-y-3">
+        <!-- Ubicación -->
+        <div class="flex flex-col space-y-2">
+          <% if tournament.online? %>
+            <!-- Torneo Online -->
+            <div class="flex items-center">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-900 text-purple-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v8a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 3a1 1 0 000 2h.01a1 1 0 100-2H5zm4 0a1 1 0 000 2h.01a1 1 0 100-2H9zm4 0a1 1 0 000 2h.01a1 1 0 100-2H13zm-8 3a1 1 0 000 2h.01a1 1 0 100-2H5zm4 0a1 1 0 000 2h.01a1 1 0 100-2H9zm4 0a1 1 0 000 2h.01a1 1 0 100-2H13z" clip-rule="evenodd" />
+                </svg>
+                🌐 Torneo Online
+              </span>
+            </div>
+            <p class="text-sm text-slate-300">
+              <%= tournament.venue_address.presence || "Torneo virtual" %>
+            </p>
+          <% elsif tournament.city.present? || tournament.region.present? %>
+            <!-- Torneo Físico -->
+            <div class="flex flex-wrap gap-2">
+              <% if tournament.city.present? %>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-900 text-green-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                  </svg>
+                  <%= tournament.city %>
+                </span>
+              <% end %>
+              <% if tournament.region.present? %>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-900 text-blue-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd" />
+                  </svg>
+                  <%= tournament.region %>
+                </span>
+              <% end %>
+            </div>
+            <p class="text-sm text-slate-300">
+              <%= tournament.venue_address.presence || "Sin ubicación definida" %>
+            </p>
+          <% else %>
+            <p class="text-sm text-slate-400 italic">
+              <%= tournament.venue_address.presence || "Sin ubicación definida" %>
+            </p>
+          <% end %>
+        </div>
+        
+        <!-- Estado de sincronización -->
+        <div class="bg-slate-700 rounded-lg p-3">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-sm font-medium text-slate-200 flex items-center">
+              <span class="mr-2 text-lg" style="filter: drop-shadow(0 0 2px #f87171);"><%= sync_emoji %></span>
+              Estado de Eventos
+            </h4>
+            <span class="text-lg font-bold text-slate-100"><%= total_events %></span>
+          </div>
+          
+          <% if total_events > 0 %>
+            <div class="space-y-2">
+              <div class="flex justify-between text-sm text-slate-400">
+                <span>Sincronizados:</span>
+                <span class="text-slate-200"><%= synced_events %>/<%= total_events %></span>
+              </div>
+              <div class="w-full bg-slate-600 rounded-full h-3 overflow-hidden border border-slate-500">
+                <div class="h-3 rounded-full <%= sync_percentage == 100 ? 'bg-green-500' : sync_percentage > 50 ? 'bg-blue-600' : 'bg-amber-500' %> transition-all duration-300" 
+                     style="width: <%= sync_percentage %>%; box-shadow: 0 0 4px <%= sync_percentage == 100 ? '#00c951' : sync_percentage > 50 ? '#3b82f6' : '#f59e0b' %>;"></div>
+              </div>
+              <div class="text-center text-xs text-slate-400">
+                <%= sync_percentage %>% completado
+              </div>
+            </div>
+          <% else %>
+            <p class="text-xs text-slate-500 text-center">Sin eventos registrados</p>
+          <% end %>
+        </div>
+      </div>
+      
+      <!-- Acciones -->
+      <div class="p-4 border-t border-slate-700 flex flex-col space-y-2">
+        <!-- Botón para ver eventos -->
+        <button 
+          id="toggle-events-mobile-<%= tournament.id %>" 
+          onclick="toggleTournamentEventsMobile(<%= tournament.id %>)" 
+          class="w-full toggle-button-mobile inline-flex items-center justify-center px-4 py-2 border border-blue-500 text-blue-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer text-sm" 
+          data-state="closed">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+          </svg>
+          <span>Ver Eventos (<%= total_events %>)</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2 toggle-icon-mobile" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        
+        <!-- Lista colapsable de eventos (móvil) -->
+        <div id="events-mobile-<%= tournament.id %>" class="hidden mt-2 space-y-2">
+          <% tournament.events.order(:name).each_with_index do |event, event_index| %>
+            <% 
+              # Determinar estado de sincronización del evento
+              event_synced = event.respond_to?(:seeds_last_synced_at) && event.seeds_last_synced_at.present?
+              event_has_seeds = event.event_seeds.any?
+              event_emoji = if event_synced && event_has_seeds
+                              "✅"
+                            elsif event_has_seeds
+                              "🔄"
+                            else
+                              "❌"
+                            end
+            %>
+            <div class="bg-slate-700 rounded-lg p-3 border border-slate-600">
+              <div class="flex items-start justify-between">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center mb-1">
+                    <span class="mr-2" style="filter: drop-shadow(0 0 2px #f87171);"><%= event_emoji %></span>
+                    <h5 class="text-sm font-medium text-slate-200 truncate"><%= event.name %></h5>
+                  </div>
+                  <% if event_synced %>
+                    <div class="flex items-center text-xs text-slate-400 mb-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                      </svg>
+                      Actualizado: <%= format_datetime_cl(event.seeds_last_synced_at) %>
+                    </div>
+                  <% end %>
+                  <% if event_has_seeds %>
+                    <div class="flex items-center text-xs text-slate-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-red-400" viewBox="0 0 20 20" fill="currentColor" style="filter: drop-shadow(0 0 2px #f87171);">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.799-2.034c-.784-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      <%= event.event_seeds.count %> participantes
+                    </div>
+                  <% end %>
+                </div>
+                <div class="flex flex-col items-end space-y-1 ml-2 flex-shrink-0">
+                  <!-- Botón de ver seeds si hay -->
+                  <% if event_has_seeds %>
+                    <%= link_to "Ver Seeds", seeds_tournament_event_path(tournament, event), 
+                        class: "inline-flex items-center px-2 py-1 border border-red-500 text-red-400 bg-slate-800 rounded text-xs hover:bg-slate-600 transition-colors duration-200",
+                        data: { turbo_frame: "_top" },
+                        title: "Ver seeds del evento" %>
+                  <% end %>
+                  <!-- Botón de sincronizar si no tiene eventos -->
+                  <% if tournament.events.empty? %>
+                    <%= link_to sync_events_tournament_path(tournament), 
+                        class: "inline-flex items-center px-2 py-1 border border-transparent text-xs leading-4 font-medium rounded text-slate-50 bg-red-600 hover:bg-red-700 transition-colors duration-200", 
+                        data: { 
+                          controller: "sync-operation",
+                          sync_operation_target: "button",
+                          action: "click->sync-operation#startSync",
+                          turbo_method: :post,
+                          turbo_frame: "tournaments_results"
+                        } do %>
+                      Sincronizar
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
 <!-- Controles de paginación -->
 <% if tournaments.respond_to?(:current_page) %>
   <div class="flex items-center justify-between bg-slate-800 rounded-lg shadow-md border border-slate-600 px-6 py-4 mt-6">
@@ -553,6 +765,42 @@
   /* Optimización de renderizado para elementos complejos */
   .tournament-row, .event-row {
     will-change: transform, opacity;
+  }
+  
+  /* Estilos específicos para móvil - torneos */
+  .toggle-button-mobile {
+    transition: all 0.2s ease;
+  }
+  
+  .toggle-button-mobile[data-state="open"] {
+    background-color: #1e40af; /* blue-800 */
+    border-color: #60a5fa; /* blue-400 */
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  }
+  
+  .toggle-icon-mobile {
+    transition: transform 0.3s ease;
+  }
+  
+  .toggle-button-mobile[data-state="open"] .toggle-icon-mobile {
+    transform: rotate(180deg);
+  }
+  
+  /* Animaciones para cards móviles - torneos */
+  .tournament-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .tournament-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Responsive para elementos que pueden ser muy largos en móviles */
+  @media (max-width: 1023px) {
+    .truncate {
+      max-width: 200px;
+    }
   }
 </style>
 
@@ -967,6 +1215,45 @@
       if (icon) icon.classList.remove('rotate-180');
     });
   });
+
+  // Función para alternar eventos en vista móvil (torneos)
+  function toggleTournamentEventsMobile(tournamentId) {
+    console.log("Toggle eventos móvil para torneo:", tournamentId);
+    
+    const button = document.getElementById(`toggle-events-mobile-${tournamentId}`);
+    const eventsContainer = document.getElementById(`events-mobile-${tournamentId}`);
+    const toggleIcon = button.querySelector('.toggle-icon-mobile');
+    const isExpanded = button.getAttribute('data-state') === 'open';
+    
+    if (isExpanded) {
+      // Cerrar
+      button.setAttribute('data-state', 'closed');
+      button.classList.remove('active-button');
+      eventsContainer.classList.add('hidden');
+      if (toggleIcon) toggleIcon.classList.remove('rotate-180');
+    } else {
+      // Cerrar otros abiertos primero
+      const otherButtons = document.querySelectorAll('button[id^="toggle-events-mobile-"][data-state="open"]');
+      otherButtons.forEach(otherButton => {
+        if (otherButton.id !== `toggle-events-mobile-${tournamentId}`) {
+          const otherTournamentId = otherButton.id.replace('toggle-events-mobile-', '');
+          const otherContainer = document.getElementById(`events-mobile-${otherTournamentId}`);
+          const otherIcon = otherButton.querySelector('.toggle-icon-mobile');
+          
+          otherButton.setAttribute('data-state', 'closed');
+          otherButton.classList.remove('active-button');
+          if (otherContainer) otherContainer.classList.add('hidden');
+          if (otherIcon) otherIcon.classList.remove('rotate-180');
+        }
+      });
+      
+      // Abrir el actual
+      button.setAttribute('data-state', 'open');
+      button.classList.add('active-button');
+      eventsContainer.classList.remove('hidden');
+      if (toggleIcon) toggleIcon.classList.add('rotate-180');
+    }
+  }
 </script>
 <% else %>
   <div class="bg-slate-800 p-8 rounded-lg shadow-md text-center border border-slate-600">

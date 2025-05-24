@@ -1,15 +1,15 @@
 <div class="container mx-auto py-6">
-  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold text-slate-100 mb-4 md:mb-0 flex items-center">
+  <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 space-y-4 lg:space-y-0">
+    <h1 class="text-2xl lg:text-3xl font-bold text-slate-100 flex items-center">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-red-500 info-icon" viewBox="0 0 20 20" fill="currentColor" style="filter: drop-shadow(0 0 3px #f87171);">
         <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd" />
       </svg>
       Torneos de Smash
     </h1>
     
-    <div class="flex space-x-4">
+    <div class="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
       <%= link_to sync_new_tournaments_tournaments_path, 
-                class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-slate-50 bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200 cursor-pointer",
+                class: "inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-slate-50 bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200 cursor-pointer",
                 data: { controller: "sync-operation", sync_operation_target: "button", action: "click->sync-operation#startSync", turbo_method: :post, turbo_frame: "tournaments_results" } do %>
         <div data-sync-operation-target="spinner" class="hidden mr-2">
           <svg class="animate-spin h-3 w-3 text-slate-50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -18,16 +18,17 @@
           </svg>
         </div>
         <div data-sync-operation-target="content" class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-3 sm:w-3 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z" />
             <path d="M9 13h2v5a1 1 0 11-2 0v-5z" />
           </svg>
-          Sincronizar Nuevos
+          <span class="hidden sm:inline">Sincronizar Nuevos</span>
+          <span class="sm:hidden">Sync Nuevos</span>
         </div>
       <% end %>
 
       <%= link_to sync_tournaments_path, 
-                class: "inline-flex items-center px-4 py-2 border border-blue-600 text-sm font-medium rounded-md shadow-sm text-blue-400 bg-slate-800 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer",
+                class: "inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-blue-600 text-sm font-medium rounded-md shadow-sm text-blue-400 bg-slate-800 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer",
                 data: { controller: "sync-operation", sync_operation_target: "button", action: "click->sync-operation#startSync", turbo_method: :post, turbo_frame: "tournaments_results" } do %>
         <div data-sync-operation-target="spinner" class="hidden mr-2">
           <svg class="animate-spin h-3 w-3 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -36,10 +37,11 @@
           </svg>
         </div>
         <div data-sync-operation-target="content" class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-3 sm:w-3 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
           </svg>
-          Sincronizar Todo
+          <span class="hidden sm:inline">Sincronizar Todo</span>
+          <span class="sm:hidden">Sync Todo</span>
         </div>
       <% end %>
     </div>
@@ -75,23 +77,24 @@
       </div>
       
       <!-- Filtros horizontales -->
-      <div class="flex flex-wrap items-center gap-4">
+      <div class="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-4">
         <!-- Etiqueta -->
         <div class="flex items-center text-sm font-medium text-slate-300">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
           </svg>
-          Filtrar por:
+          <span class="hidden sm:inline">Filtrar por:</span>
+          <span class="sm:hidden">Filtros:</span>
         </div>
         
         <!-- Filtro por Región -->
-        <div class="flex items-center space-x-2">
-          <label for="region" class="text-sm text-slate-400 whitespace-nowrap">Región:</label>
+        <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+          <label for="region" class="text-sm text-slate-400 whitespace-nowrap hidden sm:inline">Región:</label>
           <%= f.select :region, 
-                      options_for_select([['Todas', '']] + @available_regions.map { |r| [r, r] }, params[:region]),
+                      options_for_select([['Todas las regiones', '']] + @available_regions.map { |r| [r, r] }, params[:region]),
                       {},
                       {
-                        class: "focus:ring-blue-500 focus:border-blue-500 shadow-sm text-xs border-slate-600 bg-slate-700 text-slate-200 rounded-md py-1 px-2 min-w-[160px]",
+                        class: "focus:ring-blue-500 focus:border-blue-500 shadow-sm text-xs border-slate-600 bg-slate-700 text-slate-200 rounded-md py-1 px-2 w-full sm:min-w-[160px]",
                         data: { 
                           action: "change->search#selectChanged"
                         }
@@ -99,13 +102,13 @@
         </div>
         
         <!-- Filtro por Ciudad -->
-        <div class="flex items-center space-x-2">
-          <label for="city" class="text-sm text-slate-400 whitespace-nowrap">Ciudad:</label>
+        <div class="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+          <label for="city" class="text-sm text-slate-400 whitespace-nowrap hidden sm:inline">Ciudad:</label>
           <%= f.select :city, 
-                      options_for_select([['Todas', '']] + @available_cities.map { |c| [c, c] }, params[:city]),
+                      options_for_select([['Todas las ciudades', '']] + @available_cities.map { |c| [c, c] }, params[:city]),
                       {},
                       {
-                        class: "focus:ring-green-500 focus:border-green-500 shadow-sm text-xs border-slate-600 bg-slate-700 text-slate-200 rounded-md py-1 px-2 min-w-[160px]",
+                        class: "focus:ring-green-500 focus:border-green-500 shadow-sm text-xs border-slate-600 bg-slate-700 text-slate-200 rounded-md py-1 px-2 w-full sm:min-w-[160px]",
                         data: { 
                           action: "change->search#selectChanged"
                         }
@@ -115,12 +118,13 @@
         <!-- Botón para limpiar filtros -->
         <% if params[:region].present? || params[:city].present? %>
           <%= link_to tournaments_path(query: params[:query]), 
-                    class: "inline-flex items-center px-3 py-1 text-xs font-medium bg-slate-600 text-slate-200 hover:bg-slate-500 rounded-md transition-colors duration-200", 
+                    class: "inline-flex items-center px-3 py-1 text-xs font-medium bg-slate-600 text-slate-200 hover:bg-slate-500 rounded-md transition-colors duration-200 whitespace-nowrap", 
                     data: { turbo_frame: "tournaments_results" } do %>
             <svg class="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
             </svg>
-            Limpiar
+            <span class="hidden sm:inline">Limpiar</span>
+            <span class="sm:hidden">✕</span>
           <% end %>
         <% end %>
       </div>

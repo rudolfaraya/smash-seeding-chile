@@ -1,5 +1,6 @@
 <% if players.any? %>
-<div class="overflow-hidden shadow-lg rounded-lg border border-slate-600 bg-slate-800">
+<!-- Vista Desktop: Tabla tradicional -->
+<div class="hidden md:block overflow-hidden shadow-lg rounded-lg border border-slate-600 bg-slate-800">
   <table class="min-w-full bg-slate-800 divide-y divide-slate-600">
     <thead>
       <tr class="bg-gradient-to-r from-slate-900 to-blue-900 border-b-2 border-red-500">
@@ -222,21 +223,219 @@
   </table>
 </div>
 
+<!-- Vista Mobile: Cards responsivas -->
+<div class="md:hidden space-y-4">
+  <% players.each_with_index do |player, index| %>
+    <% 
+      # Calcular estadísticas de participación de forma más simple
+      event_seeds = player.event_seeds.to_a # Convertir a array para evitar múltiples consultas
+      total_events = event_seeds.size
+      
+      # Obtener torneos únicos de forma simple
+      unique_tournaments = event_seeds.map { |es| es.event.tournament.id }.uniq
+      tournaments_participated = unique_tournaments.size
+      
+      # Calcular promedio y mejor seed
+      if total_events > 0
+        seed_numbers = event_seeds.map(&:seed_num).compact
+        avg_seed = seed_numbers.any? ? (seed_numbers.sum.to_f / seed_numbers.size).round(1) : 0
+        best_seed = seed_numbers.min || 0
+      else
+        avg_seed = 0
+        best_seed = 0
+      end
+    %>
+    
+    <div class="bg-slate-800 rounded-lg border border-slate-600 shadow-lg player-card" data-player-id="<%= player.id %>">
+      <!-- Header del card -->
+      <div class="p-4 border-b border-slate-700">
+        <div class="flex items-start space-x-3">
+          <div class="flex-shrink-0">
+            <div class="h-12 w-12 rounded-full bg-gradient-to-r from-red-600 to-red-800 flex items-center justify-center border-2 border-red-500">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-100" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h3 class="text-lg font-semibold text-slate-100 truncate">
+              <%= player.name.present? ? player.name : 'Sin nombre' %>
+            </h3>
+            <p class="text-sm text-slate-400 truncate">
+              <%= player.entrant_name.present? ? player.entrant_name : 'Sin entrant name' %>
+            </p>
+            
+            <!-- Personajes de Smash -->
+            <% if player.smash_characters.any? %>
+              <div class="flex items-center mt-2 space-x-1 overflow-x-auto">
+                <% player.smash_characters.each do |char_data| %>
+                  <%= smash_character_icon(char_data[:character], char_data[:skin], 
+                        class: 'smash-character-icon flex-shrink-0', 
+                        width: 28, 
+                        height: 28) %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Información y estadísticas -->
+      <div class="p-4 space-y-3">
+        <!-- Información personal -->
+        <div class="grid grid-cols-1 gap-2">
+          <% if player.country.present? %>
+            <div class="flex items-center text-sm text-slate-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+              </svg>
+              <span class="truncate"><%= player.country %></span>
+            </div>
+          <% end %>
+          <% if player.twitter_handle.present? %>
+            <div class="flex items-center text-sm text-slate-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-sky-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+              </svg>
+              <span class="truncate">@<%= player.twitter_handle %></span>
+            </div>
+          <% end %>
+          <% if player.gender_pronoun.present? %>
+            <div class="flex items-center text-sm text-slate-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-purple-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
+              </svg>
+              <span class="truncate"><%= player.gender_pronoun %></span>
+            </div>
+          <% end %>
+        </div>
+        
+        <!-- Estadísticas de eventos -->
+        <div class="bg-slate-700 rounded-lg p-3">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-sm font-medium text-slate-200 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-red-400" viewBox="0 0 20 20" fill="currentColor" style="filter: drop-shadow(0 0 2px #f87171);">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.799-2.034c-.784-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              Eventos Participados
+            </h4>
+            <span class="text-lg font-bold text-slate-100"><%= total_events %></span>
+          </div>
+          
+          <% if total_events > 0 %>
+            <div class="grid grid-cols-3 gap-3 text-xs text-slate-400">
+              <div class="text-center">
+                <div class="text-green-400 font-semibold">🏆 <%= best_seed %></div>
+                <div>Mejor Seed</div>
+              </div>
+              <div class="text-center">
+                <div class="text-blue-400 font-semibold">📊 <%= avg_seed %></div>
+                <div>Promedio</div>
+              </div>
+              <div class="text-center">
+                <div class="text-purple-400 font-semibold">🎯 <%= tournaments_participated %></div>
+                <div>Torneos</div>
+              </div>
+            </div>
+          <% else %>
+            <p class="text-xs text-slate-500 text-center">Sin eventos registrados</p>
+          <% end %>
+        </div>
+      </div>
+      
+      <!-- Acciones -->
+      <div class="p-4 border-t border-slate-700 flex flex-col space-y-2">
+        <!-- Botón para editar personajes -->
+        <button 
+          onclick="openSmashCharacterModal(<%= player.id %>)" 
+          class="w-full inline-flex items-center justify-center px-4 py-2 border border-green-500 text-green-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 cursor-pointer text-sm" 
+          title="Editar personajes de Smash">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+          </svg>
+          Editar Personajes
+        </button>
+        
+        <!-- Botón para ver eventos -->
+        <% if total_events > 0 %>
+          <button 
+            id="toggle-events-mobile-<%= player.id %>" 
+            onclick="togglePlayerEventsMobile(<%= player.id %>)" 
+            class="w-full toggle-button-mobile inline-flex items-center justify-center px-4 py-2 border border-blue-500 text-blue-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer text-sm" 
+            data-state="closed">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+            </svg>
+            <span>Ver Eventos (<%= total_events %>)</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2 toggle-icon-mobile" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          
+          <!-- Lista colapsable de eventos (móvil) -->
+          <div id="events-mobile-<%= player.id %>" class="hidden mt-2 space-y-2">
+            <% event_seeds.sort_by { |es| es.event.tournament.start_at }.reverse.each_with_index do |event_seed, event_index| %>
+              <% 
+                event = event_seed.event
+                tournament = event.tournament
+                is_future = tournament.start_at > Time.current
+                event_emoji = is_future ? "📅" : "✅"
+              %>
+              <div class="bg-slate-700 rounded-lg p-3 border border-slate-600">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center mb-1">
+                      <span class="mr-2" style="filter: drop-shadow(0 0 2px #f87171);"><%= event_emoji %></span>
+                      <h5 class="text-sm font-medium text-slate-200 truncate"><%= event.name %></h5>
+                    </div>
+                    <p class="text-xs text-slate-400 truncate mb-2"><%= tournament.name %></p>
+                    <div class="flex items-center text-xs text-slate-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                      </svg>
+                      <%= format_datetime_cl(tournament.start_at) %>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-center h-8 w-8 rounded-full bg-red-900 text-red-200 text-xs border border-red-500 ml-2 flex-shrink-0" style="text-shadow: 0 0 3px #f87171;">
+                    #<%= event_seed.seed_num %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="w-full inline-flex items-center justify-center px-4 py-2 text-slate-500 bg-slate-900 rounded-md cursor-not-allowed text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+            </svg>
+            Sin eventos
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
 <!-- Controles de paginación -->
 <% if players.respond_to?(:current_page) %>
-  <div class="flex items-center justify-between bg-slate-800 rounded-lg shadow-md border border-slate-600 px-6 py-4 mt-6">
-    <div class="flex items-center text-sm text-slate-400">
-      <span>Mostrando 
-        <span class="font-medium text-slate-200"><%= (players.current_page - 1) * players.limit_value + 1 %></span>
-        -
-        <span class="font-medium text-slate-200"><%= [players.current_page * players.limit_value, players.total_count].min %></span>
-        de
-        <span class="font-medium text-slate-200"><%= players.total_count %></span>
-        jugadores
-      </span>
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-slate-800 rounded-lg shadow-md border border-slate-600 px-4 sm:px-6 py-4 mt-6 space-y-3 sm:space-y-0">
+    <div class="flex items-center text-xs sm:text-sm text-slate-400 justify-center sm:justify-start">
+      <span class="hidden sm:inline">Mostrando </span>
+      <span class="sm:hidden">Página <%= players.current_page %> • </span>
+      <span class="font-medium text-slate-200"><%= (players.current_page - 1) * players.limit_value + 1 %></span>
+      <span class="hidden sm:inline">-</span>
+      <span class="sm:hidden">/</span>
+      <span class="font-medium text-slate-200"><%= [players.current_page * players.limit_value, players.total_count].min %></span>
+      <span class="hidden sm:inline"> de </span>
+      <span class="sm:hidden">/</span>
+      <span class="font-medium text-slate-200"><%= players.total_count %></span>
+      <span class="hidden sm:inline"> jugadores</span>
     </div>
     
-    <div class="flex items-center space-x-2">
+    <div class="flex items-center justify-center space-x-1 sm:space-x-2">
       <%= paginate players, 
           theme: 'custom_pagination',
           params: { query: @query }.compact,
@@ -382,6 +581,45 @@
       if (icon) icon.classList.remove('rotate-180');
     });
   });
+
+  // Función para alternar eventos en vista móvil
+  function togglePlayerEventsMobile(playerId) {
+    console.log("Toggle eventos móvil para jugador:", playerId);
+    
+    const button = document.getElementById(`toggle-events-mobile-${playerId}`);
+    const eventsContainer = document.getElementById(`events-mobile-${playerId}`);
+    const toggleIcon = button.querySelector('.toggle-icon-mobile');
+    const isExpanded = button.getAttribute('data-state') === 'open';
+    
+    if (isExpanded) {
+      // Cerrar
+      button.setAttribute('data-state', 'closed');
+      button.classList.remove('active-button');
+      eventsContainer.classList.add('hidden');
+      if (toggleIcon) toggleIcon.classList.remove('rotate-180');
+    } else {
+      // Cerrar otros abiertos primero
+      const otherButtons = document.querySelectorAll('button[id^="toggle-events-mobile-"][data-state="open"]');
+      otherButtons.forEach(otherButton => {
+        if (otherButton.id !== `toggle-events-mobile-${playerId}`) {
+          const otherPlayerId = otherButton.id.replace('toggle-events-mobile-', '');
+          const otherContainer = document.getElementById(`events-mobile-${otherPlayerId}`);
+          const otherIcon = otherButton.querySelector('.toggle-icon-mobile');
+          
+          otherButton.setAttribute('data-state', 'closed');
+          otherButton.classList.remove('active-button');
+          if (otherContainer) otherContainer.classList.add('hidden');
+          if (otherIcon) otherIcon.classList.remove('rotate-180');
+        }
+      });
+      
+      // Abrir el actual
+      button.setAttribute('data-state', 'open');
+      button.classList.add('active-button');
+      eventsContainer.classList.remove('hidden');
+      if (toggleIcon) toggleIcon.classList.add('rotate-180');
+    }
+  }
 </script>
 
 <style>
@@ -493,6 +731,35 @@
   /* Optimización de renderizado para elementos complejos */
   .player-row, .event-row {
     will-change: transform, opacity;
+  }
+  
+  /* Estilos específicos para móvil */
+  .toggle-button-mobile {
+    transition: all 0.2s ease;
+  }
+  
+  .toggle-button-mobile[data-state="open"] {
+    background-color: #1e40af; /* blue-800 */
+    border-color: #60a5fa; /* blue-400 */
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  }
+  
+  .toggle-icon-mobile {
+    transition: transform 0.3s ease;
+  }
+  
+  .toggle-button-mobile[data-state="open"] .toggle-icon-mobile {
+    transform: rotate(180deg);
+  }
+  
+  /* Animaciones para cards móviles */
+  .player-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .player-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
   }
 </style>
 
