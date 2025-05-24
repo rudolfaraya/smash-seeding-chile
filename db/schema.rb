@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_23_200158) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_24_051114) do
   create_table "event_seeds", force: :cascade do |t|
     t.integer "event_id", null: false
     t.integer "player_id", null: false
@@ -65,6 +65,11 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_23_200158) do
     t.string "venue_address"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "city"
+    t.string "region"
+    t.string "start_gg_url"
+    t.index ["city"], name: "index_tournaments_on_city"
+    t.index ["region"], name: "index_tournaments_on_region"
   end
 
   add_foreign_key "event_seeds", "events"

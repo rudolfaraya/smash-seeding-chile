@@ -47,12 +47,13 @@
 
   <div class="mb-6 bg-slate-800 rounded-lg shadow-md border border-slate-600 p-5">
     <%= form_with(url: tournaments_path, method: :get, data: { controller: "search", turbo_frame: "tournaments_results", action: "submit->search#preventSubmit input->search#debouncedSubmit" }) do |f| %>
-      <div class="relative">
+      <!-- Barra de búsqueda principal -->
+      <div class="relative mb-4">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
           </svg>
-            </div>
+        </div>
         <%= f.text_field :query, 
                       value: params[:query], 
                       placeholder: "Buscar torneos...", 
@@ -69,22 +70,110 @@
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
               </svg>
             <% end %>
-              </div>
+          </div>
         <% end %>
       </div>
       
-      <div class="flex items-center mt-2 text-sm text-slate-400">
+      <!-- Filtros horizontales -->
+      <div class="flex flex-wrap items-center gap-4">
+        <!-- Etiqueta -->
+        <div class="flex items-center text-sm font-medium text-slate-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+          </svg>
+          Filtrar por:
+        </div>
+        
+        <!-- Filtro por Región -->
+        <div class="flex items-center space-x-2">
+          <label for="region" class="text-sm text-slate-400 whitespace-nowrap">Región:</label>
+          <%= f.select :region, 
+                      options_for_select([['Todas', '']] + @available_regions.map { |r| [r, r] }, params[:region]),
+                      {},
+                      {
+                        class: "focus:ring-blue-500 focus:border-blue-500 shadow-sm text-xs border-slate-600 bg-slate-700 text-slate-200 rounded-md py-1 px-2 min-w-[160px]",
+                        data: { 
+                          action: "change->search#selectChanged"
+                        }
+                      } %>
+        </div>
+        
+        <!-- Filtro por Ciudad -->
+        <div class="flex items-center space-x-2">
+          <label for="city" class="text-sm text-slate-400 whitespace-nowrap">Ciudad:</label>
+          <%= f.select :city, 
+                      options_for_select([['Todas', '']] + @available_cities.map { |c| [c, c] }, params[:city]),
+                      {},
+                      {
+                        class: "focus:ring-green-500 focus:border-green-500 shadow-sm text-xs border-slate-600 bg-slate-700 text-slate-200 rounded-md py-1 px-2 min-w-[160px]",
+                        data: { 
+                          action: "change->search#selectChanged"
+                        }
+                      } %>
+        </div>
+        
+        <!-- Botón para limpiar filtros -->
+        <% if params[:region].present? || params[:city].present? %>
+          <%= link_to tournaments_path(query: params[:query]), 
+                    class: "inline-flex items-center px-3 py-1 text-xs font-medium bg-slate-600 text-slate-200 hover:bg-slate-500 rounded-md transition-colors duration-200", 
+                    data: { turbo_frame: "tournaments_results" } do %>
+            <svg class="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>
+            Limpiar
+          <% end %>
+        <% end %>
+      </div>
+      
+      <!-- Mostrar filtros activos -->
+      <% if params[:region].present? || params[:city].present? %>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <span class="text-xs text-slate-400">Activos:</span>
+          <% if params[:region].present? %>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-900 text-blue-200">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd" />
+              </svg>
+              <%= params[:region] %>
+              <%= link_to tournaments_path(query: params[:query], city: params[:city]), 
+                        class: "ml-1 text-blue-300 hover:text-blue-100", 
+                        data: { turbo_frame: "tournaments_results" } do %>
+                <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              <% end %>
+            </span>
+          <% end %>
+          <% if params[:city].present? %>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-900 text-green-200">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+              </svg>
+              <%= params[:city] %>
+              <%= link_to tournaments_path(query: params[:query], region: params[:region]), 
+                        class: "ml-1 text-green-300 hover:text-green-100", 
+                        data: { turbo_frame: "tournaments_results" } do %>
+                <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              <% end %>
+            </span>
+          <% end %>
+        </div>
+      <% end %>
+      
+      <div class="flex items-center mt-3 text-xs text-slate-400">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
         </svg>
-        <span class="text-xs tracking-wide">La búsqueda se realiza automáticamente mientras escribes</span>
+        <span>La búsqueda y filtros se aplican automáticamente</span>
       </div>
-        <% end %>
+    <% end %>
   </div>
 
   <%= turbo_frame_tag "tournaments_results" do %>
     <%= render "tournaments_list", tournaments: @tournaments %>
-      <% end %>
+  <% end %>
 </div>
 
 <style>

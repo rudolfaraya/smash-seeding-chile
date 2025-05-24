@@ -60,16 +60,7 @@ class EventsController < ApplicationController
         format.turbo_stream {
           flash.now[:notice] = "Seeds ya sincronizados (última sincronización: #{helpers.format_datetime_cl(@event.seeds_last_synced_at)}). Utiliza el parámetro force=true para forzar la sincronización."
           
-          # Obtener todos los torneos con datos actualizados para la vista
-          # Mantener el orden original por fecha de inicio
-          @tournaments = Tournament.includes(events: {event_seeds: :player})
-                        .order(start_at: :desc)
-          
-          # Aplicar el filtro de búsqueda si existe
-          @query = session[:tournaments_query]
-          if @query.present?
-            @tournaments = @tournaments.where("LOWER(name) LIKE LOWER(?)", "%#{@query}%")
-          end
+          load_tournaments_with_filters
           
           render turbo_stream: [
             turbo_stream.replace("tournaments_results", 
@@ -96,16 +87,7 @@ class EventsController < ApplicationController
         format.turbo_stream {
           flash.now[:notice] = "Seeds y jugadores de #{@event.name} sincronizados exitosamente"
           
-          # Obtener todos los torneos con datos actualizados para la vista
-          # Mantener el orden original por fecha de inicio
-          @tournaments = Tournament.includes(events: {event_seeds: :player})
-                        .order(start_at: :desc)
-          
-          # Aplicar el filtro de búsqueda si existe
-          @query = session[:tournaments_query]
-          if @query.present?
-            @tournaments = @tournaments.where("LOWER(name) LIKE LOWER(?)", "%#{@query}%")
-          end
+          load_tournaments_with_filters
           
           render turbo_stream: [
             turbo_stream.replace("tournaments_results", 
@@ -122,16 +104,7 @@ class EventsController < ApplicationController
         format.turbo_stream {
           flash.now[:alert] = "Error al sincronizar seeds: #{e.message}"
           
-          # Obtener todos los torneos con datos actualizados para la vista
-          # Mantener el orden original por fecha de inicio
-          @tournaments = Tournament.includes(events: {event_seeds: :player})
-                        .order(start_at: :desc)
-          
-          # Aplicar el filtro de búsqueda si existe
-          @query = session[:tournaments_query]
-          if @query.present?
-            @tournaments = @tournaments.where("LOWER(name) LIKE LOWER(?)", "%#{@query}%")
-          end
+          load_tournaments_with_filters
           
           render turbo_stream: [
             turbo_stream.replace("tournaments_results", 
@@ -153,5 +126,31 @@ class EventsController < ApplicationController
 
   def set_event
     @event = @tournament.events.find(params[:id])
+  end
+
+  def load_tournaments_with_filters
+    # Obtener filtros de la sesión (igual que en tournaments_controller)
+    @query = session[:tournaments_query]
+    @region_filter = session[:tournaments_region]
+    @city_filter = session[:tournaments_city]
+    
+    # Obtener torneos con includes optimizados
+    @tournaments = Tournament.includes(events: {event_seeds: :player}).order(start_at: :desc)
+    
+    # Aplicar filtros
+    if @query.present?
+      @tournaments = @tournaments.where("LOWER(name) LIKE LOWER(?)", "%#{@query}%")
+    end
+    
+    if @region_filter.present? && @region_filter != ''
+      @tournaments = @tournaments.by_region(@region_filter)
+    end
+    
+    if @city_filter.present? && @city_filter != ''
+      @tournaments = @tournaments.by_city(@city_filter)
+    end
+    
+    # Aplicar paginación
+    @tournaments = @tournaments.page(params[:page]).per(100)
   end
 end

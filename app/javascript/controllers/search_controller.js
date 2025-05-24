@@ -25,17 +25,29 @@ export default class extends Controller {
     this.timeout = setTimeout(() => this.search(), 300)
   }
   
+  // Método específico para selects - sin debounce
+  selectChanged(event) {
+    console.log("Select cambió:", event.target.name, "=", event.target.value)
+    this.search()
+  }
+  
   search() {
     console.log("=== Iniciando búsqueda ===")
     const form = this.element
-    const input = this.inputTarget
-    const query = input.value
+    const formData = new FormData(form)
     
-    console.log("Query:", query)
-    console.log("Form action:", form.action)
+    // Construir parámetros de la URL con todos los campos del formulario
+    const params = new URLSearchParams()
+    for (let [key, value] of formData.entries()) {
+      console.log(`Parámetro encontrado: ${key} = "${value}"`)
+      if (value && value.trim() !== '') {
+        params.append(key, value)
+      }
+    }
+    params.append('partial', 'true')
     
-    const url = `${form.action}?query=${encodeURIComponent(query)}&partial=true`
-    console.log("URL completa:", url)
+    const url = `${form.action}?${params.toString()}`
+    console.log("URL completa con todos los filtros:", url)
     
     fetch(url, {
       headers: {

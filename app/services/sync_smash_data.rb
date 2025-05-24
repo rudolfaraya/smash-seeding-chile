@@ -117,6 +117,11 @@ class SyncSmashData
   # Sincronizar un solo torneo con sus eventos de forma atómica
   def sync_single_tournament_with_events(torneo_data)
     ActiveRecord::Base.transaction do
+      # Verificar si es un torneo online
+      parser = LocationParserService.new
+      is_online = parser.send(:online_tournament?, torneo_data["venueAddress"] || "") ||
+                  parser.send(:online_tournament_by_name?, torneo_data["name"] || "")
+      
       # Crear el torneo
       tournament = Tournament.create!(
         id: torneo_data["id"],
@@ -124,10 +129,15 @@ class SyncSmashData
         slug: torneo_data["slug"],
         start_at: torneo_data["startAt"] ? Time.at(torneo_data["startAt"]) : nil,
         end_at: torneo_data["endAt"] ? Time.at(torneo_data["endAt"]) : nil,
-        venue_address: torneo_data["venueAddress"]
+        venue_address: torneo_data["venueAddress"],
+        start_gg_url: torneo_data["slug"].present? ? "https://www.start.gg/#{torneo_data["slug"]}" : nil,
+        region: is_online ? "Online" : nil,
+        city: is_online ? nil : nil
       )
       
-      Rails.logger.info "✅ Creado torneo: #{tournament.name} (#{tournament.start_at})"
+      status_emoji = tournament.online? ? "🌐" : "📍"
+      location_info = tournament.online? ? "Online" : tournament.venue_address
+      Rails.logger.info "✅ Creado torneo #{status_emoji}: #{tournament.name} (#{tournament.start_at}) - #{location_info} - URL: #{tournament.start_gg_url}"
       
       # Sincronizar eventos para este torneo inmediatamente
       sync_events_for_single_tournament(tournament)

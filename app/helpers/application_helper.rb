@@ -90,4 +90,27 @@ module ApplicationHelper
   def smash_skin_options
     (1..8).map { |i| ["Skin #{i}", i] }
   end
+
+  def prepare_players_data(players)
+    players.map do |player|
+      {
+        id: player.id,
+        gamer_tag: player.gamer_tag,
+        name: player.name,
+        smash_character_1: player.smash_character_1,
+        smash_character_2: player.smash_character_2,
+        smash_character_3: player.smash_character_3,
+        smash_skin_1: player.smash_skin_1,
+        smash_skin_2: player.smash_skin_2,
+        smash_skin_3: player.smash_skin_3
+      }
+    end
+  end
+
+  def prepare_location_filters
+    {
+      regions: Tournament.where.not(region: [nil, '']).distinct.pluck(:region).sort,
+      cities: Tournament.where.not(city: [nil, '']).distinct.pluck(:city).sort
+    }
+  end
 end
