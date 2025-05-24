@@ -3,6 +3,64 @@ class Event < ApplicationRecord
   has_many :event_seeds, dependent: :destroy
   has_many :players, through: :event_seeds
 
+  validates :slug, presence: true
+  validates :name, presence: true
+
+  # Asegurar que el ID del evento de Start.gg (si se conoce) sea único por torneo
+  validates :start_gg_event_id, uniqueness: { scope: :tournament_id, allow_nil: true }, if: :start_gg_event_id_present?
+
+  # Callback para generar la URL de start.gg del evento
+  before_save :generate_start_gg_event_url, if: :slug_changed?
+  
+  # Scope para precargar detalles de seeds para cada evento
+  scope :with_seed_details, -> {
+    select('events.*, COUNT(DISTINCT event_seeds.id) AS event_seeds_count_data, EXISTS(SELECT 1 FROM event_seeds WHERE event_seeds.event_id = events.id) AS has_seeds_data')
+      .left_joins(:event_seeds)
+      .group('events.id')
+  }
+
+  def calculated_event_seeds_count
+    if attributes.key?('event_seeds_count_data')
+      attributes['event_seeds_count_data']
+    else
+      event_seeds.size # Eficiente debido al includes(events: [:event_seeds]) en el controlador de torneos
+    end
+  end
+
+  def has_seeds?
+    if attributes.key?('has_seeds_data')
+      attributes['has_seeds_data']
+    else
+      event_seeds.exists? # Eficiente
+    end
+  end
+
+  # Método para verificar si start_gg_event_id está presente y no es 0
+  def start_gg_event_id_present?
+    start_gg_event_id.present? && start_gg_event_id != 0
+  end
+
+  # Generar la URL del evento en start.gg
+  def generate_start_gg_event_url
+    if slug.present? && tournament&.slug.present?
+      # Asegurar que el slug del evento no contenga ya el slug del torneo
+      event_specific_slug = self.slug.starts_with?(tournament.slug) ? self.slug.split('/').last : self.slug
+      self.start_gg_event_url = "https://www.start.gg/#{tournament.slug}/event/#{event_specific_slug}"
+    end
+  end
+  
+  # Método para obtener la URL de start.gg del evento (con fallback si no está guardada)
+  def start_gg_event_url_or_generate
+    return start_gg_event_url if start_gg_event_url.present?
+    
+    if slug.present? && tournament&.slug.present?
+      event_specific_slug = self.slug.starts_with?(tournament.slug) ? self.slug.split('/').last : self.slug
+      "https://www.start.gg/#{tournament.slug}/event/#{event_specific_slug}"
+    else
+      nil
+    end
+  end
+
   def fetch_and_save_seeds(max_retries = 3, retry_delay = 60)
     # Verificar si ya hay event seeds para este evento
     return if event_seeds.any?

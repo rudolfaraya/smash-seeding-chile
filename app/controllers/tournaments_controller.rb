@@ -9,7 +9,7 @@ class TournamentsController < ApplicationController
     session[:tournaments_region] = @region_filter
     session[:tournaments_city] = @city_filter
     
-    @tournaments = apply_filters(Tournament.order(start_at: :desc).includes(events: :event_seeds))
+    @tournaments = apply_filters(Tournament.order(start_at: :desc))
     set_filter_options
 
     # Aplicar paginación con Kaminari - 100 torneos por página
@@ -159,7 +159,12 @@ class TournamentsController < ApplicationController
       tournaments_scope = tournaments_scope.by_city(@city_filter)
     end
 
+    # Precargar asociaciones y conteos para evitar N+1 queries en la vista
     tournaments_scope
+      .includes(events: [:event_seeds]) # Para acceder a los objetos event y event_seed si es necesario
+      .left_joins(events: :event_seeds) # Para permitir conteos agregados
+      .select('tournaments.*, COUNT(DISTINCT events.id) AS events_count_data, COUNT(DISTINCT event_seeds.id) AS total_event_seeds_count_data')
+      .group('tournaments.id')
   end
 
   def set_filter_options
@@ -192,7 +197,7 @@ class TournamentsController < ApplicationController
     @region_filter = session[:tournaments_region]
     @city_filter = session[:tournaments_city]
     
-    @tournaments = apply_filters(Tournament.order(start_at: :desc).includes(events: :event_seeds))
+    @tournaments = apply_filters(Tournament.order(start_at: :desc))
     set_filter_options
     
     # Aplicar paginación

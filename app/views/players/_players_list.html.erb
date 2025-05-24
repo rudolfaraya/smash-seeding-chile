@@ -47,10 +47,10 @@
               </div>
               <div class="ml-4">
                 <div class="text-sm font-medium text-slate-100">
-                  <%= player.name.present? ? player.name : 'Sin nombre' %>
+                  <%= player.entrant_name.present? ? player.entrant_name : 'Sin tag' %>
                 </div>
                 <div class="text-sm text-slate-400">
-                  <%= player.entrant_name.present? ? player.entrant_name : 'Sin entrant name' %>
+                  <%= player.name.present? ? player.name : 'Sin nombre' %>
                 </div>
                 
                 <!-- Personajes de Smash -->
@@ -259,10 +259,10 @@
           </div>
           <div class="flex-1 min-w-0">
             <h3 class="text-lg font-semibold text-slate-100 truncate">
-              <%= player.name.present? ? player.name : 'Sin nombre' %>
+              <%= player.entrant_name.present? ? player.entrant_name : 'Sin tag' %>
             </h3>
             <p class="text-sm text-slate-400 truncate">
-              <%= player.entrant_name.present? ? player.entrant_name : 'Sin entrant name' %>
+              <%= player.name.present? ? player.name : 'Sin nombre' %>
             </p>
             
             <!-- Personajes de Smash -->

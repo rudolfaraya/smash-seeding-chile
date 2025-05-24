@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_24_051114) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_24_222228) do
   create_table "event_seeds", force: :cascade do |t|
     t.integer "event_id", null: false
     t.integer "player_id", null: false
@@ -29,6 +29,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_24_051114) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "seeds_last_synced_at"
+    t.integer "start_gg_event_id"
     t.index ["tournament_id"], name: "index_events_on_tournament_id"
   end
 

@@ -1,6 +1,7 @@
 // Configure your import map in config/importmap.rb. Read more: https://github.com/rails/importmap-rails
 import "@hotwired/turbo-rails"
 import "./controllers"
+import "./seeds_functions"
 
 //console.log("Stimulus application loaded:", window.Stimulus)
 

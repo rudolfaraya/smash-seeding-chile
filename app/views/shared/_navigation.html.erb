@@ -12,7 +12,7 @@
       </div>
 
       <!-- Enlaces de navegación -->
-      <div class="hidden md:block">
+      <div class="hidden md:block navigation-desktop">
         <div class="ml-10 flex items-baseline space-x-4">
           <!-- Enlace a Torneos -->
           <%= link_to tournaments_path, 
@@ -35,7 +35,7 @@
       </div>
 
       <!-- Menú móvil (hamburguesa) -->
-      <div class="md:hidden">
+      <div class="md:hidden navigation-mobile">
         <button type="button" class="mobile-menu-button inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-slate-500" onclick="toggleMobileMenu()">
           <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -45,7 +45,7 @@
     </div>
 
     <!-- Menú móvil -->
-    <div class="md:hidden hidden" id="mobile-menu">
+    <div class="md:hidden hidden navigation-mobile" id="mobile-menu">
       <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-slate-700 bg-slate-900/95 backdrop-blur-sm">
         <!-- Enlace a Torneos (móvil) -->
         <%= link_to tournaments_path, 

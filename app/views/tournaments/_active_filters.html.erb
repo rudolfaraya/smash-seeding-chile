@@ -1,0 +1,27 @@
+<div class="active-filters">
+  <span class="text-xs text-slate-400">Activos:</span>
+  
+  <% if params[:region].present? %>
+    <span class="filter-tag filter-tag-region">
+      <%= render 'shared/icons/tag', class: 'icon-tiny mr-1' %>
+      <%= params[:region] %>
+      <%= link_to remove_region_filter_path, 
+                class: "filter-tag-remove filter-tag-remove-region", 
+                data: { turbo_frame: "tournaments_results" } do %>
+        <%= render 'shared/icons/close', class: 'icon-tiny' %>
+      <% end %>
+    </span>
+  <% end %>
+  
+  <% if params[:city].present? %>
+    <span class="filter-tag filter-tag-city">
+      <%= render 'shared/icons/location', class: 'icon-tiny mr-1' %>
+      <%= params[:city] %>
+      <%= link_to remove_city_filter_path, 
+                class: "filter-tag-remove filter-tag-remove-city", 
+                data: { turbo_frame: "tournaments_results" } do %>
+        <%= render 'shared/icons/close', class: 'icon-tiny' %>
+      <% end %>
+    </span>
+  <% end %>
+</div> 

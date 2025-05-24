@@ -35,7 +35,22 @@ class PlayersController < ApplicationController
     # Parámetros permitidos para personajes de Smash
     character_params = params.permit(:character_1, :skin_1, :character_2, :skin_2, :character_3, :skin_3)
     
-    if @player.update(character_params)
+    # Convertir a hash para poder iterarlo correctamente
+    params_hash = character_params.to_h
+    
+    # Limpiar valores vacíos - convertir strings vacías a nil
+    params_hash.each do |key, value|
+      if key.to_s.starts_with?('character_') && value.blank?
+        params_hash[key] = nil
+      elsif key.to_s.starts_with?('skin_') && value.blank?
+        params_hash[key] = 1  # Skin por defecto
+      end
+    end
+    
+    # Actualizar solo los campos de personajes sin ejecutar validaciones completas
+    success = @player.update_columns(params_hash)
+    
+    if success
       respond_to do |format|
         format.json { render json: { success: true, message: 'Personajes actualizados correctamente' } }
         format.turbo_stream { 
@@ -51,8 +66,8 @@ class PlayersController < ApplicationController
       end
     else
       respond_to do |format|
-        format.json { render json: { success: false, error: @player.errors.full_messages.join(', ') } }
-        format.turbo_stream { render json: { success: false, error: @player.errors.full_messages.join(', ') } }
+        format.json { render json: { success: false, error: 'Error al actualizar personajes' } }
+        format.turbo_stream { render json: { success: false, error: 'Error al actualizar personajes' } }
       end
     end
   end

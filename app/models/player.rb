@@ -114,7 +114,8 @@ class Player < ApplicationRecord
   end
 
   def character_display_name(character_key)
-    SMASH_CHARACTERS[character_key] || character_key&.humanize
+    return "Sin personaje seleccionado" if character_key.blank?
+    SMASH_CHARACTERS[character_key] || character_key.humanize
   end
 
   # Método seguro para asignar gender_pronoun/gender_pronoum dependiendo de qué columna exista

@@ -1,0 +1,458 @@
+/* ===================================
+   TORNEOS - Estilos específicos
+   =================================== */
+
+/* Fila de eventos en las tablas */
+.event-row {
+  background-color: #334155; /* slate-700 */
+  display: table-row; /* Asegura que se renderice como fila de tabla */
+}
+
+/* ===================================
+   MEJORAS GENERALES DE TIPOGRAFÍA
+   =================================== */
+
+/* Ajustes generales para mejorar legibilidad */
+body {
+  letter-spacing: 0.015em;
+}
+
+.text-xs {
+  font-size: 0.74rem;
+  line-height: 1.1rem;
+}
+
+.text-sm {
+  font-size: 0.82rem;
+  line-height: 1.25rem;
+}
+
+/* ===================================
+   CURSORES Y INTERACTIVIDAD
+   =================================== */
+
+/* Cursor pointer para todos los elementos clickeables */
+button, 
+a, 
+[role="button"], 
+.cursor-pointer,
+input[type="submit"], 
+input[type="button"], 
+input[type="reset"] {
+  cursor: pointer !important;
+}
+
+.cursor-not-allowed {
+  cursor: not-allowed !important;
+}
+
+/* ===================================
+   ESPACIADO Y MÁRGENES
+   =================================== */
+
+/* Incremento del espaciado entre iconos y texto */
+.mr-1 {
+  margin-right: 0.375rem !important;
+}
+
+.mr-2 {
+  margin-right: 0.625rem !important;
+}
+
+.mr-3 {
+  margin-right: 0.875rem !important;
+}
+
+/* Ajustes de espaciado y tamaño de texto para tablas */
+td, th {
+  letter-spacing: 0.02em;
+}
+
+/* Mejor espacio entre elementos en tournaments_list */
+.tournaments-list .mr-1 {
+  margin-right: 0.5rem !important;
+}
+
+.tournaments-list .mr-2 {
+  margin-right: 0.75rem !important;
+}
+
+.tournaments-list .mr-3 {
+  margin-right: 1rem !important;
+}
+
+/* ===================================
+   ANIMACIONES Y EFECTOS
+   =================================== */
+
+/* Animación de error para sincronización */
+@keyframes pulse-error {
+  0% { background-color: #1e293b; }
+  50% { background-color: #7f1d1d; }
+  100% { background-color: #1e293b; }
+}
+
+.sync-error {
+  animation: pulse-error 1s ease-in-out;
+}
+
+/* ===================================
+   EFECTOS DE BOTONES E ICONOS
+   =================================== */
+
+/* Efectos de brillo para botones rojos */
+.bg-red-600 {
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.bg-red-600:hover {
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+}
+
+/* Efectos de brillo para botones azules */
+.bg-blue-600, 
+.border-blue-600 {
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
+}
+
+.bg-blue-600:hover, 
+.border-blue-600:hover {
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.6);
+}
+
+/* Efectos de brillo para botones verdes */
+.bg-green-600,
+.bg-green-700 {
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+.bg-green-600:hover,
+.bg-green-700:hover {
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
+}
+
+/* ===================================
+   EFECTOS DE TEXTO
+   =================================== */
+
+/* Sombras de texto para iconos rojos */
+.text-red-500, 
+.text-red-400 {
+  text-shadow: 0 0 5px rgba(239, 68, 68, 0.4);
+}
+
+/* Sombras de texto para iconos azules */
+.text-blue-500, 
+.text-blue-400 {
+  text-shadow: 0 0 5px rgba(59, 130, 246, 0.4);
+}
+
+/* ===================================
+   TABLAS Y ESPACIADO
+   =================================== */
+
+/* Mejora de espaciado en tablas */
+th, td {
+  padding-top: 0.625rem !important;
+  padding-bottom: 0.625rem !important;
+}
+
+/* ===================================
+   ICONOS CON EFECTOS ESPECIALES
+   =================================== */
+
+.info-icon {
+  filter: drop-shadow(0 0 3px #f87171);
+}
+
+/* Limitación de tamaño para imágenes e iconos */
+img, svg {
+  max-width: 40px;
+  max-height: 40px;
+}
+
+/* Específicamente para iconos de marcador de ubicación */
+img[src*="location"], 
+img[src*="marker"], 
+img[src*="pin"] {
+  max-width: 32px;
+  max-height: 32px;
+  filter: drop-shadow(0 0 2px #f87171); /* Efecto neón rojo */
+}
+
+/* Iconos de estrella */
+img[src*="star"], 
+.star-icon {
+  max-width: 32px !important;
+  max-height: 32px !important;
+  filter: drop-shadow(0 0 3px #f87171); /* Efecto neón rojo */
+}
+
+/* Avatares y círculos de usuario */
+.avatar-circle, 
+img[src*="avatar"], 
+img[src*="user"], 
+img[src*="profile"] {
+  max-width: 32px;
+  max-height: 32px;
+  border-radius: 50%;
+  border: 1px solid #475569; /* slate-500 */
+}
+
+/* Icono de reloj/tiempo */
+img[src*="clock"], 
+img[src*="time"], 
+.time-icon {
+  max-width: 28px;
+  max-height: 28px;
+}
+
+/* ===================================
+   ESTADOS DE CARGA Y SINCRONIZACIÓN
+   =================================== */
+
+.sync-loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.sync-success {
+  background-color: #065f46;
+  color: #ecfccb;
+  border-color: #059669;
+}
+
+/* ===================================
+   BOTONES ESPECÍFICOS
+   =================================== */
+
+/* Botones más compactos para mejor visualización en línea */
+.toggle-button, 
+.seed-toggle-button {
+  white-space: nowrap !important;
+  font-size: 0.65rem !important;
+  padding: 0.1rem 0.4rem !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.toggle-button svg, 
+.seed-toggle-button svg {
+  width: 0.55rem !important;
+  height: 0.55rem !important;
+  margin-right: 0.2rem !important;
+}
+
+/* Evitar que los botones se partan en múltiples líneas */
+.toggle-button span, 
+.seed-toggle-button span {
+  white-space: nowrap !important;
+  font-size: 0.65rem !important;
+}
+
+/* Asegurar que los botones se mantengan en una línea */
+td .flex.space-x-3 {
+  flex-wrap: nowrap !important;
+  gap: 0.25rem !important;
+}
+
+/* Estados activos de botones */
+.toggle-button[data-state="open"] {
+  background-color: #1e40af; /* blue-800 */
+  border-color: #60a5fa; /* blue-400 */
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+}
+
+.seed-toggle-button.active-button {
+  background-color: #991b1b; /* red-800 */
+  border-color: #f87171; /* red-400 */
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+/* ===================================
+   ANIMACIONES DE FADE IN/OUT
+   =================================== */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-10px); }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOutUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease-out;
+}
+
+.fade-in-down {
+  animation: fadeInDown 0.3s ease forwards;
+}
+
+.fade-out-up {
+  animation: fadeOutUp 0.3s ease forwards;
+}
+
+/* ===================================
+   ANIMACIONES PARA COLAPSABLES
+   =================================== */
+
+.collapsible-content {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.5s ease-in-out, opacity 0.4s ease-in-out, transform 0.4s ease;
+  transform: translateY(-10px);
+  will-change: max-height, opacity, transform;
+}
+
+.collapsible-content.expanded {
+  max-height: 1000px; /* Valor alto para asegurar que el contenido quepa */
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===================================
+   ICONOS Y ROTACIONES
+   =================================== */
+
+/* Animación de rotación para iconos indicadores */
+.toggle-icon {
+  transition: transform 0.3s ease;
+}
+
+.toggle-button[data-state="open"] .toggle-icon,
+.seed-toggle-button.active-button .toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* ===================================
+   RESPONSIVO ESPECÍFICO PARA TORNEOS
+   =================================== */
+
+@media (max-width: 768px) {
+  .tournament-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .tournament-actions {
+    width: 100%;
+    margin-top: 1rem;
+  }
+  
+  .tournament-filters {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Responsive para elementos que pueden ser muy largos en móviles */
+  .truncate {
+    max-width: 200px;
+  }
+  
+  /* Estilos específicos para móvil - torneos */
+  .toggle-button-mobile {
+    transition: all 0.2s ease;
+  }
+  
+  .toggle-button-mobile[data-state="open"] {
+    background-color: #1e40af; /* blue-800 */
+    border-color: #60a5fa; /* blue-400 */
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  }
+  
+  .toggle-icon-mobile {
+    transition: transform 0.3s ease;
+  }
+  
+  .toggle-button-mobile[data-state="open"] .toggle-icon-mobile {
+    transform: rotate(180deg);
+  }
+  
+  /* Animaciones para cards móviles - torneos */
+  .tournament-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .tournament-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ===================================
+   ESTADOS HOVER MEJORADOS
+   =================================== */
+
+.tournament-row:hover {
+  background-color: #475569;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.event-toggle-btn:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* ===================================
+   OPTIMIZACIONES DE RENDIMIENTO
+   =================================== */
+
+/* Asegurar que la altura mínima se mantiene durante la animación */
+tr td {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Asegurar que los contenedores de fechas no cambien bruscamente */
+.date-cell {
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+}
+
+/* Optimización para evitar bloqueos en la carga inicial */
+body {
+  overscroll-behavior: none;
+}
+
+/* Rendimiento de scrolling */
+tbody {
+  contain: content;
+}
+
+/* Optimización de renderizado para elementos complejos */
+.tournament-row, 
+.event-row {
+  will-change: transform, opacity;
+} 

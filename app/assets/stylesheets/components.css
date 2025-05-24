@@ -1,0 +1,466 @@
+/* ===================================
+   COMPONENTES REUTILIZABLES
+   =================================== */
+
+/* Componente de header de sección */
+.section-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .section-header {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+  }
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .section-title {
+    font-size: 1.875rem;
+  }
+}
+
+.section-title-icon {
+  height: 1.5rem;
+  width: 1.5rem;
+  margin-right: 0.75rem;
+  color: #ef4444;
+  filter: drop-shadow(0 0 3px #f87171);
+}
+
+/* Componente de acciones */
+.action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .action-group {
+    flex-direction: row;
+  }
+}
+
+@media (min-width: 1024px) {
+  .action-group {
+    width: auto;
+  }
+}
+
+.action-button-primary {
+  display: flex;
+  align-items: center;
+  background-color: #15803d;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+  text-decoration: none;
+}
+
+.action-button-primary:hover {
+  background-color: #16a34a;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
+}
+
+.action-button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border: 1px solid #2563eb;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  color: #60a5fa;
+  background-color: #1e293b;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
+  text-decoration: none;
+}
+
+.action-button-secondary:hover {
+  background-color: #334155;
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.6);
+}
+
+.action-button-icon {
+  height: 1rem;
+  width: 1rem;
+  margin-right: 0.5rem;
+}
+
+/* Componente de filtros */
+.filters-container {
+  margin-bottom: 1.5rem;
+  background-color: #1e293b;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #475569;
+  padding: 1.25rem;
+}
+
+.search-input-container {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.search-input-icon {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  padding-left: 0.75rem;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.search-input {
+  padding-left: 2.5rem;
+  display: block;
+  width: 100%;
+  font-size: 0.875rem;
+  border: 1px solid #475569;
+  background-color: #334155;
+  color: #e2e8f0;
+  border-radius: 0.375rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  letter-spacing: 0.025em;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 1px #ef4444;
+}
+
+.search-clear-button {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  padding-right: 0.75rem;
+  display: flex;
+  align-items: center;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.search-clear-button:hover {
+  color: #cbd5e1;
+}
+
+.filters-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .filters-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+  }
+}
+
+.filters-label {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #cbd5e1;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .filter-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    width: auto;
+  }
+}
+
+.filter-select {
+  font-size: 0.75rem;
+  border: 1px solid #475569;
+  background-color: #334155;
+  color: #e2e8f0;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  width: 100%;
+  min-width: 160px;
+}
+
+.filter-select-region:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.filter-select-city:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 1px #10b981;
+}
+
+.clear-filters-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #475569;
+  color: #e2e8f0;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.clear-filters-button:hover {
+  background-color: #64748b;
+}
+
+/* Tags de filtros activos */
+.active-filters {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.filter-tag-region {
+  background-color: #1e3a8a;
+  color: #93c5fd;
+}
+
+.filter-tag-city {
+  background-color: #064e3b;
+  color: #6ee7b7;
+}
+
+.filter-tag-remove {
+  margin-left: 0.25rem;
+  transition: opacity 0.2s ease;
+}
+
+.filter-tag-remove:hover {
+  opacity: 0.75;
+}
+
+.filter-tag-remove-region {
+  color: #93c5fd;
+}
+
+.filter-tag-remove-region:hover {
+  color: #dbeafe;
+}
+
+.filter-tag-remove-city {
+  color: #6ee7b7;
+}
+
+.filter-tag-remove-city:hover {
+  color: #d1fae5;
+}
+
+/* Componente de información de ayuda */
+.help-info {
+  display: flex;
+  align-items: center;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.help-icon {
+  height: 0.75rem;
+  width: 0.75rem;
+  margin-right: 0.5rem;
+}
+
+/* Spinner de loading */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+  height: 0.75rem;
+  width: 0.75rem;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading-spinner-icon {
+  opacity: 0.25;
+}
+
+.loading-spinner-path {
+  opacity: 0.75;
+}
+
+/* Iconos comunes */
+.icon-small {
+  height: 1rem;
+  width: 1rem;
+}
+
+.icon-tiny {
+  height: 0.75rem;
+  width: 0.75rem;
+}
+
+/* Responsive helpers */
+.mobile-hidden {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .mobile-hidden {
+    display: inline;
+  }
+}
+
+.mobile-only {
+  display: inline;
+}
+
+@media (min-width: 640px) {
+  .mobile-only {
+    display: none;
+  }
+}
+
+/* ===================================
+   ANIMACIONES Y EFECTOS
+   =================================== */
+
+/* Animaciones de fade */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOutUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease-in-out;
+}
+
+.fade-in-down {
+  animation: fadeInDown 0.3s ease-in-out;
+}
+
+.fade-out-up {
+  animation: fadeOutUp 0.3s ease-in-out;
+}
+
+/* Efectos de transición para toggles */
+.toggle-icon {
+  transition: transform 0.2s ease-in-out;
+}
+
+.toggle-icon-mobile {
+  transition: transform 0.2s ease-in-out;
+}
+
+/* ===================================
+   REGLAS ESPECÍFICAS PARA EVENTOS
+   =================================== */
+
+/* Solo ocultar event-rows específicamente cuando tienen la clase hidden */
+.event-row.hidden {
+  display: none !important;
+}
+
+.event-row {
+  transition: all 0.3s ease;
+}
+
+/* Usar una clase más específica en lugar de .hidden global */
+.js-hidden {
+  display: none !important;
+}
+
+.toggle-button {
+  transition: all 0.2s ease;
+}
+
+.toggle-button-mobile {
+  transition: all 0.2s ease;
+}
+
+/* Estados activos de los botones */
+.toggle-button.active,
+.toggle-button-mobile.active {
+  background-color: #1e40af;
+  border-color: #3b82f6;
+} 

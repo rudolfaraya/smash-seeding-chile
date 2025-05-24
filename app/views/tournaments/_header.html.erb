@@ -1,0 +1,35 @@
+<div class="section-header">
+  <h1 class="section-title">
+    <%= render 'shared/icons/fire', class: 'section-title-icon' %>
+    Torneos de Smash
+  </h1>
+  
+  <div class="action-group">
+    <%= link_to sync_new_tournaments_tournaments_path,
+                method: :post,
+                class: "action-button-primary",
+                data: { 
+                  turbo_method: :post,
+                  confirm: "¿Sincronizar solo torneos nuevos? (Verificará eficientemente qué torneos no están en la base de datos)"
+                } do %>
+      <%= render 'shared/icons/plus', class: 'action-button-icon' %>
+      Sincronizar Nuevos Torneos ⚡
+    <% end %>
+
+    <%= link_to sync_tournaments_path, 
+              class: "action-button-secondary",
+              data: sync_operation_data_attributes do %>
+      <div data-sync-operation-target="spinner" class="hidden mr-2">
+        <svg class="loading-spinner text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="loading-spinner-icon" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="loading-spinner-path" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+      <div data-sync-operation-target="content" class="flex items-center">
+        <%= render 'shared/icons/refresh', class: 'action-button-icon' %>
+        <span class="mobile-hidden">Sincronizar Todo</span>
+        <span class="mobile-only">Sync Todo</span>
+      </div>
+    <% end %>
+  </div>
+</div> 

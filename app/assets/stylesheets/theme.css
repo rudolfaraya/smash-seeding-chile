@@ -1,0 +1,157 @@
+/* ===================================
+   TEMA OSCURO GAMER - OPTIMIZADO
+   =================================== */
+
+/* Tema base */
+body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+.container, main {
+  background-color: #0f172a;
+}
+
+/* Elementos contenedores optimizados */
+.bg-white, .shadow-md, .shadow-sm, .bg-gray-50, .bg-gray-100 {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+/* Tablas optimizadas */
+table {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+table th {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+table tr {
+  border-color: #334155 !important;
+}
+
+table tr:hover, 
+.hover\:bg-gray-50:hover, 
+.hover\:bg-gray-100:hover {
+  background-color: #334155 !important;
+}
+
+/* Cabecera con degradado */
+.bg-gradient-to-r.from-blue-50.to-green-50 {
+  background: linear-gradient(to right, #0f172a, #134e4a) !important;
+  border-bottom: 2px solid #ef4444;
+}
+
+/* Textos optimizados */
+.text-gray-800, .text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400 {
+  color: #e2e8f0 !important;
+}
+
+.font-semibold, .font-medium, .font-bold {
+  color: #f8fafc !important;
+}
+
+/* Botones principales */
+.bg-green-600, .bg-green-500 {
+  background-color: #ef4444 !important;
+  border-color: #b91c1c !important;
+}
+
+.hover\:bg-green-700:hover {
+  background-color: #b91c1c !important;
+}
+
+/* Botones secundarios */
+.bg-blue-600, .text-blue-600, .text-blue-700 {
+  background-color: #2563eb !important;
+  color: #f8fafc !important;
+  border-color: #1d4ed8 !important;
+}
+
+.hover\:bg-blue-700:hover, .hover\:bg-blue-50:hover {
+  background-color: #1d4ed8 !important;
+}
+
+/* Barras de progreso */
+.bg-blue-500 {
+  background-color: #2563eb !important;
+}
+
+.bg-amber-500 {
+  background-color: #f59e0b !important;
+}
+
+/* Efectos especiales */
+.star-icon, img[src*="star"] {
+  filter: drop-shadow(0 0 3px #f87171);
+}
+
+/* ===================================
+   RESTRICCIONES DE IMÁGENES OPTIMIZADAS
+   =================================== */
+
+/* Regla general optimizada */
+img, svg {
+  max-width: 40px;
+  max-height: 40px;
+}
+
+/* Iconos específicos */
+.info-icon,
+table img, 
+table svg,
+img[src*="location"], 
+img[src*="marker"], 
+img[src*="pin"] {
+  max-width: 24px !important;
+  max-height: 24px !important;
+}
+
+img[src*="star"], 
+.star-icon {
+  max-width: 32px !important;
+  max-height: 32px !important;
+}
+
+/* Avatares */
+.avatar, 
+img[src*="avatar"], 
+img[src*="user"] {
+  max-width: 32px;
+  max-height: 32px;
+  border-radius: 50%;
+}
+
+/* ===================================
+   CORRECCIONES RESPONSIVE OPTIMIZADAS
+   =================================== */
+
+/* Media queries consolidadas para mejor performance */
+@media (min-width: 768px) {
+  .hidden.md\:block,
+  .navigation-desktop,
+  .tournaments-desktop {
+    display: block !important;
+  }
+  
+  .md\:hidden,
+  .navigation-mobile {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .hidden.md\:block,
+  .navigation-desktop,
+  .tournaments-desktop {
+    display: none !important;
+  }
+  
+  .md\:hidden,
+  .navigation-mobile {
+    display: block !important;
+  }
+} 

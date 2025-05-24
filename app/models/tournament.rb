@@ -102,6 +102,17 @@ class Tournament < ApplicationRecord
     sleep 5 # Retraso para respetar los límites de rate limiting (80 solicitudes/minuto)
   end
 
+  def calculated_events_count
+    # Accede al atributo 'events_count_data' que se seleccionó en el controlador.
+    # Proporciona un fallback por si el torneo no se cargó con este select específico.
+    attributes['events_count_data'] || events.size
+  end
+
+  def calculated_total_event_seeds_count
+    # Accede al atributo 'total_event_seeds_count_data'.
+    attributes['total_event_seeds_count_data'] || event_seeds.size # Fallback
+  end
+
   private
 
   def parse_location_from_venue_address

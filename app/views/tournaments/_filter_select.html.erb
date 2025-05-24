@@ -1,0 +1,10 @@
+<div class="filter-group">
+  <label for="<%= field %>" class="text-sm text-slate-400 whitespace-nowrap mobile-hidden"><%= label %>:</label>
+  <%= form.select field, 
+                  options_for_select(filter_options_for(options, label.downcase), current_value),
+                  {},
+                  {
+                    class: "filter-select filter-select-#{type}",
+                    data: filter_select_data_attributes
+                  } %>
+</div> 
