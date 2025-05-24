@@ -1,0 +1,90 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+# Script para ejecutar tests con diferentes configuraciones
+options = {}
+
+OptionParser.new do |opts|
+  opts.banner = "Uso: bin/test [opciones]"
+
+  opts.on("-u", "--unit", "Ejecutar solo tests unitarios (modelos y servicios)") do
+    options[:unit] = true
+  end
+
+  opts.on("-i", "--integration", "Ejecutar solo tests de integración (requests)") do
+    options[:integration] = true
+  end
+
+  opts.on("-s", "--system", "Ejecutar solo tests del sistema (E2E)") do
+    options[:system] = true
+  end
+
+  opts.on("-c", "--coverage", "Generar reporte de cobertura") do
+    options[:coverage] = true
+  end
+
+  opts.on("-f", "--fast", "Ejecutar tests rápidos (sin system tests)") do
+    options[:fast] = true
+  end
+
+  opts.on("-p", "--parallel", "Ejecutar tests en paralelo") do
+    options[:parallel] = true
+  end
+
+  opts.on("-h", "--help", "Mostrar esta ayuda") do
+    puts opts
+    exit
+  end
+end.parse!
+
+# Configurar variables de entorno para testing
+ENV['RAILS_ENV'] = 'test'
+
+# Comandos base
+base_cmd = 'bundle exec rspec'
+test_files = []
+
+if options[:unit]
+  test_files << 'spec/models/'
+  test_files << 'spec/services/'
+elsif options[:integration]
+  test_files << 'spec/requests/'
+  test_files << 'spec/controllers/'
+elsif options[:system]
+  test_files << 'spec/system/'
+elsif options[:fast]
+  test_files << 'spec/models/'
+  test_files << 'spec/services/'
+  test_files << 'spec/requests/'
+else
+  test_files << 'spec/'
+end
+
+# Construir comando
+cmd_parts = [base_cmd]
+cmd_parts << test_files.join(' ')
+
+# Opciones adicionales
+if options[:coverage]
+  puts "📊 Generando reporte de cobertura..."
+  ENV['COVERAGE'] = 'true'
+end
+
+if options[:parallel]
+  cmd_parts.unshift('parallel_rspec')
+end
+
+# Ejecutar tests
+puts "🧪 Ejecutando tests..."
+puts "📂 Archivos: #{test_files.join(', ')}"
+puts "⚙️  Comando: #{cmd_parts.join(' ')}"
+puts "="*50
+
+system(cmd_parts.join(' '))
+
+# Mostrar reporte de cobertura si se solicitó
+if options[:coverage] && File.exist?('coverage/index.html')
+  puts "\n📊 Reporte de cobertura generado en: coverage/index.html"
+  puts "💡 Abre el archivo en tu navegador para ver el reporte detallado"
+end 

@@ -13,6 +13,11 @@ class Player < ApplicationRecord
   validates :skin_2, inclusion: { in: 1..8 }, allow_nil: true
   validates :skin_3, inclusion: { in: 1..8 }, allow_nil: true
 
+  # Scopes
+  scope :search, ->(query) { 
+    where("LOWER(entrant_name) LIKE LOWER(?) OR LOWER(name) LIKE LOWER(?)", "%#{query}%", "%#{query}%") if query.present?
+  }
+
   # Constante con todos los personajes de Smash Ultimate
   SMASH_CHARACTERS = {
     'mario' => 'Mario',

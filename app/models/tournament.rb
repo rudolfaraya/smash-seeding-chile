@@ -56,12 +56,8 @@ class Tournament < ApplicationRecord
     
     # Verificar por venue_address
     if venue_address.present?
-      return parser.send(:online_tournament?, venue_address)
-    end
-    
-    # Verificar por nombre del torneo
-    if name.present?
-      return parser.send(:online_tournament_by_name?, name)
+      location_data = parser.parse_location(venue_address)
+      return location_data[:region] == 'Online'
     end
     
     false

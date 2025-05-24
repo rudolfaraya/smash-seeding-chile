@@ -74,8 +74,6 @@ class LocationParserService
     updated_count
   end
 
-  private
-
   def build_online_keywords
     # Palabras clave que indican torneos online
     {
