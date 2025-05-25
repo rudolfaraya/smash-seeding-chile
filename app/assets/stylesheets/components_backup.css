@@ -476,17 +476,6 @@
   .hidden.md\:block {
     display: block !important;
   }
-}
-
-/* Forzar navegación móvil oculta en desktop */
-@media (min-width: 768px) {
-  .navigation-mobile {
-    display: none !important;
-  }
-  
-  .tournaments-mobile {
-    display: block !important;
-  }
   
   /* Asegurar que md:hidden funcione */
   .md\:hidden {
@@ -494,7 +483,7 @@
   }
 }
 
-/* Asegurar que los elementos móviles se oculten en desktop */
+/* Asegurar que los elementos desktop se oculten en móvil */
 @media (max-width: 767px) {
   .navigation-desktop {
     display: none !important;
@@ -502,10 +491,6 @@
   
   .tournaments-desktop {
     display: none !important;
-  }
-  
-  .navigation-mobile {
-    display: block !important;
   }
 }
 

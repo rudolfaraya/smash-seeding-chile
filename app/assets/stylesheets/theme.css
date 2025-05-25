@@ -123,35 +123,4 @@ img[src*="user"] {
   max-width: 32px;
   max-height: 32px;
   border-radius: 50%;
-}
-
-/* ===================================
-   CORRECCIONES RESPONSIVE OPTIMIZADAS
-   =================================== */
-
-/* Media queries consolidadas para mejor performance */
-@media (min-width: 768px) {
-  .hidden.md\:block,
-  .navigation-desktop,
-  .tournaments-desktop {
-    display: block !important;
-  }
-  
-  .md\:hidden,
-  .navigation-mobile {
-    display: none !important;
-  }
-}
-
-@media (max-width: 767px) {
-  .hidden.md\:block,
-  .navigation-desktop,
-  .tournaments-desktop {
-    display: none !important;
-  }
-  
-  .md\:hidden,
-  .navigation-mobile {
-    display: block !important;
-  }
 } 
