@@ -1,0 +1,346 @@
+/* ===================================
+   CHARACTER SKIN SELECTOR
+   =================================== */
+
+.character-skin-selector {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.3),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.character-skin-selector::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(239, 68, 68, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.character-skin-selector > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===================================
+   CHARACTER DISPLAY
+   =================================== */
+
+.character-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.character-main-image {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin-bottom: 1rem;
+  perspective: 1000px;
+}
+
+.character-skin-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+}
+
+.character-skin-image:hover {
+  transform: scale(1.05) rotateY(5deg);
+}
+
+/* ===================================
+   CHARACTER EFFECTS
+   =================================== */
+
+.character-effects {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.glow-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120%;
+  height: 120%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 40%, rgba(239, 68, 68, 0.2) 70%);
+  box-shadow: 0 0 30px #ef4444, 0 0 60px #ef444440;
+  animation: pulse-glow 2s ease-in-out infinite alternate;
+}
+
+.selection-ring {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border: 3px solid #ef4444;
+  border-radius: 1rem;
+  opacity: 0.8;
+  animation: rotate-ring 3s linear infinite;
+}
+
+@keyframes pulse-glow {
+  0% { 
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.6;
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes rotate-ring {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===================================
+   CHARACTER INFO
+   =================================== */
+
+.character-info {
+  text-align: center;
+}
+
+.character-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0 0 0.5rem 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(45deg, #ef4444, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.skin-name {
+  font-size: 1rem;
+  color: #cbd5e1;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ===================================
+   SKIN SELECTOR
+   =================================== */
+
+.skin-selector {
+  margin-bottom: 1.5rem;
+}
+
+.skin-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .skin-grid {
+    grid-template-columns: repeat(8, 1fr);
+    max-width: 600px;
+  }
+}
+
+/* ===================================
+   SKIN OPTIONS
+   =================================== */
+
+.skin-option {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border: 2px solid transparent;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.skin-option:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.4);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.skin-option.active {
+  border-color: #ef4444;
+  box-shadow: 
+    0 0 0 2px #ef4444,
+    0 8px 15px -3px rgba(239, 68, 68, 0.4);
+  transform: translateY(-2px) scale(1.1);
+}
+
+.skin-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.2s ease;
+}
+
+.skin-option:hover .skin-thumbnail {
+  transform: scale(1.1);
+}
+
+/* ===================================
+   SELECTION INDICATOR
+   =================================== */
+
+.selection-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ef4444;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.2s ease;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+.selection-indicator.active,
+.skin-option.active .selection-indicator {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ===================================
+   SKIN NUMBER
+   =================================== */
+
+.skin-number {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+/* ===================================
+   SKIN DETAILS
+   =================================== */
+
+.skin-details {
+  text-align: center;
+  padding: 1rem;
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.skin-description {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.skin-label {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.skin-value {
+  font-size: 0.875rem;
+  color: #f8fafc;
+  font-weight: 600;
+  background: linear-gradient(45deg, #ef4444, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===================================
+   RESPONSIVE ADJUSTMENTS
+   =================================== */
+
+@media (max-width: 640px) {
+  .character-skin-selector {
+    padding: 1.5rem;
+  }
+  
+  .character-main-image {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .character-name {
+    font-size: 1.25rem;
+  }
+  
+  .skin-grid {
+    gap: 0.5rem;
+  }
+}
+
+/* ===================================
+   LOADING STATES
+   =================================== */
+
+.skin-option.loading .skin-thumbnail {
+  opacity: 0.5;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+/* ===================================
+   ACCESSIBILITY
+   =================================== */
+
+.skin-option:focus {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .character-skin-image,
+  .skin-option,
+  .glow-effect,
+  .selection-ring {
+    animation: none;
+    transition: none;
+  }
+} 

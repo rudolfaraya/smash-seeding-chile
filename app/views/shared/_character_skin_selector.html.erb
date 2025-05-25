@@ -1,0 +1,59 @@
+<%# Selector de skins de personaje %>
+<div class="character-skin-selector" data-controller="character-skin-selector" data-character="<%= character_name %>">
+  <!-- Personaje principal con skin seleccionada -->
+  <div class="character-display">
+    <div class="character-main-image">
+      <%= image_tag "smash/character_individual_skins/#{character_name}/#{character_name}_skin_0.png", 
+                    alt: "#{character_name.humanize} - Skin 1",
+                    class: "character-skin-image active",
+                    data: { character_skin_selector_target: "mainImage" } %>
+      
+      <!-- Overlay de efectos -->
+      <div class="character-effects">
+        <div class="glow-effect" data-character-skin-selector-target="glowEffect"></div>
+        <div class="selection-ring" data-character-skin-selector-target="selectionRing"></div>
+      </div>
+    </div>
+    
+    <!-- Información del personaje -->
+    <div class="character-info">
+      <h3 class="character-name" data-character-skin-selector-target="characterName">
+        <%= character_name.humanize %>
+      </h3>
+      <p class="skin-name" data-character-skin-selector-target="skinName">
+        Skin por defecto
+      </p>
+    </div>
+  </div>
+  
+  <!-- Selector de skins -->
+  <div class="skin-selector">
+    <div class="skin-grid">
+      <% 8.times do |i| %>
+        <div class="skin-option <%= 'active' if i == 0 %>" 
+             data-action="click->character-skin-selector#selectSkin"
+             data-skin-index="<%= i %>"
+             data-character-skin-selector-target="skinOption">
+          <%= image_tag "smash/character_individual_skins/#{character_name}/#{character_name}_skin_#{i}.png",
+                        alt: "#{character_name.humanize} - Skin #{i + 1}",
+                        class: "skin-thumbnail",
+                        loading: "lazy" %>
+          
+          <!-- Indicador de selección -->
+          <div class="selection-indicator"></div>
+          
+          <!-- Número de skin -->
+          <span class="skin-number"><%= i + 1 %></span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- Información adicional de la skin -->
+  <div class="skin-details" data-character-skin-selector-target="skinDetails">
+    <div class="skin-description">
+      <span class="skin-label">Skin:</span>
+      <span class="skin-value" data-character-skin-selector-target="skinDescription">Por defecto</span>
+    </div>
+  </div>
+</div> 

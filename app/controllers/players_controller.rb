@@ -95,47 +95,62 @@ class PlayersController < ApplicationController
   end
 
   def prepare_players_data
-    # Reutilizar la misma lógica del método index
-    players = Player.includes(event_seeds: { event: :tournament })
+    # Usar una consulta más simple pero eficiente
+    players_query = Player.joins(:event_seeds).distinct
     
     # Filtrar por nombre si se proporciona un término de búsqueda
     if @query.present?
-      players = players.where(
+      players_query = players_query.where(
         "LOWER(players.name) LIKE LOWER(?) OR LOWER(players.entrant_name) LIKE LOWER(?) OR LOWER(players.twitter_handle) LIKE LOWER(?)", 
         "%#{@query}%", "%#{@query}%", "%#{@query}%"
       )
     end
 
-    # Obtener solo jugadores que tienen al menos un event_seed
-    players = players.joins(:event_seeds).distinct
+    # Aplicar paginación primero
+    page = (params[:page] || 1).to_i
+    per_page = 50
     
-    # Convertir a array para hacer el ordenamiento en memoria y preservar los includes
-    players_array = players.to_a
+    # Obtener los IDs paginados
+    paginated_player_ids = players_query.page(page).per(per_page).pluck(:id)
     
-    # Ordenamiento personalizado en memoria
-    players_array.sort! do |a, b|
-      # Obtener fechas de eventos más recientes
-      latest_a = a.event_seeds.map { |es| es.event.tournament.start_at }.max
-      latest_b = b.event_seeds.map { |es| es.event.tournament.start_at }.max
+    # Cargar los jugadores con sus asociaciones y datos calculados
+    players_with_data = Player.includes(event_seeds: { event: :tournament })
+                              .where(id: paginated_player_ids)
+                              .map do |player|
+      # Calcular datos en Ruby para evitar problemas de SQL
+      latest_date = player.event_seeds.map { |es| es.event.tournament.start_at }.compact.max
+      events_count = player.event_seeds.size
       
-      # Primero ordenar por fecha más reciente (DESC)
-      date_comparison = (latest_b || Time.at(0)) <=> (latest_a || Time.at(0))
+      # Agregar atributos virtuales para ordenamiento
+      player.define_singleton_method(:latest_tournament_date) { latest_date }
+      player.define_singleton_method(:events_count) { events_count }
+      player
+    end
+    
+    # Ordenar en Ruby
+    players_with_data.sort! do |a, b|
+      # Primero por fecha más reciente (DESC)
+      date_a = a.latest_tournament_date || Time.at(0)
+      date_b = b.latest_tournament_date || Time.at(0)
+      date_comparison = date_b <=> date_a
       
       if date_comparison != 0
         date_comparison
       else
-        # Si las fechas son iguales, ordenar por cantidad de eventos (DESC)
-        b.event_seeds.size <=> a.event_seeds.size
+        # Luego por cantidad de eventos (DESC)
+        events_comparison = b.events_count <=> a.events_count
+        if events_comparison != 0
+          events_comparison
+        else
+          # Finalmente por nombre (ASC)
+          a.name <=> b.name
+        end
       end
     end
     
-    # Aplicar paginación manualmente sobre el array ordenado
-    page = (params[:page] || 1).to_i
-    per_page = 100
-    total_count = players_array.size
-    
-    # Simular la funcionalidad de Kaminari
-    Kaminari.paginate_array(players_array, total_count: total_count)
+    # Simular la paginación de Kaminari con los datos ordenados
+    total_count = players_query.count
+    Kaminari.paginate_array(players_with_data, total_count: total_count)
             .page(page).per(per_page)
   end
 end 
