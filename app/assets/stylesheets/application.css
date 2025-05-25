@@ -23,3 +23,94 @@
   background-repeat: no-repeat;
   background-position: center;
 }
+
+/* Estilos para filtros y ordenamiento de players */
+.active-button {
+  @apply bg-blue-700 border-blue-400 text-blue-200;
+}
+
+.toggle-icon {
+  transition: transform 0.2s ease-in-out;
+}
+
+.toggle-icon-mobile {
+  transition: transform 0.2s ease-in-out;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* Animaciones para filas de eventos */
+.fade-in-down {
+  animation: fadeInDown 0.3s ease-out;
+}
+
+.fade-out-up {
+  animation: fadeOutUp 0.3s ease-in;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOutUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Mejoras para iconos de personajes de Smash */
+.smash-character-icon {
+  transition: all 0.2s ease-in-out;
+}
+
+.smash-character-icon:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)) brightness(1.1);
+}
+
+/* Estilos para cards de jugadores en móvil */
+.player-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.player-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Mejoras para selects y inputs */
+select:focus, input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Indicadores de estado activo para filtros */
+.filter-active {
+  @apply ring-2 ring-blue-500 ring-opacity-50;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .smash-character-icon {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  
+  .player-card {
+    margin-bottom: 0.75rem;
+  }
+}

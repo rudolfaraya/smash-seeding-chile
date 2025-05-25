@@ -95,8 +95,37 @@ class PlayersController < ApplicationController
   end
 
   def prepare_players_data
-    # Usar una consulta más simple pero eficiente
-    players_query = Player.joins(:event_seeds).distinct
+    # Comenzar con la consulta base
+    players_query = Player.all
+    
+    # Aplicar filtro por personaje
+    character_filter = params[:character_filter]
+    if character_filter.present?
+      if character_filter == 'none'
+        # Jugadores sin personajes asignados
+        players_query = players_query.where(
+          character_1: [nil, ''], 
+          character_2: [nil, ''], 
+          character_3: [nil, '']
+        )
+      else
+        # Jugadores que usan un personaje específico (en cualquier slot)
+        players_query = players_query.where(
+          "character_1 = ? OR character_2 = ? OR character_3 = ?",
+          character_filter, character_filter, character_filter
+        )
+      end
+    end
+    
+    # Solo incluir jugadores con event_seeds si no estamos filtrando por "sin personajes"
+    # y si no hay filtro de personaje específico
+    if character_filter != 'none' && character_filter.blank?
+      players_query = players_query.joins(:event_seeds).distinct
+    elsif character_filter.present? && character_filter != 'none'
+      # Para filtros de personajes específicos, incluir todos los jugadores que usan ese personaje
+      # independientemente de si tienen eventos o no
+      players_query = players_query.distinct
+    end
     
     # Filtrar por nombre si se proporciona un término de búsqueda
     if @query.present?
@@ -118,39 +147,69 @@ class PlayersController < ApplicationController
                               .where(id: paginated_player_ids)
                               .map do |player|
       # Calcular datos en Ruby para evitar problemas de SQL
-      latest_date = player.event_seeds.map { |es| es.event.tournament.start_at }.compact.max
-      events_count = player.event_seeds.size
+      event_seeds = player.event_seeds.to_a
+      tournament_dates = event_seeds.map { |es| es.event&.tournament&.start_at }.compact
+      latest_date = tournament_dates.max
+      oldest_date = tournament_dates.min
+      events_count = event_seeds.size
+      tournaments_count = event_seeds.map { |es| es.event&.tournament&.id }.compact.uniq.size
       
       # Agregar atributos virtuales para ordenamiento
       player.define_singleton_method(:latest_tournament_date) { latest_date }
+      player.define_singleton_method(:oldest_tournament_date) { oldest_date }
       player.define_singleton_method(:events_count) { events_count }
+      player.define_singleton_method(:tournaments_count) { tournaments_count }
       player
     end
     
-    # Ordenar en Ruby
-    players_with_data.sort! do |a, b|
-      # Primero por fecha más reciente (DESC)
-      date_a = a.latest_tournament_date || Time.at(0)
-      date_b = b.latest_tournament_date || Time.at(0)
-      date_comparison = date_b <=> date_a
-      
-      if date_comparison != 0
-        date_comparison
-      else
-        # Luego por cantidad de eventos (DESC)
-        events_comparison = b.events_count <=> a.events_count
-        if events_comparison != 0
-          events_comparison
-        else
-          # Finalmente por nombre (ASC)
-          a.name <=> b.name
-        end
-      end
-    end
+    # Aplicar ordenamiento
+    sort_by = params[:sort_by] || 'recent_tournament'
+    players_with_data = apply_sorting(players_with_data, sort_by)
     
     # Simular la paginación de Kaminari con los datos ordenados
     total_count = players_query.count
     Kaminari.paginate_array(players_with_data, total_count: total_count)
             .page(page).per(per_page)
+  end
+
+  def apply_sorting(players_array, sort_by)
+    players_array.sort! do |a, b|
+      case sort_by
+      when 'tag_asc'
+        (a.entrant_name || '').downcase <=> (b.entrant_name || '').downcase
+      when 'tag_desc'
+        (b.entrant_name || '').downcase <=> (a.entrant_name || '').downcase
+      when 'events_count_desc'
+        comparison = b.events_count <=> a.events_count
+        comparison != 0 ? comparison : (a.entrant_name || '').downcase <=> (b.entrant_name || '').downcase
+      when 'events_count_asc'
+        comparison = a.events_count <=> b.events_count
+        comparison != 0 ? comparison : (a.entrant_name || '').downcase <=> (b.entrant_name || '').downcase
+      when 'tournaments_count_desc'
+        comparison = b.tournaments_count <=> a.tournaments_count
+        comparison != 0 ? comparison : (a.entrant_name || '').downcase <=> (b.entrant_name || '').downcase
+      when 'tournaments_count_asc'
+        comparison = a.tournaments_count <=> b.tournaments_count
+        comparison != 0 ? comparison : (a.entrant_name || '').downcase <=> (b.entrant_name || '').downcase
+      when 'oldest_tournament'
+        date_a = a.oldest_tournament_date || Time.at(0)
+        date_b = b.oldest_tournament_date || Time.at(0)
+        comparison = date_a <=> date_b
+        comparison != 0 ? comparison : (a.entrant_name || '').downcase <=> (b.entrant_name || '').downcase
+      when 'recent_tournament'
+        date_a = a.latest_tournament_date || Time.at(0)
+        date_b = b.latest_tournament_date || Time.at(0)
+        comparison = date_b <=> date_a
+        comparison != 0 ? comparison : (a.entrant_name || '').downcase <=> (b.entrant_name || '').downcase
+      else
+        # Por defecto: más reciente inscripción
+        date_a = a.latest_tournament_date || Time.at(0)
+        date_b = b.latest_tournament_date || Time.at(0)
+        comparison = date_b <=> date_a
+        comparison != 0 ? comparison : (a.entrant_name || '').downcase <=> (b.entrant_name || '').downcase
+      end
+    end
+    
+    players_array
   end
 end 

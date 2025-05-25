@@ -85,4 +85,16 @@ export default class extends Controller {
     clearTimeout(this.timeout)
     this.timeout = setTimeout(() => this.search(), 300)
   }
+
+  // Método para cambios en filtros (sin debounce)
+  filterChanged(event) {
+    console.log("Filtro cambió:", event.target.name, "=", event.target.value)
+    this.search()
+  }
+
+  // Método para cambios en ordenamiento (sin debounce)
+  sortChanged(event) {
+    console.log("Ordenamiento cambió:", event.target.name, "=", event.target.value)
+    this.search()
+  }
 } 

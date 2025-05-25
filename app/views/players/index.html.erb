@@ -19,9 +19,11 @@
     </div>
   </div>
 
+  <!-- Filtros y Búsqueda -->
   <div class="mb-6 bg-slate-800 rounded-lg shadow-md border border-slate-600 p-5">
     <%= form_with(url: players_path, method: :get, local: false, data: { controller: "search" }) do |f| %>
-      <div class="relative">
+      <!-- Búsqueda por texto -->
+      <div class="relative mb-4">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
@@ -29,7 +31,7 @@
         </div>
         <%= f.text_field :query, 
                       value: params[:query], 
-                      placeholder: "Buscar jugadores...", 
+                      placeholder: "Buscar por nombre, tag o Twitter...", 
                       class: "pl-10 focus:ring-red-500 focus:border-red-500 block w-full shadow-sm text-sm border-slate-600 bg-slate-700 text-slate-200 rounded-md py-3 tracking-wide",
                       autocomplete: "off",
                       data: { 
@@ -46,12 +48,142 @@
           </div>
         <% end %>
       </div>
-      
-      <div class="flex items-center mt-2 text-sm text-slate-400">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-        </svg>
-        <span class="text-xs tracking-wide">La búsqueda se realiza automáticamente mientras escribes</span>
+
+      <!-- Filtros y Ordenamiento -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <!-- Filtro por Personaje -->
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Filtrar por Personaje
+          </label>
+          <%= f.select :character_filter, 
+                options_for_select([
+                  ['Todos los jugadores', ''],
+                  ['Sin personajes asignados', 'none']
+                ] + smash_character_options, params[:character_filter]),
+                {},
+                {
+                  class: "w-full bg-slate-700 border border-slate-600 text-slate-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                  data: { 
+                    search_target: "filter",
+                    action: "change->search#selectChanged"
+                  }
+                } %>
+          <% if params[:character_filter].present? %>
+            <div class="mt-1 text-xs text-blue-400">
+              <% if params[:character_filter] == 'none' %>
+                📝 Mostrando jugadores sin personajes asignados
+              <% else %>
+                🎮 Mostrando jugadores que usan: <%= Player::SMASH_CHARACTERS[params[:character_filter]] %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Ordenamiento -->
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 12a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 16a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
+            </svg>
+            Ordenar por
+          </label>
+          <%= f.select :sort_by, 
+                options_for_select([
+                  ['🕒 Más reciente inscripción', 'recent_tournament'],
+                  ['📅 Más antigua inscripción', 'oldest_tournament'],
+                  ['🔤 Tag A-Z', 'tag_asc'],
+                  ['🔤 Tag Z-A', 'tag_desc'],
+                  ['⬆️ Más eventos', 'events_count_desc'],
+                  ['⬇️ Menos eventos', 'events_count_asc'],
+                  ['🏆 Más torneos', 'tournaments_count_desc'],
+                  ['🎯 Menos torneos', 'tournaments_count_asc']
+                ], params[:sort_by] || 'recent_tournament'),
+                {},
+                {
+                  class: "w-full bg-slate-700 border border-slate-600 text-slate-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500",
+                  data: { 
+                    search_target: "sort",
+                    action: "change->search#selectChanged"
+                  }
+                } %>
+          <% if params[:sort_by].present? && params[:sort_by] != 'recent_tournament' %>
+            <div class="mt-1 text-xs text-green-400">
+              📊 Ordenado por: <%= f.object.class.human_attribute_name(params[:sort_by]) rescue params[:sort_by].humanize %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Botones de acción y estadísticas -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-center space-x-2">
+          <%= link_to players_path, 
+                class: "inline-flex items-center px-3 py-2 border border-slate-500 text-slate-300 bg-slate-700 rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors text-xs",
+                title: "Limpiar todos los filtros" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+            </svg>
+            Limpiar Filtros
+          <% end %>
+          
+          <button type="button" 
+                  onclick="toggleFiltersHelp()" 
+                  class="inline-flex items-center px-3 py-2 border border-blue-500 text-blue-400 bg-slate-700 rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors text-xs"
+                  title="Ayuda sobre filtros">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+            </svg>
+            Ayuda
+          </button>
+        </div>
+
+        <!-- Estadísticas rápidas -->
+        <div class="text-xs text-slate-400 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+          </svg>
+          <span class="tracking-wide">Los filtros se aplican automáticamente</span>
+        </div>
+      </div>
+
+      <!-- Ayuda de filtros (oculta por defecto) -->
+      <div id="filtersHelp" class="hidden bg-slate-700 rounded-md p-4 mt-4 text-xs text-slate-300 border border-slate-600">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <strong class="text-slate-200 flex items-center mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Filtro por Personaje:
+            </strong>
+            <ul class="space-y-1 text-slate-400 ml-4">
+              <li>• <strong>Todos:</strong> Muestra todos los jugadores registrados</li>
+              <li>• <strong>Sin personajes:</strong> Solo jugadores sin personajes asignados</li>
+              <li>• <strong>Personaje específico:</strong> Jugadores que usan ese personaje como principal, secundario o terciario</li>
+            </ul>
+          </div>
+          <div>
+            <strong class="text-slate-200 flex items-center mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 12a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 16a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
+              </svg>
+              Opciones de Ordenamiento:
+            </strong>
+            <ul class="space-y-1 text-slate-400 ml-4">
+              <li>• <strong>Por eventos:</strong> Cantidad de eventos en los que ha participado</li>
+              <li>• <strong>Por torneos:</strong> Cantidad de torneos únicos</li>
+              <li>• <strong>Por fecha:</strong> Fecha de última o primera inscripción en torneo</li>
+              <li>• <strong>Por tag:</strong> Orden alfabético del nombre de jugador</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-slate-600 text-slate-400">
+          <strong class="text-slate-300">💡 Tip:</strong> Puedes combinar la búsqueda por texto con los filtros para encontrar jugadores específicos más rápido.
+        </div>
       </div>
     <% end %>
   </div>
@@ -459,6 +591,163 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     closeSmashCharacterModal();
   }
+});
+
+// Función para mostrar/ocultar ayuda de filtros
+function toggleFiltersHelp() {
+  const helpDiv = document.getElementById('filtersHelp');
+  if (helpDiv) {
+    helpDiv.classList.toggle('hidden');
+    
+    // Agregar animación suave
+    if (!helpDiv.classList.contains('hidden')) {
+      helpDiv.style.opacity = '0';
+      helpDiv.style.transform = 'translateY(-10px)';
+      setTimeout(() => {
+        helpDiv.style.transition = 'all 0.3s ease-out';
+        helpDiv.style.opacity = '1';
+        helpDiv.style.transform = 'translateY(0)';
+      }, 10);
+    }
+  }
+}
+
+// Función para actualizar indicadores visuales de filtros activos
+function updateFilterIndicators() {
+  const characterFilter = document.querySelector('select[name="character_filter"]');
+  const sortBy = document.querySelector('select[name="sort_by"]');
+  const queryInput = document.querySelector('input[name="query"]');
+  
+  // Indicador para filtro de personaje
+  if (characterFilter) {
+    if (characterFilter.value && characterFilter.value !== '') {
+      characterFilter.classList.add('filter-active');
+      characterFilter.parentElement.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
+    } else {
+      characterFilter.classList.remove('filter-active');
+      characterFilter.parentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
+    }
+  }
+  
+  // Indicador para ordenamiento (solo si no es el default)
+  if (sortBy) {
+    if (sortBy.value && sortBy.value !== 'recent_tournament') {
+      sortBy.classList.add('filter-active');
+      sortBy.parentElement.classList.add('ring-2', 'ring-green-500', 'ring-opacity-50');
+    } else {
+      sortBy.classList.remove('filter-active');
+      sortBy.parentElement.classList.remove('ring-2', 'ring-green-500', 'ring-opacity-50');
+    }
+  }
+  
+  // Indicador para búsqueda
+  if (queryInput) {
+    if (queryInput.value && queryInput.value.trim() !== '') {
+      queryInput.classList.add('filter-active');
+      queryInput.parentElement.classList.add('ring-2', 'ring-red-500', 'ring-opacity-50');
+    } else {
+      queryInput.classList.remove('filter-active');
+      queryInput.parentElement.classList.remove('ring-2', 'ring-red-500', 'ring-opacity-50');
+    }
+  }
+}
+
+// Función para mostrar estadísticas de filtros
+function updateFilterStats() {
+  const playersResults = document.getElementById('players_results');
+  if (!playersResults) return;
+  
+  // Contar jugadores visibles
+  const visiblePlayers = playersResults.querySelectorAll('.player-row, .player-card').length;
+  
+  // Crear o actualizar indicador de estadísticas
+  let statsIndicator = document.getElementById('filter-stats-indicator');
+  if (!statsIndicator) {
+    statsIndicator = document.createElement('div');
+    statsIndicator.id = 'filter-stats-indicator';
+    statsIndicator.className = 'text-xs text-slate-400 mt-2 flex items-center justify-center md:justify-end';
+    
+    const filtersContainer = document.querySelector('.mb-6.bg-slate-800');
+    if (filtersContainer) {
+      filtersContainer.appendChild(statsIndicator);
+    }
+  }
+  
+  // Verificar si hay filtros activos
+  const hasActiveFilters = document.querySelector('.filter-active') !== null;
+  
+  if (hasActiveFilters) {
+    statsIndicator.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+      </svg>
+      <span class="text-blue-400">Filtros activos</span>
+      <span class="mx-2">•</span>
+      <span>${visiblePlayers} resultado${visiblePlayers !== 1 ? 's' : ''}</span>
+    `;
+    statsIndicator.classList.remove('hidden');
+  } else {
+    statsIndicator.classList.add('hidden');
+  }
+}
+
+// Función para limpiar todos los filtros con animación
+function clearAllFilters() {
+  const form = document.querySelector('form[data-controller="search"]');
+  if (!form) return;
+  
+  // Limpiar campos
+  const queryInput = form.querySelector('input[name="query"]');
+  const characterFilter = form.querySelector('select[name="character_filter"]');
+  const sortBy = form.querySelector('select[name="sort_by"]');
+  
+  if (queryInput) queryInput.value = '';
+  if (characterFilter) characterFilter.value = '';
+  if (sortBy) sortBy.value = 'recent_tournament';
+  
+  // Actualizar indicadores
+  updateFilterIndicators();
+  
+  // Enviar formulario
+  const searchController = form.searchController || window.searchController;
+  if (searchController && searchController.search) {
+    searchController.search();
+  } else {
+    // Fallback: enviar formulario manualmente
+    form.submit();
+  }
+}
+
+// Inicializar indicadores cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+  updateFilterIndicators();
+  updateFilterStats();
+  
+  // Escuchar cambios en los filtros
+  const form = document.querySelector('form[data-controller="search"]');
+  if (form) {
+    form.addEventListener('input', function() {
+      setTimeout(() => {
+        updateFilterIndicators();
+        updateFilterStats();
+      }, 100);
+    });
+    
+    form.addEventListener('change', function() {
+      setTimeout(() => {
+        updateFilterIndicators();
+        updateFilterStats();
+      }, 100);
+    });
+  }
+});
+
+// Actualizar indicadores cuando se recarga vía Turbo
+document.addEventListener('turbo:frame-render', function() {
+  setTimeout(() => {
+    updateFilterIndicators();
+    updateFilterStats();
+  }, 100);
 });
 
 // Función para asegurar que las funciones globales estén disponibles

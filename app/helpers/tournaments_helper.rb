@@ -1,7 +1,27 @@
 module TournamentsHelper
   def filter_options_for(options, label_singular)
-    [["Todas las #{label_singular}s", '']] + options.map { |opt| [opt, opt] }
+    plural_label = pluralize_spanish(label_singular.downcase)
+    [["Todas las #{plural_label}", '']] + options.map { |opt| [opt, opt] }
   end
+
+  private
+
+  def pluralize_spanish(word)
+    case word
+    when 'región'
+      'regiones'
+    when 'ciudad'
+      'ciudades'
+    when /[aeiou]$/
+      "#{word}s"
+    when /[^aeiou]$/
+      "#{word}es"
+    else
+      "#{word}s"
+    end
+  end
+
+  public
 
   def tournament_search_data_attributes
     {
