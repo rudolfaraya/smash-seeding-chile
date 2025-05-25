@@ -102,8 +102,14 @@ class Player < ApplicationRecord
     'sephiroth' => 'Sephiroth',
     'pyra_mythra' => 'Pyra/Mythra',
     'kazuya' => 'Kazuya',
-    'sora' => 'Sora'
+    'sora' => 'Sora',
+    'mii_brawler' => 'Mii Brawler',
+    'mii_swordfighter' => 'Mii Swordfighter',
+    'mii_gunner' => 'Mii Gunner'
   }.freeze
+
+  # Personajes que no tienen skins (solo tienen una imagen)
+  CHARACTERS_WITHOUT_SKINS = %w[mii_brawler mii_swordfighter mii_gunner].freeze
 
   def smash_characters
     [

@@ -50,11 +50,15 @@ module ApplicationHelper
   def smash_character_icon(character, skin = 1, options = {})
     return '' if character.blank?
     
+    # Verificar si es un personaje sin skins
+    is_character_without_skins = Player::CHARACTERS_WITHOUT_SKINS.include?(character)
+    
     # Configurar opciones por defecto con borde más sutil
+    skin_text = is_character_without_skins ? 'Personalizable' : "Skin #{skin}"
     default_options = {
       class: 'smash-character-icon',
       alt: Player::SMASH_CHARACTERS[character] || character.humanize,
-      title: "#{Player::SMASH_CHARACTERS[character] || character.humanize} (Skin #{skin})",
+      title: "#{Player::SMASH_CHARACTERS[character] || character.humanize} (#{skin_text})",
       width: 32,
       height: 32
     }
@@ -62,7 +66,11 @@ module ApplicationHelper
     options = default_options.merge(options)
     
     # Construir la ruta del asset
-    asset_path = "smash/characters/#{character}_#{skin}.png"
+    if is_character_without_skins
+      asset_path = "smash/characters/#{character}.png"
+    else
+      asset_path = "smash/characters/#{character}_#{skin}.png"
+    end
     
     # Verificar si el asset existe, si no usar un placeholder
     if Rails.application.assets&.find_asset(asset_path) || File.exist?(Rails.root.join('app', 'assets', 'images', asset_path))

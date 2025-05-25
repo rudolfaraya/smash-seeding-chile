@@ -94,8 +94,16 @@ if (typeof window.SmashSeeding.characterNames === 'undefined') {
     'sephiroth': 'Sephiroth',
     'pyra_mythra': 'Pyra/Mythra',
     'kazuya': 'Kazuya',
-    'sora': 'Sora'
+    'sora': 'Sora',
+    'mii_brawler': 'Mii Brawler',
+    'mii_swordfighter': 'Mii Swordfighter',
+    'mii_gunner': 'Mii Gunner'
   };
+}
+
+// Characters without skins - only declare once
+if (typeof window.SmashSeeding.charactersWithoutSkins === 'undefined') {
+  window.SmashSeeding.charactersWithoutSkins = ['mii_brawler', 'mii_swordfighter', 'mii_gunner'];
 }
 
 // Mobile menu state - only declare once
@@ -148,36 +156,52 @@ window.SmashSeeding.updateCharacterPreview = function(slot) {
   const nameP = document.getElementById(`character_${slot}_name`);
   const skinTextP = document.getElementById(`character_${slot}_skin_text`);
   const skinsGallery = document.getElementById(`skins_gallery_${slot}`);
+  const skinSelectContainer = skinSelect?.parentElement;
   
   if (!characterSelect || !skinSelect || !previewDiv || !iconDiv || !nameP || !skinTextP || !skinsGallery) {
     return;
   }
   
   const character = characterSelect.value;
-  const skin = skinSelect.value || 1;
+  const isCharacterWithoutSkins = window.SmashSeeding.charactersWithoutSkins.includes(character);
   
   if (character) {
     // Mostrar vista previa
     previewDiv.classList.remove('hidden');
     
+    // Para personajes sin skins, usar solo la imagen base
+    let iconPath, skinText;
+    if (isCharacterWithoutSkins) {
+      iconPath = `/assets/smash/characters/${character}.png`;
+      skinText = 'Personalizable';
+      // Ocultar selector de skin y galería
+      if (skinSelectContainer) skinSelectContainer.style.display = 'none';
+      skinsGallery.classList.add('hidden');
+    } else {
+      const skin = skinSelect.value || 1;
+      iconPath = `/assets/smash/characters/${character}_${skin}.png`;
+      skinText = `Skin ${skin}`;
+      // Mostrar selector de skin y galería
+      if (skinSelectContainer) skinSelectContainer.style.display = 'block';
+      skinsGallery.classList.remove('hidden');
+      window.SmashSeeding.updateSkinsGallery(slot, character);
+    }
+    
     // Actualizar icono
-    const iconPath = `/assets/smash/characters/${character}_${skin}.png`;
-    iconDiv.innerHTML = `<img src="${iconPath}" alt="${window.SmashSeeding.characterNames[character]} Skin ${skin}" 
+    iconDiv.innerHTML = `<img src="${iconPath}" alt="${window.SmashSeeding.characterNames[character]} ${skinText}" 
                          class="w-12 h-12 border border-slate-700 rounded-md bg-slate-800 shadow-sm"
                          style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));"
                          onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'48\\' height=\\'48\\' viewBox=\\'0 0 48 48\\'%3E%3Crect width=\\'48\\' height=\\'48\\' fill=\\'%2364748b\\'/%3E%3Ctext x=\\'24\\' y=\\'30\\' text-anchor=\\'middle\\' fill=\\'%23f1f5f9\\' font-size=\\'16\\' font-weight=\\'bold\\'%3E${character.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E';">`;
     
     // Actualizar nombre y skin
     nameP.textContent = window.SmashSeeding.characterNames[character] || character.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    skinTextP.textContent = `Skin ${skin}`;
-    
-    // Mostrar galería de skins
-    skinsGallery.classList.remove('hidden');
-    window.SmashSeeding.updateSkinsGallery(slot, character);
+    skinTextP.textContent = skinText;
   } else {
     // Ocultar vista previa
     previewDiv.classList.add('hidden');
     skinsGallery.classList.add('hidden');
+    // Mostrar selector de skin por defecto
+    if (skinSelectContainer) skinSelectContainer.style.display = 'block';
   }
 };
 
