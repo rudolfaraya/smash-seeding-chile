@@ -11,9 +11,13 @@ class StartGgClient
   def query(query, variables = {}, operation_name = nil)
     body = {
       query: query,
-      variables: variables,
-      operationName: operation_name || "TournamentsInChile"
-    }.to_json
+      variables: variables
+    }
+    
+    # Solo agregar operationName si se proporciona explícitamente
+    body[:operationName] = operation_name if operation_name
+    
+    body_json = body.to_json
 
     conn = Faraday.new(url: @base_url) do |faraday|
       faraday.headers["Authorization"] = "Bearer #{@token}"
@@ -25,11 +29,11 @@ class StartGgClient
     end
 
     Rails.logger.debug "Enviando solicitud a Start.gg con URL: #{@base_url}"
-    Rails.logger.debug "Enviando solicitud a Start.gg con body: #{body}"
+    Rails.logger.debug "Enviando solicitud a Start.gg con body: #{body_json}"
     Rails.logger.debug "Headers: #{conn.headers}"
 
     response = conn.post do |req|
-      req.body = body
+      req.body = body_json
     end
 
     Rails.logger.debug "Respuesta completa (cuerpo): #{response.body}"

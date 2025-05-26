@@ -406,11 +406,8 @@ El sistema detecta automáticamente torneos online basándose en:
 
 El sistema actualmente gestiona:
 - **1,400+** torneos sincronizados
-- **100+** jugadores registrados
-- **15** regiones de Chile cubiertas
+- **1,400+** jugadores sincronizados
 - **2,000+** eventos de torneos
-- **109** torneos online identificados automáticamente
-- **80+** personajes de Smash Ultimate con iconos
 
 ## 🔧 Configuración Avanzada
 
@@ -461,7 +458,7 @@ bin/rails console
 ### Problemas de Base de Datos
 ```bash
 # Resetear base de datos
-bin/rails db:drop db:create db:migrate db:seed
+bin/rails db:drop db:create db:migrate
 
 # Verificar migraciones pendientes
 bin/rails db:migrate:status
@@ -536,18 +533,14 @@ Para reportar bugs o solicitar funcionalidades:
 ## 📈 Roadmap
 
 ### Próximas Funcionalidades
-- [ ] Integración con más APIs de torneos
-- [ ] Sistema de rankings automático
-- [ ] Notificaciones push para nuevos torneos
 - [ ] Dashboard de analytics avanzado
 - [ ] Exportación de datos en múltiples formatos
-- [ ] API REST para desarrolladores
 - [ ] Sistema de autenticación de usuarios
-- [ ] Gestión de favoritos de torneos
+- [ ] Gestión de teams de jugadores
 
 ### Mejoras Técnicas
 - [ ] Migración a PostgreSQL para producción
-- [ ] Implementación de Redis para cache
+- [ ] Uso de Active Jobs con monitoreo de Mission Control
 - [ ] Dockerización del proyecto
 - [ ] CI/CD con GitHub Actions
 - [ ] Monitoreo con Sentry
@@ -566,10 +559,9 @@ Para reportar bugs o solicitar funcionalidades:
 
 ### 📞 Contacto
 
-- **Desarrollador Principal**: [Tu Nombre]
-- **Email**: tu-email@ejemplo.com
-- **Discord**: TuUsuario#1234
-- **Twitter**: @TuUsuario
+- **Desarrollador Principal**: Rodolfo Araya
+- **Email**: rudolfaraya@gmail.com
+- **Twitter**: @rudolfaraya2
 
 ### 🔗 Enlaces Útiles
 

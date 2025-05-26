@@ -2,7 +2,7 @@ VCR.configure do |config|
   config.cassette_library_dir = "spec/vcr_cassettes"
   config.hook_into :webmock
   config.default_cassette_options = {
-    record: :once,
+    record: :none,
     match_requests_on: [:method, :uri, :body]
   }
   
@@ -18,6 +18,20 @@ VCR.configure do |config|
   # Allow localhost connections for development
   config.ignore_localhost = true
   
-  # Allow real HTTP connections when not using VCR
+  # Deshabilitar conexiones HTTP reales - los tests deben usar mocks/stubs
   config.allow_http_connections_when_no_cassette = false
+  
+  # Configurar hosts ignorados para desarrollo local
+  config.ignore_hosts 'localhost', '127.0.0.1', '0.0.0.0'
+  
+  # Configurar para que falle si intenta hacer una llamada real sin cassette
+  config.default_cassette_options[:record] = :none
+  
+  # Configuración específica para tests que requieren cassettes existentes
+  config.before_record do |interaction|
+    # Solo permitir grabación en modo de desarrollo explícito
+    if ENV['VCR_RECORD_MODE'] != 'true'
+      raise "Intento de grabación de cassette detectado. Si necesitas grabar nuevos cassettes, ejecuta con VCR_RECORD_MODE=true"
+    end
+  end
 end 

@@ -1,4 +1,6 @@
 class TournamentsController < ApplicationController
+  rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
+
   def index
     # Si no hay parámetros de filtros, limpiar la sesión (clear all)
     if params[:query].nil? && params[:region].nil? && params[:city].nil? && 
@@ -41,6 +43,11 @@ class TournamentsController < ApplicationController
       end
       format.turbo_stream
     end
+  end
+  
+  def show
+    @tournament = Tournament.find(params[:id])
+    @events = @tournament.events.includes(:event_seeds)
   end
   
   def sync
@@ -345,5 +352,13 @@ class TournamentsController < ApplicationController
     
     # Aplicar paginación
     @tournaments = @tournaments.page(params[:page]).per(100)
+  end
+
+  def record_not_found
+    respond_to do |format|
+      format.html { render file: "#{Rails.root}/public/404.html", status: :not_found, layout: false }
+      format.json { render json: { error: 'Not found' }, status: :not_found }
+      format.turbo_stream { render turbo_stream: turbo_stream.replace("flash", partial: "shared/flash", locals: { flash: { alert: "Recurso no encontrado" } }) }
+    end
   end
 end

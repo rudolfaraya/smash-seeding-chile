@@ -1,0 +1,76 @@
+<main class="container mx-auto px-4 py-8">
+  <div class="bg-white rounded-lg shadow-lg p-6">
+    <div class="flex justify-between items-start mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2"><%= @tournament.name %></h1>
+        <p class="text-gray-600 mb-2">
+          <span class="font-semibold">Fecha:</span> 
+          <%= @tournament.start_at.strftime("%d/%m/%Y") if @tournament.start_at %>
+        </p>
+        <p class="text-gray-600 mb-2">
+          <span class="font-semibold">Ubicación:</span> 
+          <%= @tournament.venue_address %>
+        </p>
+        <p class="text-gray-600 mb-4">
+          <span class="font-semibold">Participantes:</span> 
+          <%= @tournament.attendees_count || 'No especificado' %>
+        </p>
+      </div>
+      
+      <div class="flex flex-col space-y-2">
+        <%= link_to "Ver en start.gg", @tournament.start_gg_url, 
+            target: "_blank", 
+            class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-center transition-colors" %>
+        <%= link_to "← Volver a torneos", tournaments_path, 
+            class: "bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-center transition-colors" %>
+      </div>
+    </div>
+
+    <% if @events.any? %>
+      <div class="border-t pt-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Eventos</h2>
+        <div class="grid gap-4">
+          <% @events.each do |event| %>
+            <div class="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900"><%= event.name %></h3>
+                  <p class="text-gray-600">
+                    <span class="font-medium">Evento:</span> 
+                    <%= event.name %>
+                  </p>
+                  <% if event.has_seeds? %>
+                    <p class="text-green-600 font-medium">
+                      ✓ Seeds disponibles (<%= event.calculated_event_seeds_count %>)
+                    </p>
+                  <% else %>
+                    <p class="text-gray-500">Sin seeds</p>
+                  <% end %>
+                </div>
+                
+                <div class="flex space-x-2">
+                  <% if event.start_gg_event_url_or_generate %>
+                    <%= link_to "Ver en start.gg", event.start_gg_event_url_or_generate, 
+                        target: "_blank", 
+                        class: "bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors" %>
+                  <% end %>
+                  
+                  <% if event.has_seeds? %>
+                    <%= link_to "Ver Seeds", tournament_event_seeds_path(@tournament, event), 
+                        class: "bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors" %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <div class="border-t pt-6">
+        <p class="text-gray-600 text-center py-8">
+          Este torneo no tiene eventos registrados.
+        </p>
+      </div>
+    <% end %>
+  </div>
+</main> 

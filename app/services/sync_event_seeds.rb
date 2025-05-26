@@ -7,348 +7,377 @@ class SyncEventSeeds
     @client = StartGgClient.new
     @force = force
     @update_players = update_players
+    @target_event_id = @event.id
   end
 
   def call
-    Rails.logger.info "Sincronizando seeds y jugadores para el evento: #{@event.name} (force: #{@force})"
+    Rails.logger.info "🎯 INICIANDO SINCRONIZACIÓN - Evento: #{@event.name} (ID: #{@event.id}) - Torneo: #{@event.tournament.name} (force: #{@force})"
     
-    # Si es una sincronización forzada, limpiar seeds existentes
+    # NUEVA LÓGICA: Si es forzado, eliminar TODOS los seeds y empezar desde cero
     if @force
-      Rails.logger.info "Sincronización forzada: eliminando #{@event.event_seeds.count} seeds existentes"
+      existing_count = @event.event_seeds.count
+      Rails.logger.info "🧹 SINCRONIZACIÓN FORZADA: Eliminando TODOS los #{existing_count} seeds existentes para evento #{@event.name} (ID: #{@event.id})"
       @event.event_seeds.destroy_all
-    end
-    
-    # Intentar primero con la consulta de entrants (más directa)
-    begin
-      seeds_data = fetch_seeds_from_entrants(@event.tournament.slug, @event.slug)
-    rescue StandardError => e
-      Rails.logger.warn "Error al obtener seeds mediante entrants: #{e.message}. Intentando método alternativo..."
-      # Si falla, intentar con el método de phases y groups
-      seeds_data = fetch_seeds_sequentially(@event.tournament.slug, @event.slug)
-    end
-    
-    if seeds_data.empty?
-      Rails.logger.warn "No se encontraron seeds para el evento: #{@event.name}"
-      raise "No se encontraron seeds para el evento. Verifica que el evento tenga participantes con seeding."
-    end
-    
-    # Para evitar duplicados, mantener un registro de los seeds procesados
-    processed_seeds = Set.new
-    
-    seeds_data.each do |seed_data|
-      begin
-        entrant = seed_data["entrant"]
-        next unless entrant && entrant["participants"].present?
-
-        player_data = entrant["participants"].first["player"]
-        user = player_data["user"] || {}
-        
-        # Crear un identificador único para evitar duplicados
-        unique_key = "#{user["id"]}_#{entrant["id"]}"
-        
-        if processed_seeds.include?(unique_key)
-          Rails.logger.warn "Seed duplicado saltado: #{entrant["name"]} (#{unique_key})"
-          next
-        end
-        processed_seeds << unique_key
-        
-        Rails.logger.info "Procesando jugador: #{entrant["name"]} (User ID: #{user["id"] || 'No disponible'})"
-        
-        # Validar datos antes de crear el jugador
-        if user["id"].nil?
-          Rails.logger.warn "User ID no disponible para #{entrant["name"]}, saltando"
-          next
-        end
-        
-        # Preparar atributos de forma segura
-        player_attributes = {
-          id: player_data["id"],
-          entrant_name: entrant["name"],
-          name: user["name"],
-          discriminator: user["discriminator"],
-          bio: user["bio"],
-          birthday: user["birthday"],
-          twitter_handle: user["authorizations"]&.first&.dig("externalUsername")
-        }
-        
-        # Agregar atributos de ubicación si están disponibles
-        if user["location"].present?
-          player_attributes[:city] = user["location"]["city"]
-          player_attributes[:state] = user["location"]["state"]
-          player_attributes[:country] = user["location"]["country"]
-        end
-        
-        # Buscar o crear el jugador
-        player = Player.find_or_create_by(user_id: user["id"]) do |p|
-          # Asignar atributos básicos
-          player_attributes.each do |attr, value|
-            begin
-              p[attr] = value if value.present?
-            rescue => e
-              Rails.logger.warn "No se pudo asignar #{attr}: #{e.message}"
-            end
-          end
-          
-          # Asignar el pronombre de género con el método seguro
-          p.assign_gender_pronoun(user["genderPronoun"]) if user["genderPronoun"].present?
-        end
-
-        # Si el jugador ya existía, actualizar su información si es necesaria
-        if player.persisted? && !player.changed?
-          # Verificar si necesita actualización (nombre, tag, etc.)
-          needs_update = false
-          
-          # Verificar cambios en el entrant_name (tag del jugador)
-          if player.entrant_name != entrant["name"]
-            Rails.logger.info "Actualizando tag de '#{player.entrant_name}' a '#{entrant["name"]}'"
-            player.entrant_name = entrant["name"]
-            needs_update = true
-          end
-          
-          # Verificar cambios en información básica
-          player_attributes.each do |attr, value|
-            if value.present? && player[attr] != value
-              Rails.logger.info "Actualizando #{attr} de '#{player[attr]}' a '#{value}'"
-              player[attr] = value
-              needs_update = true
-            end
-          end
-          
-          # Verificar pronombre de género
-          if user["genderPronoun"].present?
-            current_pronoun = player.respond_to?(:gender_pronoun) ? player.gender_pronoun : player.gender_pronoum
-            if current_pronoun != user["genderPronoun"]
-              Rails.logger.info "Actualizando pronombre de género de '#{current_pronoun}' a '#{user["genderPronoun"]}'"
-              player.assign_gender_pronoun(user["genderPronoun"])
-              needs_update = true
-            end
-          end
-          
-          # Guardar cambios si es necesario
-          if needs_update
-            player.save!
-            Rails.logger.info "✅ Información actualizada para jugador existente: #{player.entrant_name}"
-          end
-        end
-
-        Rails.logger.info "Jugador creado/actualizado: #{player.id} - #{player.entrant_name}"
-        
-        # Crear o actualizar el EventSeed
-        event_seed = EventSeed.find_or_create_by(event: @event, player: player) do |es|
-          es.seed_num = seed_data["seedNum"] || nil
-          es.character_stock_icon = nil
-        end
-        
-        # Actualizar el seed_num si ha cambiado
-        if event_seed.seed_num != (seed_data["seedNum"] || nil)
-          Rails.logger.info "Actualizando seed_num de #{event_seed.seed_num} a #{seed_data["seedNum"]} para #{player.entrant_name}"
-          event_seed.update!(seed_num: seed_data["seedNum"] || nil)
-        end
-        
-        Rails.logger.info "EventSeed creado/actualizado: #{event_seed.id} - Seed #{event_seed.seed_num}"
-      rescue StandardError => e
-        Rails.logger.error "Error procesando seed para evento #{@event.name}: #{e.message}"
-        Rails.logger.error e.backtrace.join("\n")
-        # No hacemos raise para continuar con el siguiente seed
-        next
+      Rails.logger.info "✅ Seeds eliminados correctamente para evento #{@event.name}"
+    else
+      # Si no es forzado y ya hay seeds, no hacer nada
+      if @event.event_seeds.any?
+        Rails.logger.info "ℹ️ El evento #{@event.name} ya tiene seeds. Saltando sincronización (usar force: true para forzar)"
+        return
       end
     end
+
+    Rails.logger.info "🔍 Obteniendo seeds ÚNICAMENTE para evento: #{@event.name} (slug: #{@event.slug})"
     
-    final_count = EventSeed.where(event: @event).count
-    Rails.logger.info "Sincronización completada: #{final_count} seeds para el evento #{@event.name}"
-    
-    # Actualizar información de jugadores si está habilitado
-    if @update_players
-      Rails.logger.info "🔄 Actualizando información de jugadores del evento: #{@event.name}"
-      update_service = UpdatePlayersService.new(
-        delay_between_requests: 1.second,
-        force_update: @force # Si es forzado, también forzar actualización de jugadores
-      )
-      update_service.update_players_from_event_sync(@event)
+    begin
+      # Obtener seeds con validación estricta
+      seeds_data = fetch_seeds_with_strict_validation
+      
+      if seeds_data.empty?
+        Rails.logger.warn "⚠️ No se encontraron seeds para el evento #{@event.name}"
+        return
+      end
+
+      # NUEVA LÓGICA: Sistema de priorización inteligente para resolver seeds duplicados
+      Rails.logger.info "📊 Total seeds obtenidos de la API: #{seeds_data.length}"
+      
+      # Agrupar seeds por número de seed para detectar duplicados
+      seeds_by_number = seeds_data.group_by { |seed| seed[:seed_num] }
+      
+      # Procesar seeds y resolver conflictos
+      resolved_seeds = []
+      discarded_players = []
+      duplicates_resolved = 0
+      
+      seeds_by_number.each do |seed_num, competing_seeds|
+        if competing_seeds.length == 1
+          # No hay conflicto, agregar directamente
+          resolved_seeds << competing_seeds.first
+        else
+          # HAY CONFLICTO: Múltiples jugadores con el mismo seed
+          Rails.logger.warn "⚠️ CONFLICTO DE SEED #{seed_num}: #{competing_seeds.length} jugadores compitiendo"
+          competing_seeds.each { |s| Rails.logger.warn "   - #{s[:player_name]}" }
+          
+          # Resolver usando estadísticas históricas
+          best_player = resolve_seed_conflict(competing_seeds, seed_num)
+          resolved_seeds << best_player
+          
+          # Guardar los jugadores descartados para reasignar después
+          discarded = competing_seeds.reject { |s| s == best_player }
+          discarded_players.concat(discarded)
+          duplicates_resolved += discarded.length
+          
+          Rails.logger.info "✅ CONFLICTO RESUELTO: Seed #{seed_num} asignado a #{best_player[:player_name]} (mejor historial)"
+          Rails.logger.info "📝 DESCARTADOS: #{discarded.map { |d| d[:player_name] }.join(', ')}"
+        end
+      end
+      
+      Rails.logger.info "🎯 RESOLUCIÓN INICIAL: #{resolved_seeds.length} seeds únicos, #{duplicates_resolved} jugadores descartados"
+      
+      # NUEVA LÓGICA: Encontrar seeds faltantes y reasignar jugadores descartados
+      if discarded_players.any?
+        Rails.logger.info "🔍 REASIGNANDO #{discarded_players.length} jugadores descartados a seeds faltantes..."
+        
+        # Encontrar todos los números de seed que deberían existir (1 hasta el máximo)
+        used_seeds = resolved_seeds.map { |s| s[:seed_num] }.sort
+        max_seed = seeds_data.map { |s| s[:seed_num] }.max
+        expected_seeds = (1..max_seed).to_a
+        missing_seeds = expected_seeds - used_seeds
+        
+        Rails.logger.info "📊 Seeds usados: #{used_seeds.length}, Seeds faltantes: #{missing_seeds.length}"
+        Rails.logger.info "🔢 Seeds faltantes: #{missing_seeds.first(10).join(', ')}#{missing_seeds.length > 10 ? '...' : ''}"
+        
+        # Ordenar jugadores descartados por su seed original (menor a mayor)
+        discarded_players.sort_by! { |player| player[:seed_num] }
+        
+        # Asignar seeds faltantes a jugadores descartados
+        missing_seeds.each_with_index do |missing_seed, index|
+          break if index >= discarded_players.length
+          
+          player = discarded_players[index]
+          original_seed = player[:seed_num]
+          player[:seed_num] = missing_seed
+          resolved_seeds << player
+          
+          Rails.logger.info "🔄 REASIGNADO: #{player[:player_name]} (seed original: #{original_seed} → nuevo seed: #{missing_seed})"
+        end
+        
+        # Si aún quedan jugadores descartados, asignarlos a seeds consecutivos después del máximo
+        remaining_players = discarded_players[missing_seeds.length..-1] || []
+        if remaining_players.any?
+          Rails.logger.info "➕ AGREGANDO #{remaining_players.length} jugadores con seeds consecutivos después de #{max_seed}"
+          
+          remaining_players.each_with_index do |player, index|
+            new_seed = max_seed + index + 1
+            original_seed = player[:seed_num]
+            player[:seed_num] = new_seed
+            resolved_seeds << player
+            
+            Rails.logger.info "➕ AGREGADO: #{player[:player_name]} (seed original: #{original_seed} → nuevo seed: #{new_seed})"
+          end
+        end
+      end
+      
+      Rails.logger.info "🎯 RESOLUCIÓN COMPLETADA: #{resolved_seeds.length} seeds únicos, #{duplicates_resolved} conflictos resueltos"
+      
+      # Procesar seeds resueltos
+      created_count = 0
+      resolved_seeds.each_with_index do |seed_data, index|
+        begin
+          player = find_or_create_player(seed_data)
+          next unless player
+
+          event_seed = @event.event_seeds.build(
+            player: player,
+            seed_num: seed_data[:seed_num]
+          )
+
+          if event_seed.save
+            created_count += 1
+            Rails.logger.info "  [#{index + 1}/#{resolved_seeds.length}] ✅ Agregado: #{seed_data[:player_name]} (Seed: #{seed_data[:seed_num]})"
+          else
+            Rails.logger.error "  [#{index + 1}/#{resolved_seeds.length}] ❌ Error al guardar seed para #{seed_data[:player_name]}: #{event_seed.errors.full_messages.join(', ')}"
+          end
+        rescue => e
+          Rails.logger.error "  [#{index + 1}/#{resolved_seeds.length}] ❌ Error procesando #{seed_data[:player_name]}: #{e.message}"
+        end
+      end
+
+      Rails.logger.info "🎉 SINCRONIZACIÓN COMPLETADA - Evento: #{@event.name}"
+      Rails.logger.info "📊 RESUMEN: #{created_count} seeds creados exitosamente de #{resolved_seeds.length} totales"
+      Rails.logger.info "🧠 INTELIGENCIA: #{duplicates_resolved} conflictos resueltos usando estadísticas históricas"
+
+    rescue => e
+      Rails.logger.error "❌ Error al obtener seeds para evento #{@event.name}: #{e.message}"
+      Rails.logger.error "🔍 Backtrace: #{e.backtrace.first(5).join("\n")}"
+      raise e
     end
-    
-    final_count
   end
 
   private
-  
-  # Método alternativo que obtiene seeds a través de entrants
-  def fetch_seeds_from_entrants(tournament_slug, event_slug, per_page = 100)
+
+  def fetch_seeds_with_strict_validation
+    Rails.logger.info "🔍 FETCH_SEEDS_WITH_STRICT_VALIDATION - Evento ID: #{@event.id}, Nombre: #{@event.name}"
+    
     all_seeds = []
     page = 1
-    total_pages = nil
 
     loop do
-      begin
-        Rails.logger.info "Obteniendo seeds mediante entrants para #{event_slug}, página #{page}"
-        variables = { 
-          tournamentSlug: tournament_slug, 
-          eventSlug: event_slug, 
-          perPage: per_page, 
-          page: page 
-        }
-        response = @client.query(StartGgQueries::EVENT_SEEDING_QUERY, variables, "EventSeeding")
-        
-        if response.is_a?(Hash) && response["errors"]
-          Rails.logger.error "Errores en la respuesta: #{response["errors"]}"
-          raise "API retornó errores: #{response["errors"]}"
-        end
-        
-        event = response["data"]["tournament"]["events"].first
-        return [] unless event && event["entrants"] && event["entrants"]["nodes"]
-        
-        event["entrants"]["nodes"].each do |entrant|
-          # Verificar si el entrant tiene información de participantes
-          if !entrant["participants"].present?
-            Rails.logger.warn "Entrant #{entrant["name"]} (#{entrant["id"]}) no tiene participantes, saltando"
-            next
-          end
-          
-          # Verificar si el primer participante tiene información de jugador
-          participant = entrant["participants"].first
-          if !participant["player"]
-            Rails.logger.warn "Participante en entrant #{entrant["name"]} no tiene información de jugador, saltando"
-            next
-          end
-          
-          # Construir el seed data con información segura
-          seed_data = {
-            "id" => entrant["id"],
-            "seedNum" => entrant["initialSeedNum"],
-            "entrant" => {
-              "id" => entrant["id"],
-              "name" => entrant["name"],
-              "participants" => []
-            }
-          }
-          
-          # Solo agregar información de participantes si existe
-          entrant["participants"].each do |p|
-            if p["player"]
-              seed_data["entrant"]["participants"] << p
-            end
-          end
-          
-          # Solo agregar a los seeds si tiene al menos un participante con información
-          if seed_data["entrant"]["participants"].present?
-            all_seeds << seed_data
-          else
-            Rails.logger.warn "Entrant #{entrant["name"]} no tiene participantes válidos, saltando"
-          end
-        end
-        
-        total_pages = event["entrants"]["pageInfo"]["totalPages"] || 1
-      rescue StandardError => e
-        Rails.logger.error "Error al obtener seeds mediante entrants: #{e.message}"
-        Rails.logger.error e.backtrace.join("\n")
-        raise
+      Rails.logger.info "📡 Página #{page} - Obteniendo seeds DIRECTAMENTE por ID de evento: #{@event.id}"
+      
+      variables = { 
+        eventId: @event.id,
+        perPage: 100,
+        page: page 
+      }
+      
+      response = @client.query(StartGgQueries::EVENT_SEEDING_BY_ID_QUERY, variables, "EventSeedingById")
+      
+      # Validar que la respuesta tenga la estructura esperada
+      unless response&.dig('data', 'event')
+        Rails.logger.error "❌ Respuesta inválida de la API - no se encontró evento con ID #{@event.id}"
+        break
       end
       
-      break if page >= total_pages
+      event_data = response['data']['event']
+      Rails.logger.info "✅ EVENTO ENCONTRADO DIRECTAMENTE: #{event_data['name']} (ID: #{event_data['id']})"
+      
+      entrants = event_data.dig('entrants', 'nodes') || []
+      Rails.logger.info "👥 Entrants encontrados en página #{page}: #{entrants.length}"
+      
+      if entrants.empty?
+        Rails.logger.info "ℹ️ No hay más entrants en página #{page}"
+        break
+      end
+      
+      # Procesar entrants de esta página
+      entrants.each do |entrant|
+        next unless entrant['initialSeedNum'] && entrant['participants']&.any?
+        
+        participant = entrant['participants'].first
+        next unless participant&.dig('player', 'user')
+        
+        user_data = participant['player']['user']
+        
+        seed_data = {
+          seed_num: entrant['initialSeedNum'],
+          player_name: entrant['name'],
+          user_id: user_data['id'],
+          player_id: participant['player']['id'],
+          user_slug: user_data['slug'],
+          name: user_data['name'],
+          discriminator: user_data['discriminator'],
+          bio: user_data['bio'],
+          birthday: user_data['birthday'],
+          gender_pronoun: user_data['genderPronoun'],
+          city: user_data.dig('location', 'city'),
+          state: user_data.dig('location', 'state'),
+          country: user_data.dig('location', 'country'),
+          twitter: user_data.dig('authorizations')&.first&.dig('externalUsername')
+        }
+        
+        all_seeds << seed_data
+      end
+      
+      # Verificar si hay más páginas
+      page_info = event_data.dig('entrants', 'pageInfo')
+      total_pages = page_info&.dig('totalPages') || 1
+      
+      if page >= total_pages
+        Rails.logger.info "✅ Procesadas todas las páginas (#{page}/#{total_pages})"
+        break
+      end
+      
       page += 1
-      sleep 0.75 # Retraso entre solicitudes
     end
     
-    Rails.logger.info "Se encontraron #{all_seeds.size} seeds mediante entrants para el evento: #{event_slug}"
+    Rails.logger.info "📊 Total seeds obtenidos DIRECTAMENTE del evento #{@event.id}: #{all_seeds.length}"
     all_seeds
   end
 
-  def fetch_seeds_sequentially(tournament_slug, event_slug, requests_per_minute = 80)
-    all_seeds = []
-    page = 1
-    per_page = 50
-    total_pages = nil
+  def find_or_create_player(seed_data)
+    # Buscar jugador existente por user_id (no start_gg_id)
+    player = Player.find_by(user_id: seed_data[:user_id])
+    
+    if player
+      # Actualizar datos del jugador si es necesario
+      if @update_players
+        player.update!(
+          name: seed_data[:name],
+          discriminator: seed_data[:discriminator],
+          bio: seed_data[:bio],
+          birthday: seed_data[:birthday],
+          city: seed_data[:city],
+          state: seed_data[:state],
+          country: seed_data[:country],
+          twitter_handle: seed_data[:twitter]
+        )
+        # Manejar gender_pronoun/gender_pronoum
+        player.assign_gender_pronoun(seed_data[:gender_pronoun])
+        player.save!
+      end
+      return player
+    end
+    
+    # Crear nuevo jugador
+    new_player = Player.new(
+      user_id: seed_data[:user_id],
+      entrant_name: seed_data[:player_name],
+      name: seed_data[:name],
+      discriminator: seed_data[:discriminator],
+      bio: seed_data[:bio],
+      birthday: seed_data[:birthday],
+      city: seed_data[:city],
+      state: seed_data[:state],
+      country: seed_data[:country],
+      twitter_handle: seed_data[:twitter]
+    )
+    
+    # Manejar gender_pronoun/gender_pronoum
+    new_player.assign_gender_pronoun(seed_data[:gender_pronoun])
+    new_player.save!
+    new_player
+  rescue ActiveRecord::RecordInvalid => e
+    Rails.logger.error "❌ Error al crear/actualizar jugador #{seed_data[:player_name]}: #{e.message}"
+    nil
+  end
 
-    loop do
-      begin
-        Rails.logger.info "Enviando solicitud a Start.gg con URL: https://api.start.gg/gql/alpha"
-        variables = { 
-          tournamentSlug: tournament_slug, 
-                                eventSlug: event_slug, 
-                                perPage: per_page, 
-          page: page 
-        }
-        request_body = { 
-          query: StartGgQueries::EVENT_PARTICIPANTS_QUERY, 
-          variables: variables, 
-          operationName: "EventParticipants"
-        }.to_json
-        Rails.logger.info "Enviando solicitud a Start.gg con body: #{request_body}"
-        response = @client.query(StartGgQueries::EVENT_PARTICIPANTS_QUERY, variables, "EventParticipants")
-        
-        Rails.logger.info "Respuesta completa (cuerpo): #{response}"
-        Rails.logger.info "Respuesta completa (headers): #{response.headers}" if response.respond_to?(:headers)
-        
-        if response.is_a?(Hash) && response["errors"]
-          Rails.logger.error "Errores en la respuesta: #{response["errors"]}"
-          raise "API retornó errores: #{response["errors"]}"
-        end
-        
-        event = response["data"]["tournament"]["events"].first
-        
-        # Verificar que existan phases antes de procesarlas
-        if event["phases"].nil? || event["phases"].empty?
-          Rails.logger.warn "No se encontraron phases para el evento: #{event_slug}"
-          break
-        end
-        
-        # Procesamos cada fase y grupo de fase para extraer los seeds
-        event["phases"].each do |phase|
-          # Verificar que phaseGroups exista y tenga nodes
-          next unless phase["phaseGroups"] && phase["phaseGroups"]["nodes"]
-          
-          phase["phaseGroups"]["nodes"].each do |group|
-            # Verificar que seeds exista y tenga nodes
-            next unless group["seeds"] && group["seeds"]["nodes"]
-            
-            group["seeds"]["nodes"].each do |seed|
-              # Verificar que el seed tenga la información necesaria
-              next unless seed["entrant"] && seed["id"] && seed["seedNum"]
-              
-              all_seeds << {
-                "id" => seed["id"],
-                "seedNum" => seed["seedNum"],
-                "entrant" => seed["entrant"]
-          }
-        end
-          end
-        end
-        
-        # Determinamos si hay más páginas para cargar
-        if event["phases"].first && 
-           event["phases"].first["phaseGroups"] && 
-           event["phases"].first["phaseGroups"]["pageInfo"]
-          total_pages = event["phases"].first["phaseGroups"]["pageInfo"]["totalPages"] || 1
-        else
-          total_pages = 1
-        end
-        
-      rescue Faraday::ClientError => e
-        if e.response && e.response[:status] == 429
-          retry_after = e.response[:headers] && e.response[:headers]["Retry-After"]&.to_i || 60
-          Rails.logger.warn "Rate limit excedido para torneo #{tournament_slug}, evento #{event_slug}, página #{page}. Esperando #{retry_after} segundos..."
-          sleep(retry_after)
-          next
-        elsif e.response && [404, 500].include?(e.response[:status])
-          Rails.logger.error "Error HTTP #{e.response[:status]} al obtener seeds para torneo #{tournament_slug}, evento #{event_slug}, página #{page}: #{e.response[:body]}"
-          raise "Error HTTP al obtener seeds: #{e.response[:status]} - #{e.response[:body]}"
-        else
-          Rails.logger.error "Error al obtener seeds para torneo #{tournament_slug}, evento #{event_slug}, página #{page}: #{e.message}"
-          raise
-        end
+  # Resuelve conflictos de seeds duplicados usando estadísticas históricas
+  def resolve_seed_conflict(competing_seeds, seed_num)
+    Rails.logger.info "🧠 Resolviendo conflicto para seed #{seed_num} entre #{competing_seeds.length} jugadores"
+    
+    best_candidate = nil
+    best_score = -1
+    
+    competing_seeds.each do |seed_data|
+      # Buscar jugador en la base de datos
+      player = Player.find_by(user_id: seed_data[:user_id])
+      
+      if player.nil?
+        Rails.logger.info "   📊 #{seed_data[:player_name]}: Jugador nuevo (score: 0)"
+        score = 0
+      else
+        # Calcular score basado en historial de seeds
+        score = calculate_player_seed_score(player)
+        Rails.logger.info "   📊 #{seed_data[:player_name]}: Score histórico: #{score}"
       end
       
-      break if page >= total_pages
-      page += 1
-      sleep 0.75 # Retraso de 0.75 segundos entre solicitudes (80 solicitudes/minuto = ~0.75s por solicitud)
+      # Actualizar mejor candidato
+      if score > best_score
+        best_score = score
+        best_candidate = seed_data
+      end
     end
     
-    if all_seeds.empty?
-      Rails.logger.warn "No se encontraron seeds para el evento: #{event_slug}"
-    else
-      Rails.logger.info "Se encontraron #{all_seeds.size} seeds para el evento: #{event_slug}"
+    Rails.logger.info "🏆 Ganador: #{best_candidate[:player_name]} (score: #{best_score})"
+    best_candidate
+  end
+  
+  # Calcula un score basado en el historial de seeds del jugador
+  def calculate_player_seed_score(player)
+    # Obtener todos los seeds históricos del jugador
+    historical_seeds = player.event_seeds.includes(:event)
+    
+    return 0 if historical_seeds.empty?
+    
+    total_score = 0
+    
+    historical_seeds.each do |event_seed|
+      # Validar que el seed_num no sea nil
+      seed_num = event_seed.seed_num
+      next if seed_num.nil? || seed_num <= 0
+      
+      # Score basado en qué tan bajo es el seed (seeds más bajos = mejor jugador)
+      # Usamos una fórmula que da más puntos a seeds bajos
+      if seed_num <= 8
+        # Top 8: puntos muy altos (seed 1 = 200, seed 8 = 125)
+        seed_score = 200 - (seed_num - 1) * 10
+      elsif seed_num <= 16
+        # Top 16: puntos altos (seed 9 = 100, seed 16 = 65)
+        seed_score = 100 - (seed_num - 9) * 5
+      elsif seed_num <= 32
+        # Top 32: puntos medios (seed 17 = 50, seed 32 = 35)
+        seed_score = 50 - (seed_num - 17) * 1
+      else
+        # Resto: puntos bajos pero algo (seed 33+ = 10-1 puntos)
+        seed_score = [30 - seed_num, 1].max
+      end
+      
+      # Bonus por participar en eventos (experiencia)
+      participation_bonus = 5
+      
+      # Bonus adicional por seeds muy buenos (top 3)
+      champion_bonus = case seed_num
+                      when 1 then 100  # Seed 1 = campeón esperado
+                      when 2 then 50   # Seed 2 = subcampeón esperado  
+                      when 3 then 25   # Seed 3 = top 3
+                      else 0
+                      end
+      
+      total_score += seed_score + participation_bonus + champion_bonus
     end
     
-    all_seeds
+    # Score promedio para normalizar por cantidad de participaciones
+    valid_seeds_count = historical_seeds.count { |seed| seed.seed_num&.positive? }
+    
+    if valid_seeds_count == 0
+      # Si no hay seeds válidos, solo dar bonus por participación
+      experience_bonus = [historical_seeds.count * 3, 50].min
+      return experience_bonus
+    end
+    
+    average_score = total_score.to_f / valid_seeds_count
+    
+    # Bonus por cantidad de participaciones (experiencia)
+    experience_bonus = [historical_seeds.count * 3, 50].min
+    
+    final_score = (average_score + experience_bonus).round(2)
+    
+    # Mostrar el mejor seed histórico para contexto
+    valid_seeds = historical_seeds.select { |seed| seed.seed_num&.positive? }
+    best_seed = valid_seeds.map(&:seed_num).min if valid_seeds.any?
+    Rails.logger.debug "     Detalles: #{historical_seeds.count} participaciones (#{valid_seeds_count} válidas), mejor seed: #{best_seed || 'N/A'}, score promedio: #{average_score.round(2)}, bonus experiencia: #{experience_bonus}"
+    
+    final_score
   end
 end

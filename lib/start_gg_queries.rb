@@ -119,45 +119,41 @@ module StartGgQueries
     }
   GRAPHQL
 
-  # Consulta alternativa que obtiene seeds directamente a través de entrants
-  EVENT_SEEDING_QUERY = <<~GRAPHQL
-    query EventSeeding($tournamentSlug: String!, $eventSlug: String!, $perPage: Int, $page: Int) {
-      tournament(slug: $tournamentSlug) {
+  # Consulta que obtiene seeds usando el ID del evento directamente (más precisa)
+  EVENT_SEEDING_BY_ID_QUERY = <<~GRAPHQL
+    query EventSeedingById($eventId: ID!, $perPage: Int, $page: Int) {
+      event(id: $eventId) {
         id
         name
-        events(filter: { slug: $eventSlug }) {
-          id
-          name
-          entrants(query: { perPage: $perPage, page: $page }) {
-            nodes {
-              id
-              name
-              initialSeedNum
-              participants {
-                player {
+        entrants(query: { perPage: $perPage, page: $page }) {
+          nodes {
+            id
+            name
+            initialSeedNum
+            participants {
+              player {
+                id
+                user {
                   id
-                  user {
-                    id
-                    slug
-                    name
-                    discriminator
-                    bio
-                    birthday
-                    genderPronoun
-                    location {
-                      city
-                      state
-                      country
-                    }
-                    authorizations(types: [TWITTER]) { externalUsername }
+                  slug
+                  name
+                  discriminator
+                  bio
+                  birthday
+                  genderPronoun
+                  location {
+                    city
+                    state
+                    country
                   }
+                  authorizations(types: [TWITTER]) { externalUsername }
                 }
               }
             }
-            pageInfo {
-              total
-              totalPages
-            }
+          }
+          pageInfo {
+            total
+            totalPages
           }
         }
       }
@@ -210,6 +206,51 @@ module StartGgQueries
               id
               name
               startAt
+            }
+          }
+        }
+      }
+    }
+  GRAPHQL
+
+  # Consulta alternativa que obtiene seeds directamente a través de entrants (usando slug)
+  EVENT_SEEDING_QUERY = <<~GRAPHQL
+    query EventSeeding($tournamentSlug: String!, $eventSlug: String!, $perPage: Int, $page: Int) {
+      tournament(slug: $tournamentSlug) {
+        id
+        name
+        events(filter: { slug: $eventSlug }) {
+          id
+          name
+          entrants(query: { perPage: $perPage, page: $page }) {
+            nodes {
+              id
+              name
+              initialSeedNum
+              participants {
+                player {
+                  id
+                  user {
+                    id
+                    slug
+                    name
+                    discriminator
+                    bio
+                    birthday
+                    genderPronoun
+                    location {
+                      city
+                      state
+                      country
+                    }
+                    authorizations(types: [TWITTER]) { externalUsername }
+                  }
+                }
+              }
+            }
+            pageInfo {
+              total
+              totalPages
             }
           }
         }

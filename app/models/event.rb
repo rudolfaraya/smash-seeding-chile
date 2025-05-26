@@ -43,16 +43,13 @@ class Event < ApplicationRecord
   # Generar la URL del evento en start.gg
   def generate_start_gg_event_url
     if slug.present? && tournament&.slug.present?
-      # Asegurar que el slug del evento no contenga ya el slug del torneo
       event_specific_slug = self.slug.starts_with?(tournament.slug) ? self.slug.split('/').last : self.slug
-      self.start_gg_event_url = "https://www.start.gg/#{tournament.slug}/event/#{event_specific_slug}"
+      "https://www.start.gg/#{tournament.slug}/event/#{event_specific_slug}"
     end
   end
   
-  # Método para obtener la URL de start.gg del evento (con fallback si no está guardada)
+  # Método para obtener la URL de start.gg del evento
   def start_gg_event_url_or_generate
-    return start_gg_event_url if start_gg_event_url.present?
-    
     if slug.present? && tournament&.slug.present?
       event_specific_slug = self.slug.starts_with?(tournament.slug) ? self.slug.split('/').last : self.slug
       "https://www.start.gg/#{tournament.slug}/event/#{event_specific_slug}"
@@ -61,9 +58,15 @@ class Event < ApplicationRecord
     end
   end
 
-  def fetch_and_save_seeds(max_retries = 3, retry_delay = 60)
-    # Verificar si ya hay event seeds para este evento
-    return if event_seeds.any?
+  def fetch_and_save_seeds(max_retries = 3, retry_delay = 60, force: false)
+    # Si es una sincronización forzada, limpiar seeds existentes
+    if force
+      Rails.logger.info "Sincronización forzada: eliminando #{event_seeds.count} seeds existentes para #{name}"
+      event_seeds.destroy_all
+    else
+      # Verificar si ya hay event seeds para este evento (solo si no es forzado)
+      return if event_seeds.any?
+    end
 
     if tournament.name == "La Gagoleta 3: Edición Loki" && name == "Singles"
       Rails.logger.info "Usando datos simulados para La Gagoleta 3: Edición Loki - Singles"
@@ -88,7 +91,6 @@ class Event < ApplicationRecord
         player = Player.find_or_create_by(user_id: user["id"]) do |p|
           p.id = player_data["id"]
           p.entrant_name = entrant["name"]
-          p.user_slug = user["slug"]
           p.name = user["name"]
           p.discriminator = user["discriminator"]
           p.bio = user["bio"]

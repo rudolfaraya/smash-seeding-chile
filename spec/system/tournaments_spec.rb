@@ -217,7 +217,7 @@ RSpec.describe 'Tournaments System', type: :system do
     it 'handles 404 errors gracefully' do
       visit '/tournaments/non-existent'
       
-      expect(page).to have_content('404') || expect(page).to have_content('No encontrado')
+      expect(page).to have_content('404').or have_content('No encontrado')
     end
 
     it 'handles server errors gracefully' do
@@ -226,7 +226,7 @@ RSpec.describe 'Tournaments System', type: :system do
       
       visit tournaments_path
       
-      expect(page).to have_content('Error') || expect(page).to have_content('500')
+      expect(page).to have_content('Error').or have_content('500')
     end
   end
 
