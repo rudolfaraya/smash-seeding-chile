@@ -88,10 +88,77 @@ class PlayersController < ApplicationController
     render json: { success: false, error: 'Jugador no encontrado' }
   end
 
+  def edit_info
+    @player = Player.find(params[:id])
+    
+    respond_to do |format|
+      format.html { render partial: 'edit_info_modal', locals: { player: @player } }
+      format.turbo_stream { 
+        render turbo_stream: turbo_stream.replace("edit_info_modal_content", 
+          partial: "edit_info_modal", 
+          locals: { player: @player }
+        )
+      }
+    end
+  rescue ActiveRecord::RecordNotFound
+    respond_to do |format|
+      format.html { redirect_to players_path, alert: 'Jugador no encontrado' }
+      format.turbo_stream { 
+        render turbo_stream: turbo_stream.replace("edit_info_modal_content", "")
+      }
+    end
+  end
+
+  def update_info
+    @player = Player.find(params[:id])
+    
+    if @player.update(player_info_params)
+      respond_to do |format|
+        format.json { render json: { success: true, message: 'Información actualizada correctamente' } }
+        format.turbo_stream { 
+          # Preparar datos para la recarga
+          @query = session[:players_query]
+          @players = prepare_players_data
+          
+          render turbo_stream: turbo_stream.replace("players_results", 
+            partial: "players_list", 
+            locals: { players: @players }
+          )
+        }
+        format.html { redirect_to players_path, notice: 'Información actualizada correctamente' }
+      end
+    else
+      respond_to do |format|
+        format.json { render json: { success: false, errors: @player.errors.full_messages } }
+        format.turbo_stream { 
+          render turbo_stream: turbo_stream.replace("edit_info_modal_content", 
+            partial: "edit_info_modal", 
+            locals: { player: @player }
+          )
+        }
+        format.html { 
+          render partial: 'edit_info_modal', locals: { player: @player }, status: :unprocessable_entity
+        }
+      end
+    end
+  rescue ActiveRecord::RecordNotFound
+    respond_to do |format|
+      format.json { render json: { success: false, error: 'Jugador no encontrado' } }
+      format.turbo_stream { 
+        render turbo_stream: turbo_stream.replace("edit_info_modal_content", "")
+      }
+      format.html { redirect_to players_path, alert: 'Jugador no encontrado' }
+    end
+  end
+
   private
 
   def player_params
     params.require(:player).permit(:character_1, :skin_1, :character_2, :skin_2, :character_3, :skin_3)
+  end
+
+  def player_info_params
+    params.require(:player).permit(:entrant_name, :name, :country, :city, :state, :twitter_handle, :bio, :birthday, :gender_pronoun)
   end
 
   def prepare_players_data

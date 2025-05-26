@@ -38,6 +38,8 @@ Rails.application.routes.draw do
     member do
       patch :update_smash_characters
       get :current_characters
+      get :edit_info
+      patch :update_info
     end
   end
 end

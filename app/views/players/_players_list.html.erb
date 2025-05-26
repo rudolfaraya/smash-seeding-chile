@@ -83,7 +83,19 @@
                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                   </svg>
-                  <span class="text-xs">@<%= player.twitter_handle %></span>
+                  <a href="<%= player.twitter_url %>" target="_blank" rel="noopener noreferrer" class="text-xs text-sky-400 hover:text-sky-300 transition-colors duration-200">
+                    @<%= player.twitter_handle %>
+                  </a>
+                </div>
+              <% end %>
+              <% if player.discriminator.present? %>
+                <div class="flex items-center mb-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd" />
+                  </svg>
+                  <a href="<%= player.start_gg_url %>" target="_blank" rel="noopener noreferrer" class="text-xs text-green-400 hover:text-green-300 transition-colors duration-200">
+                    start.gg
+                  </a>
                 </div>
               <% end %>
               <% if player.gender_pronoun.present? %>
@@ -120,6 +132,17 @@
           </td>
           <td class="py-4 px-6">
             <div class="flex space-x-3">
+              <!-- Botón para editar información del jugador -->
+              <button 
+                onclick="openEditInfoModal(<%= player.id %>)" 
+                class="inline-flex items-center px-2 py-1 border border-purple-500 text-purple-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200 cursor-pointer text-xs" 
+                title="Editar información del jugador">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
+                </svg>
+                <span>Editar Jugador</span>
+              </button>
+              
               <!-- Botón para editar personajes de Smash -->
               <button 
                 onclick="openSmashCharacterModal(<%= player.id %>)" 
@@ -298,7 +321,19 @@
                 <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                 <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
               </svg>
-              <span class="truncate">@<%= player.twitter_handle %></span>
+              <a href="<%= player.twitter_url %>" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:text-sky-300 transition-colors duration-200 truncate">
+                @<%= player.twitter_handle %>
+              </a>
+            </div>
+          <% end %>
+          <% if player.discriminator.present? %>
+            <div class="flex items-center text-sm text-slate-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-green-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd" />
+              </svg>
+              <a href="<%= player.start_gg_url %>" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:text-green-300 transition-colors duration-200 truncate">
+                start.gg
+              </a>
             </div>
           <% end %>
           <% if player.gender_pronoun.present? %>
@@ -346,6 +381,17 @@
       
       <!-- Acciones -->
       <div class="p-4 border-t border-slate-700 flex flex-col space-y-2">
+        <!-- Botón para editar información del jugador -->
+        <button 
+          onclick="openEditInfoModal(<%= player.id %>)" 
+          class="w-full inline-flex items-center justify-center px-4 py-2 border border-purple-500 text-purple-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200 cursor-pointer text-sm" 
+          title="Editar información del jugador">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
+          </svg>
+          Editar Información
+        </button>
+        
         <!-- Botón para editar personajes -->
         <button 
           onclick="openSmashCharacterModal(<%= player.id %>)" 

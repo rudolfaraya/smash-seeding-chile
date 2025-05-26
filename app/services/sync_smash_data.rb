@@ -2,8 +2,9 @@ require_relative "../../lib/start_gg_queries"
 require 'set'
 
 class SyncSmashData
-  def initialize
+  def initialize(update_players: false)
     @client = StartGgClient.new
+    @update_players = update_players
   end
 
   def call
@@ -206,6 +207,17 @@ class SyncSmashData
       # Sincronizar eventos para este torneo inmediatamente
       sync_events_for_single_tournament(tournament)
       
+      # Actualizar información de jugadores si está habilitado
+      if @update_players
+        Rails.logger.info "🔄 Actualizando información de jugadores del torneo: #{tournament.name}"
+        update_service = UpdatePlayersService.new(
+          delay_between_requests: 1.second,
+          force_update: false
+        )
+        update_service.update_players_from_tournament_sync(tournament)
+      end
+      
+      Rails.logger.info "✅ Torneo sincronizado exitosamente: #{tournament.name}"
       return 1 # Retorna 1 torneo creado
     end
   rescue StandardError => e

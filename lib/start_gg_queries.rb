@@ -162,6 +162,59 @@ module StartGgQueries
     }
   GRAPHQL
 
+  # Query para obtener información de un usuario específico por ID
+  USER_BY_ID_QUERY = <<~GRAPHQL
+    query UserById($userId: ID!) {
+      user(id: $userId) {
+        id
+        slug
+        name
+        discriminator
+        bio
+        birthday
+        genderPronoun
+        location {
+          city
+          state
+          country
+        }
+        authorizations(types: [TWITTER]) {
+          type
+          externalUsername
+        }
+      }
+    }
+  GRAPHQL
+
+  # Query para obtener las participaciones recientes de un usuario y extraer su tag actual
+  USER_RECENT_ENTRANTS_QUERY = <<~GRAPHQL
+    query UserRecentEntrants($userId: ID!) {
+      user(id: $userId) {
+        id
+        player {
+          id
+          recentStandings(limit: 10) {
+            entrant {
+              id
+              name
+              participants {
+                player {
+                  id
+                }
+              }
+            }
+            placement
+            tournament {
+              id
+              name
+              startAt
+            }
+          }
+        }
+      }
+    }
+  GRAPHQL
+
   def self.fetch_tournaments(client, per_page = 25)
     tournaments = []
     page = 1
@@ -281,28 +334,116 @@ module StartGgQueries
     total_pages = nil
 
     loop do
+      variables = { tournamentSlug: tournament_slug, eventSlug: event_slug, perPage: per_page, page: page }
       begin
-        response = client.query(EVENT_PARTICIPANTS_QUERY,
-                              { tournamentSlug: tournament_slug, eventSlug: event_slug, perPage: per_page, page: page },
-                              "EventParticipants")
-        event = response["data"]["tournament"]["events"].first
-        data = event["seeds"]
-        seeds.concat(data["nodes"]) unless data["nodes"].nil?
-        total_pages ||= data["pageInfo"]["totalPages"]
+        response = client.query(EVENT_PARTICIPANTS_QUERY, variables, "EventParticipants")
+        data = response["data"]["tournament"]["events"].first
+
+        if data && data["phases"]
+          data["phases"].each do |phase|
+            phase["phaseGroups"]["nodes"].each do |group|
+              seeds.concat(group["seeds"]["nodes"]) unless group["seeds"]["nodes"].nil?
+            end
+          end
+          total_pages ||= data["phases"].first&.dig("phaseGroups", "pageInfo", "totalPages") || 1
+        end
       rescue Faraday::ClientError => e
         if e.response[:status] == 429
-          Rails.logger.warn "Rate limit excedido para torneo #{tournament_slug}, evento #{event_slug}, página #{page}. Esperando 60 segundos..."
-          sleep(60) # Espera 60 segundos antes de reintentar
+          Rails.logger.warn "Rate limit excedido para página #{page}. Esperando 60 segundos..."
+          sleep(60)
           next
         else
-          Rails.logger.error "Error en fetch_event_seeds: #{e.message}"
+          Rails.logger.error "Error en la página #{page}: #{e.message}"
           raise
         end
       end
       break if page >= total_pages
       page += 1
-      sleep 2 # Aumenta el retraso entre páginas
+      sleep 2
     end
     seeds
+  end
+
+  # Obtener información de un usuario específico por ID
+  def self.fetch_user_by_id(client, user_id)
+    Rails.logger.info "🔍 Obteniendo información del usuario ID: #{user_id}"
+    
+    begin
+      variables = { userId: user_id }
+      response = client.query(USER_BY_ID_QUERY, variables, "UserById")
+      
+      if response["data"] && response["data"]["user"]
+        Rails.logger.info "✅ Información obtenida para usuario #{user_id}"
+        response["data"]["user"]
+      else
+        Rails.logger.warn "⚠️ No se encontró información para el usuario #{user_id}"
+        nil
+      end
+    rescue Faraday::ClientError => e
+      if e.response[:status] == 429
+        Rails.logger.warn "Rate limit excedido para usuario #{user_id}. Esperando 60 segundos..."
+        sleep(60)
+        # Reintentar una vez
+        retry
+      else
+        Rails.logger.error "Error obteniendo información del usuario #{user_id}: #{e.message}"
+        raise
+      end
+    rescue StandardError => e
+      Rails.logger.error "Error inesperado obteniendo usuario #{user_id}: #{e.message}"
+      nil
+    end
+  end
+
+  # Obtener el tag más reciente del usuario desde sus participaciones
+  def self.fetch_user_recent_tag(client, user_id)
+    Rails.logger.info "🏷️ Obteniendo tag reciente del usuario ID: #{user_id}"
+    
+    begin
+      variables = { userId: user_id }
+      response = client.query(USER_RECENT_ENTRANTS_QUERY, variables, "UserRecentEntrants")
+      
+      if response["data"] && response["data"]["user"] && response["data"]["user"]["player"]
+        standings = response["data"]["user"]["player"]["recentStandings"]
+        
+        if standings && standings.any?
+          # Buscar el entrant más reciente que sea individual (solo un participante)
+          recent_individual_entrant = standings.find do |standing|
+            entrant = standing["entrant"]
+            participants = entrant["participants"] || []
+            # Solo considerar entrants individuales (un solo participante)
+            participants.length == 1 && participants.first["player"]["id"].to_s == user_id.to_s
+          end
+          
+          if recent_individual_entrant
+            tag = recent_individual_entrant["entrant"]["name"]
+            Rails.logger.info "✅ Tag reciente encontrado para usuario #{user_id}: #{tag}"
+            return tag
+          else
+            Rails.logger.warn "⚠️ No se encontraron participaciones individuales recientes para usuario #{user_id}"
+            return nil
+          end
+        else
+          Rails.logger.warn "⚠️ No se encontraron participaciones recientes para usuario #{user_id}"
+          return nil
+        end
+      else
+        Rails.logger.warn "⚠️ No se encontró información de jugador para usuario #{user_id}"
+        return nil
+      end
+    rescue Faraday::ClientError => e
+      if e.response[:status] == 429
+        Rails.logger.warn "Rate limit excedido para tag de usuario #{user_id}. Esperando 60 segundos..."
+        sleep(60)
+        # Reintentar una vez
+        retry
+      else
+        Rails.logger.error "Error obteniendo tag del usuario #{user_id}: #{e.message}"
+        return nil
+      end
+    rescue StandardError => e
+      Rails.logger.error "Error inesperado obteniendo tag del usuario #{user_id}: #{e.message}"
+      return nil
+    end
   end
 end

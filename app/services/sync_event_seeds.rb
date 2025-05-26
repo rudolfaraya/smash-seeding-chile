@@ -2,10 +2,11 @@ require_relative "../../lib/start_gg_queries"
 require 'set'
 
 class SyncEventSeeds
-  def initialize(event, force: false)
+  def initialize(event, force: false, update_players: false)
     @event = event
     @client = StartGgClient.new
     @force = force
+    @update_players = update_players
   end
 
   def call
@@ -92,6 +93,44 @@ class SyncEventSeeds
           p.assign_gender_pronoun(user["genderPronoun"]) if user["genderPronoun"].present?
         end
 
+        # Si el jugador ya existía, actualizar su información si es necesaria
+        if player.persisted? && !player.changed?
+          # Verificar si necesita actualización (nombre, tag, etc.)
+          needs_update = false
+          
+          # Verificar cambios en el entrant_name (tag del jugador)
+          if player.entrant_name != entrant["name"]
+            Rails.logger.info "Actualizando tag de '#{player.entrant_name}' a '#{entrant["name"]}'"
+            player.entrant_name = entrant["name"]
+            needs_update = true
+          end
+          
+          # Verificar cambios en información básica
+          player_attributes.each do |attr, value|
+            if value.present? && player[attr] != value
+              Rails.logger.info "Actualizando #{attr} de '#{player[attr]}' a '#{value}'"
+              player[attr] = value
+              needs_update = true
+            end
+          end
+          
+          # Verificar pronombre de género
+          if user["genderPronoun"].present?
+            current_pronoun = player.respond_to?(:gender_pronoun) ? player.gender_pronoun : player.gender_pronoum
+            if current_pronoun != user["genderPronoun"]
+              Rails.logger.info "Actualizando pronombre de género de '#{current_pronoun}' a '#{user["genderPronoun"]}'"
+              player.assign_gender_pronoun(user["genderPronoun"])
+              needs_update = true
+            end
+          end
+          
+          # Guardar cambios si es necesario
+          if needs_update
+            player.save!
+            Rails.logger.info "✅ Información actualizada para jugador existente: #{player.entrant_name}"
+          end
+        end
+
         Rails.logger.info "Jugador creado/actualizado: #{player.id} - #{player.entrant_name}"
         
         # Crear o actualizar el EventSeed
@@ -117,6 +156,17 @@ class SyncEventSeeds
     
     final_count = EventSeed.where(event: @event).count
     Rails.logger.info "Sincronización completada: #{final_count} seeds para el evento #{@event.name}"
+    
+    # Actualizar información de jugadores si está habilitado
+    if @update_players
+      Rails.logger.info "🔄 Actualizando información de jugadores del evento: #{@event.name}"
+      update_service = UpdatePlayersService.new(
+        delay_between_requests: 1.second,
+        force_update: @force # Si es forzado, también forzar actualización de jugadores
+      )
+      update_service.update_players_from_event_sync(@event)
+    end
+    
     final_count
   end
 

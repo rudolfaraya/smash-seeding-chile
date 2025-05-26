@@ -389,6 +389,13 @@
   </div>
 </div>
 
+<!-- Modal para editar información del jugador -->
+<div id="editInfoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[9999] flex items-center justify-center" style="z-index: 9999;">
+  <div id="edit_info_modal_content">
+    <!-- El contenido se cargará dinámicamente aquí -->
+  </div>
+</div>
+
 <script>
 // Funciones globales para el modal de personajes de Smash
 function openSmashCharacterModal(playerId) {
@@ -785,6 +792,175 @@ function initializeCharacterPreviews() {
     }
   });
 }
+
+// Funciones para el modal de edición de información del jugador
+function openEditInfoModal(playerId) {
+  console.log("=== Abriendo modal de edición de información para jugador:", playerId, "===");
+  
+  const modal = document.getElementById('editInfoModal');
+  if (!modal) {
+    console.error("❌ Modal de edición de información no encontrado");
+    return;
+  }
+  
+  // Mostrar el modal
+  modal.classList.remove('hidden');
+  
+  // Cargar el formulario via AJAX
+  fetch(`/players/${playerId}/edit_info`, {
+    method: 'GET',
+    headers: {
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+      'Accept': 'text/html'
+    }
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.text();
+  })
+  .then(html => {
+    const modalContent = document.getElementById('edit_info_modal_content');
+    if (modalContent) {
+      modalContent.innerHTML = html;
+      console.log("✅ Formulario de edición cargado");
+    } else {
+      console.error("❌ Contenedor del modal no encontrado");
+      throw new Error("Modal content container not found");
+    }
+  })
+  .catch(error => {
+    console.error('❌ Error cargando formulario de edición:', error);
+    const modalContent = document.getElementById('edit_info_modal_content');
+    if (modalContent) {
+      modalContent.innerHTML = `
+        <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-600 p-6 w-full max-w-md mx-4">
+          <div class="text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-400 mb-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <h3 class="text-lg font-medium text-slate-100 mb-2">Error</h3>
+            <p class="text-slate-400 mb-4">No se pudo cargar el formulario de edición</p>
+            <button onclick="closeEditInfoModal()" class="px-4 py-2 bg-slate-600 text-slate-200 rounded-md hover:bg-slate-500">
+              Cerrar
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      console.error("❌ No se puede mostrar el error: contenedor del modal no encontrado");
+      // Cerrar el modal si no podemos mostrar el contenido
+      closeEditInfoModal();
+    }
+  });
+}
+
+function closeEditInfoModal() {
+  const modal = document.getElementById('editInfoModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    
+    // Limpiar contenido
+    const modalContent = document.getElementById('edit_info_modal_content');
+    if (modalContent) {
+      modalContent.innerHTML = '';
+    }
+    
+    console.log("✅ Modal de edición de información cerrado");
+  }
+}
+
+// Cerrar modal de edición de información al hacer clic fuera de él
+document.addEventListener('click', function(e) {
+  const modal = document.getElementById('editInfoModal');
+  const modalContent = document.getElementById('edit_info_modal_content');
+  
+  if (e.target === modal && !modalContent.contains(e.target)) {
+    closeEditInfoModal();
+  }
+});
+
+// Cerrar modal de edición de información con tecla Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('editInfoModal');
+    if (modal && !modal.classList.contains('hidden')) {
+      closeEditInfoModal();
+    }
+  }
+});
+
+// Manejar envío del formulario de edición de información
+document.addEventListener('submit', function(e) {
+  // Verificar si es el formulario de edición de información
+  if (e.target.closest('#editInfoModal')) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const playerId = form.action.match(/\/players\/(\d+)\//)[1];
+    
+    // Enviar datos via AJAX con Turbo Stream
+    fetch(form.action, {
+      method: 'PATCH',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Accept': 'text/vnd.turbo-stream.html'
+      },
+      body: formData
+    })
+    .then(response => {
+      if (response.headers.get('Content-Type')?.includes('turbo-stream')) {
+        return response.text().then(html => {
+          closeEditInfoModal();
+          console.log("✅ Información del jugador actualizada con Turbo Stream");
+          
+          // Turbo procesará automáticamente la respuesta
+          Turbo.renderStreamMessage(html);
+          return { success: true };
+        });
+      } else {
+        return response.json();
+      }
+    })
+    .then(data => {
+      if (data.success) {
+        // Ya manejado arriba para turbo-stream
+        if (!data.turbo_stream_processed) {
+          closeEditInfoModal();
+          console.log("✅ Información del jugador actualizada con JSON fallback");
+          
+          // Fallback: recargar turbo frame manualmente
+          const turboFrame = document.getElementById('players_results');
+          if (turboFrame) {
+            const currentSrc = turboFrame.getAttribute('src') || window.location.pathname;
+            const url = new URL(currentSrc, window.location.origin);
+            url.searchParams.set('_reload', Date.now());
+            
+            const searchParams = new URLSearchParams(window.location.search);
+            if (searchParams.get('query')) {
+              url.searchParams.set('query', searchParams.get('query'));
+            }
+            
+            turboFrame.setAttribute('src', url.toString());
+            console.log("🔄 Recargando turbo frame con URL:", url.toString());
+          } else {
+            console.log("⚠️ Turbo frame no encontrado, recargando página completa");
+            window.location.reload();
+          }
+        }
+      } else if (data.errors) {
+        console.error("❌ Errores de validación:", data.errors);
+        // Los errores se mostrarán en el formulario via turbo-stream
+      }
+    })
+    .catch(error => {
+      console.error('❌ Error actualizando información del jugador:', error);
+      alert('Error al actualizar la información del jugador');
+    });
+  }
+});
 </script>
 
 <style>
