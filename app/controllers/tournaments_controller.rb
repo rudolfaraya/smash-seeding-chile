@@ -52,14 +52,13 @@ class TournamentsController < ApplicationController
 
   def sync
     begin
-      service = SyncSmashData.new
-      # Usar el nuevo método que prioriza eventos faltantes antes que seeds
-      service.sync_tournaments
+      # Encolar job de sincronización general de torneos
+      job = SyncTournamentsJob.perform_later
 
       respond_to do |format|
-        format.html { redirect_to tournaments_path, notice: "Torneos sincronizados exitosamente. Se priorizaron eventos faltantes antes que seeds." }
+        format.html { redirect_to tournaments_path, notice: "Sincronización de torneos iniciada en segundo plano. Job ID: #{job.job_id}" }
         format.turbo_stream {
-          flash.now[:notice] = "Torneos sincronizados exitosamente. Se priorizaron eventos faltantes antes que seeds."
+          flash.now[:notice] = "Sincronización de torneos iniciada en segundo plano. Puedes monitorear el progreso en Mission Control."
           load_tournaments_with_session_filters
           render turbo_stream: [
             turbo_stream.replace("tournaments_results",
@@ -72,9 +71,9 @@ class TournamentsController < ApplicationController
       end
     rescue StandardError => e
       respond_to do |format|
-        format.html { redirect_to tournaments_path, alert: "Error al sincronizar: #{e.message}" }
+        format.html { redirect_to tournaments_path, alert: "Error al iniciar sincronización: #{e.message}" }
         format.turbo_stream {
-          flash.now[:alert] = "Error al sincronizar: #{e.message}"
+          flash.now[:alert] = "Error al iniciar sincronización: #{e.message}"
           load_tournaments_with_session_filters
           render turbo_stream: [
             turbo_stream.replace("tournaments_results",
@@ -90,44 +89,28 @@ class TournamentsController < ApplicationController
 
   def sync_new_tournaments
     begin
-      service = SyncSmashData.new
-      # Usar el nuevo método optimizado que busca solo torneos posteriores al último registrado
-      nuevos_torneos = service.sync_tournaments_and_events_atomic
+      # Encolar job de sincronización de nuevos torneos
+      job = SyncNewTournamentsJob.perform_later
 
       respond_to do |format|
-        if nuevos_torneos > 0
-          format.html { redirect_to tournaments_path, notice: "✅ Sincronización completada: #{nuevos_torneos} nuevos torneos agregados (solo torneos que no existían en la base de datos)." }
-          format.turbo_stream {
-            flash.now[:notice] = "✅ Sincronización: #{nuevos_torneos} nuevos torneos agregados (solo torneos posteriores al último registrado que no existían en BD)."
-            load_tournaments_with_session_filters
-            render turbo_stream: [
-              turbo_stream.replace("tournaments_results",
-                partial: "tournaments/tournaments_list",
-                locals: { tournaments: @tournaments }),
-              turbo_stream.replace("flash",
-                partial: "shared/flash")
-            ]
-          }
-        else
-          format.html { redirect_to tournaments_path, notice: "✨ Base de datos actualizada: no se encontraron torneos nuevos posteriores al último registrado." }
-          format.turbo_stream {
-            flash.now[:notice] = "✨ Base de datos actualizada: no se encontraron torneos nuevos para sincronizar."
-            load_tournaments_with_session_filters
-            render turbo_stream: [
-              turbo_stream.replace("tournaments_results",
-                partial: "tournaments/tournaments_list",
-                locals: { tournaments: @tournaments }),
-              turbo_stream.replace("flash",
-                partial: "shared/flash")
-            ]
-          }
-        end
+        format.html { redirect_to tournaments_path, notice: "Sincronización de nuevos torneos iniciada en segundo plano. Job ID: #{job.job_id}" }
+        format.turbo_stream {
+          flash.now[:notice] = "Sincronización de nuevos torneos iniciada en segundo plano. Puedes monitorear el progreso en Mission Control."
+          load_tournaments_with_session_filters
+          render turbo_stream: [
+            turbo_stream.replace("tournaments_results",
+              partial: "tournaments/tournaments_list",
+              locals: { tournaments: @tournaments }),
+            turbo_stream.replace("flash",
+              partial: "shared/flash")
+          ]
+        }
       end
     rescue StandardError => e
       respond_to do |format|
-        format.html { redirect_to tournaments_path, alert: "❌ Error en sincronización: #{e.message}" }
+        format.html { redirect_to tournaments_path, alert: "❌ Error al iniciar sincronización: #{e.message}" }
         format.turbo_stream {
-          flash.now[:alert] = "❌ Error en sincronización de nuevos torneos: #{e.message}"
+          flash.now[:alert] = "❌ Error al iniciar sincronización de nuevos torneos: #{e.message}"
           load_tournaments_with_session_filters
           render turbo_stream: [
             turbo_stream.replace("tournaments_results",
@@ -145,44 +128,28 @@ class TournamentsController < ApplicationController
     @tournament = Tournament.find(params[:id])
 
     begin
-      # Sincronizar eventos para este torneo específico usando el nuevo método
-      service = SyncSmashData.new
-      nuevos_eventos = service.sync_events_for_single_tournament(@tournament)
+      # Encolar job de sincronización de eventos para este torneo específico
+      job = SyncTournamentEventsJob.perform_later(@tournament.id)
 
       respond_to do |format|
-        if nuevos_eventos > 0
-          format.html { redirect_to tournaments_path, notice: "Se han sincronizado #{nuevos_eventos} eventos para el torneo #{@tournament.name}." }
-          format.turbo_stream {
-            flash.now[:notice] = "Se han sincronizado #{nuevos_eventos} eventos para el torneo #{@tournament.name}."
-            load_tournaments_with_session_filters
-            render turbo_stream: [
-              turbo_stream.replace("tournaments_results",
-                partial: "tournaments/tournaments_list",
-                locals: { tournaments: @tournaments }),
-              turbo_stream.replace("flash",
-                partial: "shared/flash")
-            ]
-          }
-        else
-          format.html { redirect_to tournaments_path, notice: "No se encontraron nuevos eventos para el torneo #{@tournament.name}." }
-          format.turbo_stream {
-            flash.now[:notice] = "No se encontraron nuevos eventos para el torneo #{@tournament.name}."
-            load_tournaments_with_session_filters
-            render turbo_stream: [
-              turbo_stream.replace("tournaments_results",
-                partial: "tournaments/tournaments_list",
-                locals: { tournaments: @tournaments }),
-              turbo_stream.replace("flash",
-                partial: "shared/flash")
-            ]
-          }
-        end
+        format.html { redirect_to tournaments_path, notice: "Sincronización de eventos iniciada para el torneo #{@tournament.name}. Job ID: #{job.job_id}" }
+        format.turbo_stream {
+          flash.now[:notice] = "Sincronización de eventos iniciada para el torneo #{@tournament.name}. Puedes monitorear el progreso en Mission Control."
+          load_tournaments_with_session_filters
+          render turbo_stream: [
+            turbo_stream.replace("tournaments_results",
+              partial: "tournaments/tournaments_list",
+              locals: { tournaments: @tournaments }),
+            turbo_stream.replace("flash",
+              partial: "shared/flash")
+          ]
+        }
       end
     rescue StandardError => e
       respond_to do |format|
-        format.html { redirect_to tournaments_path, alert: "Error al sincronizar eventos: #{e.message}" }
+        format.html { redirect_to tournaments_path, alert: "Error al iniciar sincronización de eventos: #{e.message}" }
         format.turbo_stream {
-          flash.now[:alert] = "Error al sincronizar eventos: #{e.message}"
+          flash.now[:alert] = "Error al iniciar sincronización de eventos: #{e.message}"
           load_tournaments_with_session_filters
           render turbo_stream: [
             turbo_stream.replace("tournaments_results",

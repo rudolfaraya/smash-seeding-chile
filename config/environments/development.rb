@@ -67,6 +67,10 @@ Rails.application.configure do
   # Optimizar assets para evitar warnings de preload innecesarios
   config.assets.preload = []
 
+  # solid_queue with active_job
+  config.active_job.queue_adapter = :solid_queue
+  config.solid_queue.connects_to = { database: { writing: :queue } }
+
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true
 

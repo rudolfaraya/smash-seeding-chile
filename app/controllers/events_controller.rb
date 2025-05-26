@@ -61,26 +61,24 @@ class EventsController < ApplicationController
 
     begin
       force = params[:force].present?
-      SyncEventSeeds.new(@event, force: force).call
-
-      # Actualizar el timestamp de sincronización si el modelo soporta este campo
-      if @event.respond_to?(:seeds_last_synced_at)
-        @event.update(seeds_last_synced_at: Time.current)
-      end
+      update_players = params[:update_players].present?
+      
+      # Encolar job de sincronización de seeds
+      job = SyncEventSeedsJob.perform_later(@event.id, { force: force, update_players: update_players })
 
       respond_to do |format|
         format.html {
           if force
-            redirect_to seeds_tournament_event_path(@tournament, @event), notice: "Seeds sincronizados forzadamente y actualizados exitosamente."
+            redirect_to seeds_tournament_event_path(@tournament, @event), notice: "Sincronización forzada de seeds iniciada en segundo plano. Job ID: #{job.job_id}"
           else
-            redirect_to seeds_tournament_event_path(@tournament, @event), notice: "Seeds y jugadores sincronizados exitosamente."
+            redirect_to seeds_tournament_event_path(@tournament, @event), notice: "Sincronización de seeds iniciada en segundo plano. Job ID: #{job.job_id}"
           end
         }
         format.turbo_stream {
           if force
-            flash.now[:notice] = "Seeds de #{@event.name} sincronizados forzadamente y actualizados exitosamente"
+            flash.now[:notice] = "Sincronización forzada de seeds de #{@event.name} iniciada en segundo plano. Puedes monitorear el progreso en Mission Control."
           else
-            flash.now[:notice] = "Seeds y jugadores de #{@event.name} sincronizados exitosamente"
+            flash.now[:notice] = "Sincronización de seeds de #{@event.name} iniciada en segundo plano. Puedes monitorear el progreso en Mission Control."
           end
 
           load_tournaments_with_filters
@@ -96,9 +94,9 @@ class EventsController < ApplicationController
       end
     rescue StandardError => e
       respond_to do |format|
-        format.html { redirect_to seeds_tournament_event_path(@tournament, @event), alert: "Error al sincronizar: #{e.message}" }
+        format.html { redirect_to seeds_tournament_event_path(@tournament, @event), alert: "Error al iniciar sincronización: #{e.message}" }
         format.turbo_stream {
-          flash.now[:alert] = "Error al sincronizar seeds: #{e.message}"
+          flash.now[:alert] = "Error al iniciar sincronización de seeds: #{e.message}"
 
           load_tournaments_with_filters
 

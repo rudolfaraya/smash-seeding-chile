@@ -42,4 +42,7 @@ Rails.application.routes.draw do
       patch :update_info
     end
   end
+
+  # Mission Control Jobs - Panel de administración de jobs
+  mount MissionControl::Jobs::Engine, at: "/jobs"
 end
