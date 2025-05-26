@@ -76,7 +76,7 @@ RSpec.describe Tournament, type: :model do
     describe '#online?' do
       context 'when region is Online' do
         let(:tournament) { build(:tournament, :online) }
-        
+
         it 'returns true' do
           expect(tournament.online?).to be true
         end
@@ -84,7 +84,7 @@ RSpec.describe Tournament, type: :model do
 
       context 'when region is not Online' do
         let(:tournament) { build(:tournament, :santiago) }
-        
+
         it 'returns false' do
           expect(tournament.online?).to be false
         end
@@ -93,7 +93,7 @@ RSpec.describe Tournament, type: :model do
 
     describe '#start_gg_url_or_generate' do
       let(:tournament) { build(:tournament, slug: 'test-tournament') }
-      
+
       it 'generates correct start.gg URL' do
         expect(tournament.start_gg_url_or_generate).to eq('https://www.start.gg/test-tournament')
       end
@@ -102,7 +102,7 @@ RSpec.describe Tournament, type: :model do
     describe '#should_be_online?' do
       context 'when venue_address indicates online' do
         let(:tournament) { build(:tournament, venue_address: 'Chile') }
-        
+
         it 'returns true' do
           expect(tournament.should_be_online?).to be true
         end
@@ -110,7 +110,7 @@ RSpec.describe Tournament, type: :model do
 
       context 'when venue_address indicates physical location' do
         let(:tournament) { build(:tournament, venue_address: 'Centro de Eventos Los Leones, Santiago') }
-        
+
         it 'returns false' do
           expect(tournament.should_be_online?).to be false
         end
@@ -208,4 +208,4 @@ RSpec.describe Tournament, type: :model do
       expect(tournament.region).to eq('Metropolitana de Santiago')
     end
   end
-end 
+end

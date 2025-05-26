@@ -15,7 +15,7 @@ Rails.application.config.assets.version = "1.0"
 if Rails.env.development?
   # En desarrollo, reducir el uso agresivo de preload
   Rails.application.config.assets.preload = []
-  
+
   # Configurar cache de assets para desarrollo
   Rails.application.config.assets.cache_store = :null_store
 end

@@ -6,7 +6,7 @@ class AddSmashCharactersToPlayers < ActiveRecord::Migration[7.2]
     add_column :players, :skin_2, :integer, null: true, default: 1
     add_column :players, :character_3, :string, null: true
     add_column :players, :skin_3, :integer, null: true, default: 1
-    
+
     # Agregar índices para búsquedas eficientes
     add_index :players, :character_1
     add_index :players, :character_2

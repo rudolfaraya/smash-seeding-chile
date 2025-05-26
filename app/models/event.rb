@@ -11,25 +11,25 @@ class Event < ApplicationRecord
 
   # Callback para generar la URL de start.gg del evento
   before_save :generate_start_gg_event_url, if: :slug_changed?
-  
+
   # Scope para precargar detalles de seeds para cada evento
   scope :with_seed_details, -> {
-    select('events.*, COUNT(DISTINCT event_seeds.id) AS event_seeds_count_data, EXISTS(SELECT 1 FROM event_seeds WHERE event_seeds.event_id = events.id) AS has_seeds_data')
+    select("events.*, COUNT(DISTINCT event_seeds.id) AS event_seeds_count_data, EXISTS(SELECT 1 FROM event_seeds WHERE event_seeds.event_id = events.id) AS has_seeds_data")
       .left_joins(:event_seeds)
-      .group('events.id')
+      .group("events.id")
   }
 
   def calculated_event_seeds_count
-    if attributes.key?('event_seeds_count_data')
-      attributes['event_seeds_count_data']
+    if attributes.key?("event_seeds_count_data")
+      attributes["event_seeds_count_data"]
     else
       event_seeds.size # Eficiente debido al includes(events: [:event_seeds]) en el controlador de torneos
     end
   end
 
   def has_seeds?
-    if attributes.key?('has_seeds_data')
-      attributes['has_seeds_data']
+    if attributes.key?("has_seeds_data")
+      attributes["has_seeds_data"]
     else
       event_seeds.exists? # Eficiente
     end
@@ -43,15 +43,15 @@ class Event < ApplicationRecord
   # Generar la URL del evento en start.gg
   def generate_start_gg_event_url
     if slug.present? && tournament&.slug.present?
-      event_specific_slug = self.slug.starts_with?(tournament.slug) ? self.slug.split('/').last : self.slug
+      event_specific_slug = self.slug.starts_with?(tournament.slug) ? self.slug.split("/").last : self.slug
       "https://www.start.gg/#{tournament.slug}/event/#{event_specific_slug}"
     end
   end
-  
+
   # Método para obtener la URL de start.gg del evento
   def start_gg_event_url_or_generate
     if slug.present? && tournament&.slug.present?
-      event_specific_slug = self.slug.starts_with?(tournament.slug) ? self.slug.split('/').last : self.slug
+      event_specific_slug = self.slug.starts_with?(tournament.slug) ? self.slug.split("/").last : self.slug
       "https://www.start.gg/#{tournament.slug}/event/#{event_specific_slug}"
     else
       nil
@@ -125,7 +125,7 @@ class Event < ApplicationRecord
           Rails.logger.error "Servicio no disponible (503) después de #{max_retries} reintentos para evento #{slug} en torneo #{tournament.slug}"
           raise "Error 503 persistente: Los servicios de Start.gg no están disponibles."
         end
-      elsif [404, 500].include?(e.response[:status])
+      elsif [ 404, 500 ].include?(e.response[:status])
         Rails.logger.error "Error HTTP #{e.response[:status]} al obtener seeds para evento #{slug} en torneo #{tournament.slug}: #{e.response[:body]}"
         raise "Error HTTP al obtener seeds: #{e.response[:status]} - #{e.response[:body]}"
       else
@@ -190,7 +190,7 @@ class Event < ApplicationRecord
           Rails.logger.warn "Servicio no disponible (503) para torneo #{tournament_slug}, evento #{event_slug}, página #{page}. Reintentando en 60 segundos..."
           sleep(60)
           next
-        elsif [404, 500].include?(e.response[:status])
+        elsif [ 404, 500 ].include?(e.response[:status])
           Rails.logger.error "Error HTTP #{e.response[:status]} al obtener seeds para torneo #{tournament_slug}, evento #{event_slug}, página #{page}: #{e.response[:body]}"
           raise "Error HTTP al obtener seeds: #{e.response[:status]} - #{e.response[:body]}"
         else

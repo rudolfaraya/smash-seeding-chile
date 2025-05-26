@@ -2,7 +2,7 @@ module ApiHelpers
   # Stub Start.gg API responses
   def stub_start_gg_tournament_request(tournament_id, response_data = nil)
     response_data ||= mock_tournament_data(tournament_id)
-    
+
     stub_request(:post, "https://api.start.gg/gql/alpha")
       .with(
         body: hash_including("query" => /tournament.*#{tournament_id}/),
@@ -17,10 +17,10 @@ module ApiHelpers
         headers: { 'Content-Type' => 'application/json' }
       )
   end
-  
+
   def stub_start_gg_events_request(tournament_id, events_data = nil)
     events_data ||= mock_events_data(tournament_id)
-    
+
     stub_request(:post, "https://api.start.gg/gql/alpha")
       .with(
         body: hash_including("query" => /events.*#{tournament_id}/),
@@ -35,10 +35,10 @@ module ApiHelpers
         headers: { 'Content-Type' => 'application/json' }
       )
   end
-  
+
   def stub_start_gg_seeds_request(event_id, seeds_data = nil)
     seeds_data ||= mock_seeds_data(event_id)
-    
+
     stub_request(:post, "https://api.start.gg/gql/alpha")
       .with(
         body: hash_including("query" => /seeds.*#{event_id}/),
@@ -57,7 +57,7 @@ module ApiHelpers
   # Stub para consultas de torneos generales
   def stub_start_gg_tournaments_query(tournaments_data = nil)
     tournaments_data ||= mock_tournaments_list_data
-    
+
     stub_request(:post, "https://api.start.gg/gql/alpha")
       .with(
         body: hash_including("query" => /TournamentsInChile/),
@@ -76,7 +76,7 @@ module ApiHelpers
   # Stub para consultas de torneos desde una fecha específica
   def stub_start_gg_tournaments_since_date_query(tournaments_data = nil)
     tournaments_data ||= mock_tournaments_list_data
-    
+
     stub_request(:post, "https://api.start.gg/gql/alpha")
       .with(
         body: hash_including("query" => /TournamentsInChileSinceDate/),
@@ -97,7 +97,7 @@ module ApiHelpers
     stub_request(:post, "https://api.start.gg/gql/alpha")
       .to_return(
         status: status,
-        body: { "errors" => [error_message] }.to_json,
+        body: { "errors" => [ error_message ] }.to_json,
         headers: { 'Content-Type' => 'application/json' }
       )
   end
@@ -107,8 +107,8 @@ module ApiHelpers
     stub_request(:post, "https://api.start.gg/gql/alpha")
       .to_return(
         status: 429,
-        body: { "errors" => ["Rate limit exceeded"] }.to_json,
-        headers: { 
+        body: { "errors" => [ "Rate limit exceeded" ] }.to_json,
+        headers: {
           'Content-Type' => 'application/json',
           'Retry-After' => '60'
         }
@@ -143,9 +143,9 @@ module ApiHelpers
     allow(sync_service).to receive(:call).with(event).and_return(return_value)
     sync_service
   end
-  
+
   private
-  
+
   def mock_tournament_data(tournament_id)
     {
       "data" => {
@@ -168,7 +168,7 @@ module ApiHelpers
       }
     }
   end
-  
+
   def mock_events_data(tournament_id)
     {
       "data" => {
@@ -187,7 +187,7 @@ module ApiHelpers
               }
             },
             {
-              "id" => "#{tournament_id}002", 
+              "id" => "#{tournament_id}002",
               "name" => "Super Smash Bros. Ultimate Doubles",
               "slug" => "ultimate-doubles",
               "numEntrants" => 16,
@@ -201,7 +201,7 @@ module ApiHelpers
       }
     }
   end
-  
+
   def mock_seeds_data(event_id)
     {
       "data" => {
@@ -310,15 +310,15 @@ end
 
 RSpec.configure do |config|
   config.include ApiHelpers
-  
+
   # Configuración para deshabilitar conexiones HTTP reales en tests
   config.before(:each) do
     # Deshabilitar todas las conexiones HTTP reales
     WebMock.disable_net_connect!(allow_localhost: true)
   end
-  
+
   config.after(:each) do
     # Limpiar todos los stubs después de cada test
     WebMock.reset!
   end
-end 
+end

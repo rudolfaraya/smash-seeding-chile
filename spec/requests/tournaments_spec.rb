@@ -191,4 +191,4 @@ RSpec.describe TournamentsController, type: :request do
       expect(response.body).to include('<h1')
     end
   end
-end 
+end

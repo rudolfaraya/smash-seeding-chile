@@ -28,8 +28,8 @@ module StartGgQueries
       tournaments(query: {
         perPage: $perPage
         page: $page
-        filter: { 
-          countryCode: "CL", 
+        filter: {#{' '}
+          countryCode: "CL",#{' '}
           videogameIds: [1386],
           afterDate: $afterDate
         }
@@ -294,17 +294,17 @@ module StartGgQueries
     tournaments = []
     page = 1
     total_pages = nil
-    
+
     # Convertir la fecha a timestamp Unix para la API
     after_date_timestamp = since_date ? since_date.to_i : nil
 
     loop do
-      variables = { 
-        perPage: per_page, 
+      variables = {
+        perPage: per_page,
         page: page,
         afterDate: after_date_timestamp
       }
-      
+
       begin
         # Intentar primero con la consulta optimizada con filtro de fecha
         response = client.query(TOURNAMENTS_SINCE_DATE_QUERY, variables, "TournamentsInChileSinceDate")
@@ -313,9 +313,9 @@ module StartGgQueries
         new_tournaments = data["nodes"] || []
         tournaments.concat(new_tournaments)
         total_pages ||= data["pageInfo"]["totalPages"]
-        
+
         Rails.logger.info "📄 Página #{page}/#{total_pages}: encontrados #{new_tournaments.length} torneos"
-        
+
       rescue Faraday::ClientError => e
         if e.response[:status] == 429
           Rails.logger.warn "⏱️  Rate limit excedido para página #{page}. Esperando 60 segundos..."
@@ -330,12 +330,12 @@ module StartGgQueries
           raise
         end
       end
-      
+
       break if page >= total_pages
       page += 1
       sleep 1.5 # Retraso más conservador para nuevos torneos
     end
-    
+
     Rails.logger.info "✅ Búsqueda completada: #{tournaments.length} torneos encontrados desde #{since_date}"
     tournaments
   end
@@ -344,15 +344,15 @@ module StartGgQueries
   def self.fetch_tournaments_fallback(client, since_date, per_page = 25)
     Rails.logger.info "🔄 Usando método de respaldo para filtrar por fecha"
     all_tournaments = fetch_tournaments(client, per_page)
-    
+
     return all_tournaments unless since_date
-    
+
     # Filtrar solo torneos posteriores a la fecha especificada
     filtered_tournaments = all_tournaments.select do |tournament_data|
       tournament_date = tournament_data["startAt"] ? Time.at(tournament_data["startAt"]) : nil
       tournament_date && tournament_date > since_date
     end
-    
+
     Rails.logger.info "🎯 Filtrados #{filtered_tournaments.length} torneos de #{all_tournaments.length} totales"
     filtered_tournaments
   end
@@ -410,11 +410,11 @@ module StartGgQueries
   # Obtener información de un usuario específico por ID
   def self.fetch_user_by_id(client, user_id)
     Rails.logger.info "🔍 Obteniendo información del usuario ID: #{user_id}"
-    
+
     begin
       variables = { userId: user_id }
       response = client.query(USER_BY_ID_QUERY, variables, "UserById")
-      
+
       if response["data"] && response["data"]["user"]
         Rails.logger.info "✅ Información obtenida para usuario #{user_id}"
         response["data"]["user"]
@@ -441,14 +441,14 @@ module StartGgQueries
   # Obtener el tag más reciente del usuario desde sus participaciones
   def self.fetch_user_recent_tag(client, user_id)
     Rails.logger.info "🏷️ Obteniendo tag reciente del usuario ID: #{user_id}"
-    
+
     begin
       variables = { userId: user_id }
       response = client.query(USER_RECENT_ENTRANTS_QUERY, variables, "UserRecentEntrants")
-      
+
       if response["data"] && response["data"]["user"] && response["data"]["user"]["player"]
         standings = response["data"]["user"]["player"]["recentStandings"]
-        
+
         if standings && standings.any?
           # Buscar el entrant más reciente que sea individual (solo un participante)
           recent_individual_entrant = standings.find do |standing|
@@ -457,22 +457,22 @@ module StartGgQueries
             # Solo considerar entrants individuales (un solo participante)
             participants.length == 1 && participants.first["player"]["id"].to_s == user_id.to_s
           end
-          
+
           if recent_individual_entrant
             tag = recent_individual_entrant["entrant"]["name"]
             Rails.logger.info "✅ Tag reciente encontrado para usuario #{user_id}: #{tag}"
-            return tag
+            tag
           else
             Rails.logger.warn "⚠️ No se encontraron participaciones individuales recientes para usuario #{user_id}"
-            return nil
+            nil
           end
         else
           Rails.logger.warn "⚠️ No se encontraron participaciones recientes para usuario #{user_id}"
-          return nil
+          nil
         end
       else
         Rails.logger.warn "⚠️ No se encontró información de jugador para usuario #{user_id}"
-        return nil
+        nil
       end
     rescue Faraday::ClientError => e
       if e.response[:status] == 429
@@ -482,11 +482,11 @@ module StartGgQueries
         retry
       else
         Rails.logger.error "Error obteniendo tag del usuario #{user_id}: #{e.message}"
-        return nil
+        nil
       end
     rescue StandardError => e
       Rails.logger.error "Error inesperado obteniendo tag del usuario #{user_id}: #{e.message}"
-      return nil
+      nil
     end
   end
 end

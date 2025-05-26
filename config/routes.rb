@@ -5,12 +5,12 @@ Rails.application.routes.draw do
       post :sync # Ruta para sincronizar torneos y eventos
       post :sync_new_tournaments # Nueva ruta para sincronizar solo nuevos torneos
     end
-    
+
     member do
       post :sync_events # Ruta para sincronizar eventos de un torneo específico
     end
-    
-    resources :events, only: [:index, :show] do
+
+    resources :events, only: [ :index, :show ] do
       member do
         get :seeds, to: "events#seeds", as: :seeds # Añadimos nombre explícito para la ruta de seeds
         get :sync_seeds, to: "events#sync_seeds" # Permitir GET para sync_seeds
@@ -31,7 +31,7 @@ Rails.application.routes.draw do
   root "tournaments#index"
 
   # Players routes
-  resources :players, only: [:index] do
+  resources :players, only: [ :index ] do
     collection do
       get :search
     end

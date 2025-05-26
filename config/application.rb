@@ -12,8 +12,8 @@ module SmashSeedingChile
     config.load_defaults 7.2
 
     # Configurar zona horaria para Santiago, Chile
-    config.time_zone = 'America/Santiago'
-    
+    config.time_zone = "America/Santiago"
+
     # Configurar idioma en español
     config.i18n.default_locale = :es
 

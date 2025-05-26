@@ -13,10 +13,10 @@ class StartGgClient
       query: query,
       variables: variables
     }
-    
+
     # Solo agregar operationName si se proporciona explícitamente
     body[:operationName] = operation_name if operation_name
-    
+
     body_json = body.to_json
 
     conn = Faraday.new(url: @base_url) do |faraday|

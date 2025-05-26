@@ -45,13 +45,13 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
-  
+
   # RSpec testing framework
   gem "rspec-rails", "~> 6.1"
-  
+
   # Factory Bot for test data generation
   gem "factory_bot_rails", "~> 6.4"
-  
+
   # Faker for realistic test data
   gem "faker", "~> 3.4"
 end
@@ -65,22 +65,22 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara", "~> 3.40"
   gem "selenium-webdriver"
-  
+
   # Shoulda matchers for cleaner model tests
   gem "shoulda-matchers", "~> 6.0"
-  
+
   # WebMock for stubbing HTTP requests
   gem "webmock", "~> 3.19"
-  
+
   # VCR for recording HTTP interactions
   gem "vcr", "~> 6.2"
-  
+
   # Database cleaner for clean test state
   gem "database_cleaner-active_record", "~> 2.1"
-  
+
   # Simplecov for code coverage
   gem "simplecov", "~> 0.22", require: false
-  
+
   # Test profiling
   gem "test-prof", "~> 1.3"
 end

@@ -224,4 +224,4 @@ RSpec.describe Event, type: :model do
       expect(event.event_seeds.count).to be > 0
     end
   end
-end 
+end

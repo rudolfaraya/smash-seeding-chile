@@ -1,17 +1,17 @@
 module TournamentsHelper
   def filter_options_for(options, label_singular)
     plural_label = pluralize_spanish(label_singular.downcase)
-    [["Todas las #{plural_label}", '']] + options.map { |opt| [opt, opt] }
+    [ [ "Todas las #{plural_label}", "" ] ] + options.map { |opt| [ opt, opt ] }
   end
 
   private
 
   def pluralize_spanish(word)
     case word
-    when 'región'
-      'regiones'
-    when 'ciudad'
-      'ciudades'
+    when "región"
+      "regiones"
+    when "ciudad"
+      "ciudades"
     when /[aeiou]$/
       "#{word}s"
     when /[^aeiou]$/
@@ -45,9 +45,9 @@ module TournamentsHelper
   end
 
   def has_active_filters?
-    params[:region].present? || params[:city].present? || params[:status].present? || 
-    params[:start_date].present? || params[:end_date].present? || 
-    (params[:sort].present? && params[:sort] != 'newest')
+    params[:region].present? || params[:city].present? || params[:status].present? ||
+    params[:start_date].present? || params[:end_date].present? ||
+    (params[:sort].present? && params[:sort] != "newest")
   end
 
   def has_any_filters?
@@ -64,12 +64,12 @@ module TournamentsHelper
 
   def sort_options_for_select
     [
-      ['Más nuevos', 'newest'],
-      ['Más antiguos', 'oldest'],
-      ['Más asistentes', 'most_attendees'],
-      ['Menos asistentes', 'least_attendees'],
-      ['Alfabético A-Z', 'alphabetical_az'],
-      ['Alfabético Z-A', 'alphabetical_za']
+      [ "Más nuevos", "newest" ],
+      [ "Más antiguos", "oldest" ],
+      [ "Más asistentes", "most_attendees" ],
+      [ "Menos asistentes", "least_attendees" ],
+      [ "Alfabético A-Z", "alphabetical_az" ],
+      [ "Alfabético Z-A", "alphabetical_za" ]
     ]
   end
 
@@ -90,4 +90,4 @@ module TournamentsHelper
       turbo_frame: "tournaments_results"
     }
   end
-end 
+end

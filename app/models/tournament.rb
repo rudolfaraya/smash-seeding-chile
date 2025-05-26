@@ -5,19 +5,19 @@ class Tournament < ApplicationRecord
 
   # Callback para parsear ubicación cuando se guarda o actualiza venue_address
   before_save :parse_location_from_venue_address, if: :venue_address_changed?
-  
+
   # Callback para marcar como online si venue_address es "Chile"
   before_save :mark_chile_as_online, if: :venue_address_changed?
-  
+
   # Callback para generar la URL de start.gg
   before_save :generate_start_gg_url, if: :slug_changed?
 
   scope :by_region, ->(region) { where(region: region) if region.present? }
   scope :by_city, ->(city) { where(city: city) if city.present? }
-  
+
   # Scopes para torneos online
-  scope :online_tournaments, -> { where(region: 'Online') }
-  scope :physical_tournaments, -> { where.not(region: 'Online') }
+  scope :online_tournaments, -> { where(region: "Online") }
+  scope :physical_tournaments, -> { where.not(region: "Online") }
 
   # Método para generar la URL de start.gg
   def generate_start_gg_url
@@ -29,7 +29,7 @@ class Tournament < ApplicationRecord
   # Método para obtener la URL de start.gg (con fallback si no está guardada)
   def start_gg_url_or_generate
     return start_gg_url if start_gg_url.present?
-    
+
     if slug.present?
       "https://www.start.gg/#{slug}"
     else
@@ -39,7 +39,7 @@ class Tournament < ApplicationRecord
 
   # Métodos para torneos online
   def online?
-    region == 'Online'
+    region == "Online"
   end
 
   def physical?
@@ -47,19 +47,19 @@ class Tournament < ApplicationRecord
   end
 
   def mark_as_online!
-    update_columns(city: nil, region: 'Online')
+    update_columns(city: nil, region: "Online")
   end
 
   # Método para detectar si debería ser online basado en nombre y venue
   def should_be_online?
     parser = LocationParserService.new
-    
+
     # Verificar por venue_address
     if venue_address.present?
       location_data = parser.parse_location(venue_address)
-      return location_data[:region] == 'Online'
+      return location_data[:region] == "Online"
     end
-    
+
     false
   end
 
@@ -77,9 +77,9 @@ class Tournament < ApplicationRecord
 
       # Guardar cada evento en la base de datos
       events_data.each do |event_data|
-        Event.find_or_create_by(tournament: self, slug: event_data['slug']) do |event|
-          event.name = event_data['name']
-          event.id = event_data['id']
+        Event.find_or_create_by(tournament: self, slug: event_data["slug"]) do |event|
+          event.name = event_data["name"]
+          event.id = event_data["id"]
         end
         Rails.logger.info "Evento guardado: #{event_data['name']} (ID: #{event_data['id']})"
       end
@@ -88,7 +88,7 @@ class Tournament < ApplicationRecord
         Rails.logger.warn "Rate limit excedido para torneo #{slug}. Esperando 60 segundos..."
         sleep(60) # Espera 60 segundos antes de reintentar
         retry
-      elsif [404, 500].include?(e.response[:status])
+      elsif [ 404, 500 ].include?(e.response[:status])
         Rails.logger.error "Error HTTP #{e.response[:status]} al obtener eventos para torneo #{slug}: #{e.response[:body]}"
         raise "Error HTTP al obtener eventos: #{e.response[:status]} - #{e.response[:body]}"
       else
@@ -105,26 +105,26 @@ class Tournament < ApplicationRecord
   def calculated_events_count
     # Accede al atributo 'events_count_data' que se seleccionó en el controlador.
     # Proporciona un fallback por si el torneo no se cargó con este select específico.
-    attributes['events_count_data'] || events.size
+    attributes["events_count_data"] || events.size
   end
 
   def calculated_total_event_seeds_count
     # Accede al atributo 'total_event_seeds_count_data'.
-    attributes['total_event_seeds_count_data'] || event_seeds.size # Fallback
+    attributes["total_event_seeds_count_data"] || event_seeds.size # Fallback
   end
 
   private
 
   def parse_location_from_venue_address
     return unless venue_address.present?
-    
+
     begin
       parser = LocationParserService.new
       location_data = parser.parse_location(venue_address)
-      
+
       self.city = location_data[:city] if location_data[:city].present?
       self.region = location_data[:region] if location_data[:region].present?
-      
+
       Rails.logger.info "Ubicación parseada para torneo #{name}: Ciudad=#{city}, Región=#{region}"
     rescue => e
       Rails.logger.error "Error parseando ubicación para torneo #{name}: #{e.message}"
@@ -132,9 +132,9 @@ class Tournament < ApplicationRecord
   end
 
   def mark_chile_as_online
-    if venue_address == 'Chile'
+    if venue_address == "Chile"
       self.city = nil
-      self.region = 'Online'
+      self.region = "Online"
       Rails.logger.info "Torneo #{name} marcado automáticamente como online (venue_address: 'Chile')"
     end
   end

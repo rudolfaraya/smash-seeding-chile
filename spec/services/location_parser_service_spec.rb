@@ -12,8 +12,8 @@ RSpec.describe LocationParserService, type: :service do
       end
 
       it 'detects online keywords' do
-        online_keywords = ['Online', 'WiFi', 'Discord', 'Internet', 'Virtual']
-        
+        online_keywords = [ 'Online', 'WiFi', 'Discord', 'Internet', 'Virtual' ]
+
         online_keywords.each do |keyword|
           result = service.parse_location(keyword)
           expect(result[:region]).to eq('Online')
@@ -22,8 +22,8 @@ RSpec.describe LocationParserService, type: :service do
       end
 
       it 'detects Spanish online keywords' do
-        spanish_keywords = ['en línea', 'remoto', 'cuarentena', 'desde casa']
-        
+        spanish_keywords = [ 'en línea', 'remoto', 'cuarentena', 'desde casa' ]
+
         spanish_keywords.each do |keyword|
           result = service.parse_location(keyword)
           expect(result[:region]).to eq('Online')
@@ -34,7 +34,7 @@ RSpec.describe LocationParserService, type: :service do
       it 'is case insensitive for online detection' do
         result = service.parse_location('ONLINE')
         expect(result[:region]).to eq('Online')
-        
+
         result = service.parse_location('discord')
         expect(result[:region]).to eq('Online')
       end
@@ -125,8 +125,8 @@ RSpec.describe LocationParserService, type: :service do
   describe 'online tournament detection' do
     context 'when checking venue address through parse_location' do
       it 'detects online tournaments correctly' do
-        online_venues = ['Chile', 'Online', 'Discord', 'WiFi', 'Internet']
-        
+        online_venues = [ 'Chile', 'Online', 'Discord', 'WiFi', 'Internet' ]
+
         online_venues.each do |venue|
           result = service.parse_location(venue)
           expect(result[:region]).to eq('Online')
@@ -167,7 +167,7 @@ RSpec.describe LocationParserService, type: :service do
       # Test indirecto de normalización a través de la funcionalidad pública
       result1 = service.parse_location('SANTIAGO, CHILE')
       result2 = service.parse_location('santiago, chile')
-      
+
       expect(result1[:city]).to eq(result2[:city])
       expect(result1[:region]).to eq(result2[:region])
     end
@@ -194,4 +194,4 @@ RSpec.describe LocationParserService, type: :service do
       end
     end
   end
-end 
+end

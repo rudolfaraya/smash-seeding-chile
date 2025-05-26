@@ -88,4 +88,4 @@ RSpec.describe Player, type: :model do
       expect(player.entrant_name).to match(/^(SCL|VLP|ANF|TMC|IQQ)\|/)
     end
   end
-end 
+end

@@ -56,7 +56,7 @@ RSpec.describe SyncSmashData, type: :service do
         allow(mock_client).to receive(:query)
           .with(StartGgQueries::TOURNAMENTS_QUERY, anything, "TournamentsInChile")
           .and_return(mock_tournaments_response)
-        
+
         # Mock para las llamadas de eventos que hace el servicio
         allow(mock_client).to receive(:query)
           .with(StartGgQueries::EVENTS_QUERY, anything, "TournamentEvents")
@@ -77,7 +77,7 @@ RSpec.describe SyncSmashData, type: :service do
 
       it 'correctly parses tournament data' do
         service.sync_tournaments
-        
+
         tournament1 = Tournament.find_by(name: "Test Tournament 1")
         expect(tournament1).to be_present
         expect(tournament1.slug).to eq("test-tournament-1")
@@ -99,7 +99,7 @@ RSpec.describe SyncSmashData, type: :service do
       it 'does not create duplicate tournaments' do
         # Crear un torneo existente
         create(:tournament, name: "Test Tournament 1", slug: "test-tournament-1")
-        
+
         expect { service.sync_tournaments }.to change(Tournament, :count).by(1)
       end
     end
@@ -201,11 +201,11 @@ RSpec.describe SyncSmashData, type: :service do
         allow(mock_client).to receive(:query)
           .with(StartGgQueries::TOURNAMENTS_QUERY, hash_including(page: 1), "TournamentsInChile")
           .and_return(page1_response)
-        
+
         allow(mock_client).to receive(:query)
           .with(StartGgQueries::TOURNAMENTS_QUERY, hash_including(page: 2), "TournamentsInChile")
           .and_return(page2_response)
-          
+
         # Mock para las llamadas de eventos
         allow(mock_client).to receive(:query)
           .with(StartGgQueries::EVENTS_QUERY, anything, "TournamentEvents")
@@ -226,7 +226,7 @@ RSpec.describe SyncSmashData, type: :service do
 
       it 'calls API for each page' do
         service.sync_tournaments
-        
+
         expect(mock_client).to have_received(:query)
           .with(StartGgQueries::TOURNAMENTS_QUERY, hash_including(page: 1), "TournamentsInChile")
         expect(mock_client).to have_received(:query)
@@ -251,11 +251,11 @@ RSpec.describe SyncSmashData, type: :service do
     it 'correctly sets tournament attributes' do
       tournament_data_modified = tournament_data.dup
       tournament_data_modified["venueAddress"] = "Santiago, Región Metropolitana de Santiago, Chile"
-      
+
       mock_response = {
         "data" => {
           "tournaments" => {
-            "nodes" => [tournament_data_modified],
+            "nodes" => [ tournament_data_modified ],
             "pageInfo" => { "total" => 1, "totalPages" => 1 }
           }
         }
@@ -264,7 +264,7 @@ RSpec.describe SyncSmashData, type: :service do
       allow(mock_client).to receive(:query)
         .with(StartGgQueries::TOURNAMENTS_QUERY, anything, "TournamentsInChile")
         .and_return(mock_response)
-      
+
       # Mock para eventos
       allow(mock_client).to receive(:query)
         .with(StartGgQueries::EVENTS_QUERY, anything, "TournamentEvents")
@@ -277,7 +277,7 @@ RSpec.describe SyncSmashData, type: :service do
             }
           }
         })
-      
+
       service.sync_tournaments
       tournament = Tournament.last
 
@@ -289,4 +289,4 @@ RSpec.describe SyncSmashData, type: :service do
       expect(tournament.city).to eq("Santiago")
     end
   end
-end 
+end

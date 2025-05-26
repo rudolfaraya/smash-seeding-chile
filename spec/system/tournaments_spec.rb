@@ -201,13 +201,13 @@ RSpec.describe 'Tournaments System', type: :system do
 
     it 'navigates between pages without full reload', :js do
       visit tournaments_path
-      
+
       expect(page).to have_content('First Tournament')
-      
+
       click_link tournament1.name
       expect(page).to have_current_path(tournament_path(tournament1))
       expect(page).to have_content(tournament1.venue_address)
-      
+
       # Verifica que navegamos correctamente
       expect(page).to have_current_path(tournament_path(tournament1))
     end
@@ -216,16 +216,16 @@ RSpec.describe 'Tournaments System', type: :system do
   describe 'Error handling' do
     it 'handles 404 errors gracefully' do
       visit '/tournaments/non-existent'
-      
+
       expect(page).to have_content('404').or have_content('No encontrado')
     end
 
     it 'handles server errors gracefully' do
       # Simula error de servidor mockeando el controlador
       allow_any_instance_of(TournamentsController).to receive(:index).and_raise(StandardError)
-      
+
       visit tournaments_path
-      
+
       expect(page).to have_content('Error').or have_content('500')
     end
   end
@@ -282,4 +282,4 @@ RSpec.describe 'Tournaments System', type: :system do
       expect(tournament_items.count).to be <= 20
     end
   end
-end 
+end
