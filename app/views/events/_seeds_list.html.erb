@@ -23,7 +23,10 @@
         
         <%= link_to sync_seeds_tournament_event_path(tournament, event, force: true), 
                   class: "inline-flex items-center px-2 py-1 bg-red-500 text-slate-50 text-xs font-medium rounded-md hover:bg-red-600 transition-colors duration-200 cursor-pointer", 
-                  data: { turbo_method: :post } do %>
+                  data: { 
+                    turbo_method: :post,
+                    confirm: "¿Estás seguro? Esto eliminará todos los seeds actuales y los volverá a sincronizar desde start.gg"
+                  } do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
           </svg>
@@ -36,9 +39,9 @@
       <thead>
         <tr class="bg-slate-900">
           <th scope="col" class="px-3 py-1.5 text-left text-[10px] font-medium text-blue-300 uppercase tracking-wider w-1/8">Seed</th>
-          <th scope="col" class="px-3 py-1.5 text-left text-[10px] font-medium text-blue-300 uppercase tracking-wider w-1/4">Jugador</th>
           <th scope="col" class="px-3 py-1.5 text-left text-[10px] font-medium text-blue-300 uppercase tracking-wider w-1/4">Nombre en Torneo</th>
           <th scope="col" class="px-3 py-1.5 text-left text-[10px] font-medium text-blue-300 uppercase tracking-wider w-3/8">Personajes</th>
+          <th scope="col" class="px-3 py-1.5 text-left text-[10px] font-medium text-blue-300 uppercase tracking-wider w-1/4">Jugador</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-600">
@@ -48,18 +51,6 @@
               <span class="inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-900 text-red-200 text-xs border border-red-500" style="text-shadow: 0 0 3px #f87171;">
                 <%= event_seed.seed_num %>
               </span>
-            </td>
-            <td class="px-3 py-2 whitespace-nowrap text-xs">
-              <% if event_seed.player&.name %>
-                <div class="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 mr-1.5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                  </svg>
-                  <span class="tracking-wide text-[11px]"><%= event_seed.player.name %></span>
-                </div>
-              <% else %>
-                <span class="text-slate-400 tracking-wide text-[11px]">N/A</span>
-              <% end %>
             </td>
             <td class="px-3 py-2 whitespace-nowrap text-xs">
               <% if event_seed.player&.entrant_name %>
@@ -100,6 +91,18 @@
                 <% end %>
               <% else %>
                 <span class="text-slate-400 tracking-wide text-[10px]">N/A</span>
+              <% end %>
+            </td>
+            <td class="px-3 py-2 whitespace-nowrap text-xs">
+              <% if event_seed.player&.name %>
+                <div class="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 mr-1.5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="tracking-wide text-[11px]"><%= event_seed.player.name %></span>
+                </div>
+              <% else %>
+                <span class="text-slate-400 tracking-wide text-[11px]">N/A</span>
               <% end %>
             </td>
           </tr>

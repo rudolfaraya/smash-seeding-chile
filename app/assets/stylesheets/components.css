@@ -233,6 +233,12 @@
   box-shadow: 0 0 0 1px #10b981;
 }
 
+.filter-select-sort:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 1px #8b5cf6;
+}
+
 .clear-filters-button {
   display: inline-flex;
   align-items: center;
@@ -249,6 +255,41 @@
 
 .clear-filters-button:hover {
   background-color: #64748b;
+}
+
+.clear-all-filters-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #dc2626;
+  color: #fef2f2;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  text-decoration: none;
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.4);
+}
+
+.clear-all-filters-button:hover {
+  background-color: #b91c1c;
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.6);
+}
+
+.clear-all-button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* En mobile, centrar el botón */
+@media (max-width: 768px) {
+  .clear-all-button-container {
+    justify-content: center;
+    margin-top: 1rem;
+  }
 }
 
 /* Tags de filtros activos */

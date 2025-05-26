@@ -54,4 +54,11 @@ es:
       short: "%d de %B %H:%M"
       long: "%d de %B de %Y %H:%M"
     am: "am"
-    pm: "pm" 
+    pm: "pm"
+  
+  # Pluralización personalizada
+  helpers:
+    pluralize:
+      asistente:
+        one: "asistente"
+        other: "asistentes" 

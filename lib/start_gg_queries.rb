@@ -15,6 +15,7 @@ module StartGgQueries
           startAt
           endAt
           venueAddress
+          numAttendees
         }
         pageInfo { total totalPages }
       }
@@ -40,6 +41,7 @@ module StartGgQueries
           startAt
           endAt
           venueAddress
+          numAttendees
         }
         pageInfo { total totalPages }
       }

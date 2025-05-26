@@ -197,7 +197,8 @@ class SyncSmashData
         venue_address: torneo_data["venueAddress"],
         start_gg_url: torneo_data["slug"].present? ? "https://www.start.gg/#{torneo_data["slug"]}" : nil,
         region: is_online ? "Online" : nil,
-        city: is_online ? nil : nil
+        city: is_online ? nil : nil,
+        attendees_count: torneo_data["numAttendees"]
       )
       
       status_emoji = tournament.online? ? "🌐" : "📍"

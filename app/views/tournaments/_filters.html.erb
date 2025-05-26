@@ -1,4 +1,4 @@
-<div class="filters-container">
+<div class="filters-container" data-controller="filter">
   <%= form_with(url: tournaments_path, method: :get, data: tournament_search_data_attributes) do |f| %>
     
     <!-- Barra de búsqueda principal -->
@@ -48,6 +48,31 @@
           current_value: params[:city],
           type: 'city' %>
       
+      <!-- Filtro por Estado (Pasados/Futuros) -->
+      <div class="filter-group">
+        <label for="status" class="text-sm text-slate-400 whitespace-nowrap mobile-hidden">Estado:</label>
+        <%= f.select :status, 
+                    options_for_select([['Todos', ''], ['Futuros', 'upcoming'], ['Pasados', 'past']], params[:status]),
+                    {},
+                    {
+                      class: "filter-select filter-select-status",
+                      data: filter_select_data_attributes
+                    } %>
+      </div>
+
+      <!-- Filtro de Ordenamiento -->
+      <div class="filter-group">
+        <label for="sort" class="text-sm text-slate-400 whitespace-nowrap mobile-hidden">Ordenar:</label>
+        <%= f.select :sort, 
+                    options_for_select(sort_options_for_select, params[:sort] || 'newest'),
+                    {},
+                    {
+                      class: "filter-select filter-select-sort",
+                      data: filter_select_data_attributes,
+                      value: params[:sort] || 'newest'
+                    } %>
+      </div>
+      
       <!-- Botón para limpiar filtros -->
       <% if has_active_filters? %>
         <%= link_to clear_filters_path, 
@@ -57,6 +82,61 @@
           <span class="mobile-hidden">Limpiar</span>
           <span class="mobile-only">✕</span>
         <% end %>
+      <% end %>
+      
+
+    </div>
+    
+    <!-- Filtros de fecha -->
+    <div class="filters-row date-filters-section">
+      <div class="filters-label">
+        <%= render 'shared/icons/calendar', class: 'icon-small mr-2 text-purple-400' %>
+        <span class="mobile-hidden">Filtrar por fechas:</span>
+        <span class="mobile-only">Fechas:</span>
+      </div>
+      
+      <div class="filter-group">
+        <label for="start_date" class="text-sm text-slate-400 whitespace-nowrap mobile-hidden">Desde:</label>
+        <%= f.date_field :start_date, 
+                        value: params[:start_date], 
+                        class: "filter-select filter-select-date",
+                        placeholder: "dd-mm-aaaa",
+                        data: { action: "change->tournaments#applyFilters" } %>
+      </div>
+      
+      <div class="filter-group">
+        <label for="end_date" class="text-sm text-slate-400 whitespace-nowrap mobile-hidden">Hasta:</label>
+        <%= f.date_field :end_date, 
+                        value: params[:end_date], 
+                        class: "filter-select filter-select-date",
+                        placeholder: "dd-mm-aaaa",
+                        data: { action: "change->tournaments#applyFilters" } %>
+      </div>
+      
+      <% if params[:start_date].present? || params[:end_date].present? %>
+        <%= link_to tournaments_path(query: params[:query], region: params[:region], city: params[:city], status: params[:status]), 
+                    class: "clear-filters-button", 
+                    data: { turbo_frame: "tournaments_results" } do %>
+          <%= render 'shared/icons/close', class: 'icon-tiny mr-1' %>
+          <span class="mobile-hidden">Limpiar fechas</span>
+          <span class="mobile-only">✕</span>
+        <% end %>
+      <% end %>
+    </div>
+    
+    <!-- Botón para limpiar TODOS los filtros incluyendo búsqueda -->
+    <div class="clear-all-button-container">
+      <%= link_to clear_all_filters_path, 
+                class: "clear-all-filters-button hidden", 
+                data: { 
+                  turbo_frame: "tournaments_results",
+                  filter_target: "clearAllButton",
+                  action: "click->filter#clearAllFilters"
+                },
+                title: "Limpiar todos los filtros y búsqueda" do %>
+        <%= render 'shared/icons/refresh', class: 'icon-tiny mr-1' %>
+        <span class="mobile-hidden">Limpiar Todo</span>
+        <span class="mobile-only">🔄</span>
       <% end %>
     </div>
     

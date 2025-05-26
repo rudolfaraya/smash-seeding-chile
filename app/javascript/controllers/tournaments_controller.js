@@ -11,6 +11,16 @@ export default class extends Controller {
     this.initializeEventStates()
   }
 
+  // Método para aplicar filtros automáticamente cuando cambian las fechas
+  applyFilters(event) {
+    console.log("Aplicando filtros automáticamente...")
+    const form = event.target.closest('form')
+    if (form) {
+      // Enviar el formulario automáticamente
+      form.requestSubmit()
+    }
+  }
+
   // Método para inicializar el estado correcto de los eventos y botones
   initializeEventStates() {
     // Buscar todos los botones de toggle de eventos en escritorio
