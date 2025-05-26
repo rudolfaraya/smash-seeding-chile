@@ -490,8 +490,10 @@
             character_filter: @character_filter,
             sort_by: @sort_by
           }.compact,
+          param_name: :page,
           remote: true,
-          data: { turbo_frame: 'players_results' } %>
+          data: { turbo_frame: 'players_results' },
+          url: players_path %>
     </div>
   </div>
 <% end %>

@@ -3,13 +3,15 @@ class PlayersController < ApplicationController
     @query = params[:query]
     @character_filter = params[:character_filter]
     @sort_by = params[:sort_by]
+    @page = params[:page]
 
-    Rails.logger.info "=== Players#index called with query: '#{@query}', character_filter: '#{@character_filter}', sort_by: '#{@sort_by}', format: #{request.format} ==="
+    Rails.logger.info "=== Players#index called with query: '#{@query}', character_filter: '#{@character_filter}', sort_by: '#{@sort_by}', page: '#{@page}', format: #{request.format} ==="
 
     # Guardar todos los parámetros de filtro en la sesión
     session[:players_query] = @query
     session[:players_character_filter] = @character_filter
     session[:players_sort_by] = @sort_by
+    session[:players_page] = @page
 
     # Usar el método helper para preparar los datos
     @players = prepare_players_data
@@ -65,12 +67,20 @@ class PlayersController < ApplicationController
           @query = session[:players_query]
           @character_filter = session[:players_character_filter]
           @sort_by = session[:players_sort_by]
+          @page = session[:players_page]
           @players = prepare_players_data
 
-          render turbo_stream: turbo_stream.replace("players_results",
-            partial: "players_list",
-            locals: { players: @players }
-          )
+          # Construir la URL correcta para la redirección
+          redirect_params = {
+            query: @query,
+            character_filter: @character_filter,
+            sort_by: @sort_by,
+            page: @page
+          }.compact
+          
+          redirect_url = players_path(redirect_params)
+          
+          render turbo_stream: turbo_stream.action(:visit, redirect_url)
         }
       end
     else
@@ -129,12 +139,20 @@ class PlayersController < ApplicationController
           @query = session[:players_query]
           @character_filter = session[:players_character_filter]
           @sort_by = session[:players_sort_by]
+          @page = session[:players_page]
           @players = prepare_players_data
 
-          render turbo_stream: turbo_stream.replace("players_results",
-            partial: "players_list",
-            locals: { players: @players }
-          )
+          # Construir la URL correcta para la redirección
+          redirect_params = {
+            query: @query,
+            character_filter: @character_filter,
+            sort_by: @sort_by,
+            page: @page
+          }.compact
+          
+          redirect_url = players_path(redirect_params)
+          
+          render turbo_stream: turbo_stream.action(:visit, redirect_url)
         }
         format.html { redirect_to players_path, notice: "Información actualizada correctamente" }
       end
@@ -217,8 +235,8 @@ class PlayersController < ApplicationController
       )
     end
 
-    # Aplicar paginación primero
-    page = (params[:page] || 1).to_i
+    # Aplicar paginación primero - usar parámetros de URL o sesión
+    page = (params[:page].presence || session[:players_page] || 1).to_i
     per_page = 50
 
     # Obtener los IDs paginados
