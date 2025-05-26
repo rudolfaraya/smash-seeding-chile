@@ -23,13 +23,18 @@
   </head>
 
   <body class="bg-slate-900">
+    <!-- Skip links para accesibilidad -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 bg-blue-600 text-white p-2 z-50">
+      Saltar al contenido principal
+    </a>
+    
     <%= render "shared/navigation" %>
     
     <%= turbo_frame_tag "flash" do %>
       <%= render "shared/flash" %>
     <% end %>
 
-    <main class="container mx-auto pt-20 px-5 flex flex-col">
+    <main id="main-content" class="container mx-auto pt-20 px-5 flex flex-col">
       <%= yield %>
     </main>
   </body>

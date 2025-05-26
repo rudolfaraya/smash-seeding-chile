@@ -30,7 +30,7 @@
           </svg>
         </div>
         <%= f.text_field :query, 
-                      value: params[:query], 
+                      value: @query, 
                       placeholder: "Buscar por nombre, tag o Twitter...", 
                       class: "pl-10 focus:ring-red-500 focus:border-red-500 block w-full shadow-sm text-sm border-slate-600 bg-slate-700 text-slate-200 rounded-md py-3 tracking-wide",
                       autocomplete: "off",
@@ -38,7 +38,7 @@
                         search_target: "input",
                         action: "input->search#inputChanged"
                       } %>
-        <% if params[:query].present? %>
+        <% if @query.present? %>
           <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
             <%= link_to players_path, class: "text-slate-400 hover:text-slate-300 cursor-pointer" do %>
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -63,7 +63,7 @@
                 options_for_select([
                   ['Todos los jugadores', ''],
                   ['Sin personajes asignados', 'none']
-                ] + smash_character_options, params[:character_filter]),
+                ] + smash_character_options, @character_filter),
                 {},
                 {
                   class: "w-full bg-slate-700 border border-slate-600 text-slate-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
@@ -72,12 +72,12 @@
                     action: "change->search#selectChanged"
                   }
                 } %>
-          <% if params[:character_filter].present? %>
+          <% if @character_filter.present? %>
             <div class="mt-1 text-xs text-blue-400">
-              <% if params[:character_filter] == 'none' %>
+              <% if @character_filter == 'none' %>
                 📝 Mostrando jugadores sin personajes asignados
               <% else %>
-                🎮 Mostrando jugadores que usan: <%= Player::SMASH_CHARACTERS[params[:character_filter]] %>
+                🎮 Mostrando jugadores que usan: <%= Player::SMASH_CHARACTERS[@character_filter] %>
               <% end %>
             </div>
           <% end %>
@@ -101,7 +101,7 @@
                   ['⬇️ Menos eventos', 'events_count_asc'],
                   ['🏆 Más torneos', 'tournaments_count_desc'],
                   ['🎯 Menos torneos', 'tournaments_count_asc']
-                ], params[:sort_by] || 'recent_tournament'),
+                ], @sort_by || 'recent_tournament'),
                 {},
                 {
                   class: "w-full bg-slate-700 border border-slate-600 text-slate-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500",
@@ -110,9 +110,9 @@
                     action: "change->search#selectChanged"
                   }
                 } %>
-          <% if params[:sort_by].present? && params[:sort_by] != 'recent_tournament' %>
+          <% if @sort_by.present? && @sort_by != 'recent_tournament' %>
             <div class="mt-1 text-xs text-green-400">
-              📊 Ordenado por: <%= f.object.class.human_attribute_name(params[:sort_by]) rescue params[:sort_by].humanize %>
+              📊 Ordenado por: <%= f.object.class.human_attribute_name(@sort_by) rescue @sort_by.humanize %>
             </div>
           <% end %>
         </div>
@@ -188,9 +188,7 @@
     <% end %>
   </div>
 
-  <%= turbo_frame_tag "players_results" do %>
-    <%= render "players_list", players: @players %>
-  <% end %>
+  <%= render "players_list", players: @players %>
 </div>
 
 <!-- Modal para editar personajes de Smash (fuera del turbo frame) -->

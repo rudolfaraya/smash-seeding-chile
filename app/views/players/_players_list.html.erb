@@ -1,3 +1,4 @@
+<%= turbo_frame_tag "players_results" do %>
 <% if players.any? %>
 <!-- Vista Desktop: Tabla tradicional -->
 <div class="hidden md:block overflow-hidden shadow-lg rounded-lg border border-slate-600 bg-slate-800">
@@ -484,7 +485,11 @@
     <div class="flex items-center justify-center space-x-1 sm:space-x-2">
       <%= paginate players, 
           theme: 'custom_pagination',
-          params: { query: @query }.compact,
+          params: { 
+            query: @query,
+            character_filter: @character_filter,
+            sort_by: @sort_by
+          }.compact,
           remote: true,
           data: { turbo_frame: 'players_results' } %>
     </div>
@@ -822,4 +827,5 @@
       <% end %>
     </div>
   </div>
-<% end %> 
+<% end %>
+<% end %>

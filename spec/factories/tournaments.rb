@@ -1,14 +1,19 @@
 FactoryBot.define do
   factory :tournament do
-    sequence(:name) { |n| "#{Faker::Esport.event} #{n}" }
+    sequence(:name) { |n| "Tournament #{n}" }
     sequence(:slug) { |n| "tournament-#{n}" }
-    start_at { Faker::Time.forward(days: 30, period: :morning) }
-    venue_address { "#{Faker::Address.street_address}, Santiago, Región Metropolitana" }
-
+    start_at { 1.week.from_now }
+    venue_address { "Centro de Eventos, Santiago, Región Metropolitana" }
     city { "Santiago" }
     region { "Metropolitana de Santiago" }
+    
+    # Asegurar que se genere la URL de start.gg
+    after(:build) do |tournament|
+      tournament.start_gg_url = "https://www.start.gg/#{tournament.slug}" if tournament.slug.present?
+    end
 
     trait :online do
+      name { "Discord Weekly" }
       venue_address { "Chile" }
       city { nil }
       region { "Online" }
@@ -21,13 +26,15 @@ FactoryBot.define do
     end
 
     trait :santiago do
-      venue_address { "#{Faker::Address.street_address}, Santiago, Región Metropolitana" }
+      name { "Santiago Major" }
+      venue_address { "Centro de Eventos Los Leones, Santiago, Región Metropolitana" }
       city { "Santiago" }
       region { "Metropolitana de Santiago" }
     end
 
     trait :valparaiso do
-      venue_address { "#{Faker::Address.street_address}, Valparaíso, Valparaíso" }
+      name { "Valparaíso Cup" }
+      venue_address { "Centro Cultural Valparaíso, Valparaíso, Región de Valparaíso" }
       city { "Valparaíso" }
       region { "Valparaíso" }
     end
@@ -45,7 +52,8 @@ FactoryBot.define do
     end
 
     trait :past do
-      start_at { Faker::Time.backward(days: 30, period: :morning) }
+      name { "Past Event" }
+      start_at { 1.week.ago }
     end
 
     trait :future do

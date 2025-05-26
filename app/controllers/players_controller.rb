@@ -1,11 +1,15 @@
 class PlayersController < ApplicationController
   def index
     @query = params[:query]
+    @character_filter = params[:character_filter]
+    @sort_by = params[:sort_by]
 
-    Rails.logger.info "=== Players#index called with query: '#{@query}', format: #{request.format} ==="
+    Rails.logger.info "=== Players#index called with query: '#{@query}', character_filter: '#{@character_filter}', sort_by: '#{@sort_by}', format: #{request.format} ==="
 
-    # Guardar el término de búsqueda en la sesión
+    # Guardar todos los parámetros de filtro en la sesión
     session[:players_query] = @query
+    session[:players_character_filter] = @character_filter
+    session[:players_sort_by] = @sort_by
 
     # Usar el método helper para preparar los datos
     @players = prepare_players_data
@@ -15,9 +19,12 @@ class PlayersController < ApplicationController
     respond_to do |format|
       format.html do
         Rails.logger.info "=== Responding with HTML ==="
-        if params[:partial] == "true"
+        # Detectar si es una solicitud de Turbo Frame o partial
+        if params[:partial] == "true" || turbo_frame_request?
+          Rails.logger.info "=== Rendering partial for Turbo Frame ==="
           render partial: "players_list", locals: { players: @players }
         else
+          Rails.logger.info "=== Rendering full page ==="
           render :index
         end
       end
@@ -54,8 +61,10 @@ class PlayersController < ApplicationController
       respond_to do |format|
         format.json { render json: { success: true, message: "Personajes actualizados correctamente" } }
         format.turbo_stream {
-          # Preparar datos para la recarga
+          # Preparar datos para la recarga usando parámetros de la sesión
           @query = session[:players_query]
+          @character_filter = session[:players_character_filter]
+          @sort_by = session[:players_sort_by]
           @players = prepare_players_data
 
           render turbo_stream: turbo_stream.replace("players_results",
@@ -116,8 +125,10 @@ class PlayersController < ApplicationController
       respond_to do |format|
         format.json { render json: { success: true, message: "Información actualizada correctamente" } }
         format.turbo_stream {
-          # Preparar datos para la recarga
+          # Preparar datos para la recarga usando parámetros de la sesión
           @query = session[:players_query]
+          @character_filter = session[:players_character_filter]
+          @sort_by = session[:players_sort_by]
           @players = prepare_players_data
 
           render turbo_stream: turbo_stream.replace("players_results",
@@ -165,8 +176,12 @@ class PlayersController < ApplicationController
     # Comenzar con la consulta base
     players_query = Player.all
 
+    # Usar parámetros de la URL o de la sesión como fallback
+    character_filter = params[:character_filter].presence || session[:players_character_filter]
+    query = @query.presence || session[:players_query]
+    sort_by = params[:sort_by].presence || session[:players_sort_by] || "recent_tournament"
+
     # Aplicar filtro por personaje
-    character_filter = params[:character_filter]
     if character_filter.present?
       if character_filter == "none"
         # Jugadores sin personajes asignados
@@ -195,10 +210,10 @@ class PlayersController < ApplicationController
     end
 
     # Filtrar por nombre si se proporciona un término de búsqueda
-    if @query.present?
+    if query.present?
       players_query = players_query.where(
         "LOWER(players.name) LIKE LOWER(?) OR LOWER(players.entrant_name) LIKE LOWER(?) OR LOWER(players.twitter_handle) LIKE LOWER(?)",
-        "%#{@query}%", "%#{@query}%", "%#{@query}%"
+        "%#{query}%", "%#{query}%", "%#{query}%"
       )
     end
 
@@ -230,7 +245,6 @@ class PlayersController < ApplicationController
     end
 
     # Aplicar ordenamiento
-    sort_by = params[:sort_by] || "recent_tournament"
     players_with_data = apply_sorting(players_with_data, sort_by)
 
     # Simular la paginación de Kaminari con los datos ordenados

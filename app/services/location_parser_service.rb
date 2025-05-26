@@ -81,8 +81,8 @@ class LocationParserService
         "online", "wifi", "discord", "internet", "virtual", "remoto",
         "en línea", "en linea", "desde casa", "digital", "netplay",
         "quarantine", "cuarentena", "lockdown", "stay home", "quedateencasa",
-        "home", "casa", "anywhere", "cualquier lugar", "worldwide", "global",
-        "chile"  # Agregar 'chile' como indicador de torneo online
+        "home", "casa", "anywhere", "cualquier lugar", "worldwide", "global"
+        # Removido 'chile' para evitar falsos positivos en tests
       ],
       name_keywords: [
         "online", "wifi", "quarantine", "lockdown", "stay home", "digital",
