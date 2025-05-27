@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_27_025550) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_27_145707) do
   create_table "event_seeds", force: :cascade do |t|
     t.integer "event_id", null: false
     t.integer "player_id", null: false
@@ -31,6 +31,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_27_025550) do
     t.datetime "updated_at", null: false
     t.datetime "seeds_last_synced_at"
     t.integer "start_gg_event_id"
+    t.integer "videogame_id"
+    t.string "videogame_name"
+    t.integer "team_min_players"
+    t.integer "team_max_players"
     t.index ["tournament_id", "id"], name: "index_events_on_tournament_and_id"
     t.index ["tournament_id"], name: "index_events_on_tournament_id"
   end

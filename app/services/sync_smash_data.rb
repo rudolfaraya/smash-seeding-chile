@@ -233,17 +233,39 @@ class SyncSmashData
 
     begin
       events_data = fetch_events(tournament.slug)
+      
+      # Filtrar eventos para obtener solo Smash Ultimate Singles
+      filter_service = EventFilterService.new
+      valid_events_data = filter_service.filter_events_during_sync(events_data)
 
-      events_data.each do |event_data|
+      valid_events_data.each do |event_data|
         Event.find_or_create_by(tournament: tournament, slug: event_data["slug"]) do |event|
           event.name = event_data["name"]
           event.id = event_data["id"]
+          
+          # Almacenar información del videojuego
+          if event_data["videogame"]
+            event.videogame_id = event_data["videogame"]["id"]
+            event.videogame_name = event_data["videogame"]["name"]
+          end
+          
+          # Almacenar información del tamaño del equipo
+          if event_data["teamRosterSize"]
+            event.team_min_players = event_data["teamRosterSize"]["minPlayers"]
+            event.team_max_players = event_data["teamRosterSize"]["maxPlayers"]
+          end
         end
       end
 
       count_after = tournament.events.reload.count
       new_events = count_after - count_before
-      Rails.logger.info "  ✅ Se crearon #{new_events} eventos para #{tournament.name}"
+      
+      if valid_events_data.size != events_data.size
+        filtered_count = events_data.size - valid_events_data.size
+        Rails.logger.info "  ✅ Se crearon #{new_events} eventos válidos para #{tournament.name} (#{filtered_count} eventos filtrados)"
+      else
+        Rails.logger.info "  ✅ Se crearon #{new_events} eventos para #{tournament.name}"
+      end
 
       new_events
     rescue StandardError => e

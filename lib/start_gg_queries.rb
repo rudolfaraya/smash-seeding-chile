@@ -57,6 +57,14 @@ module StartGgQueries
           id
           name
           slug
+          videogame {
+            id
+            name
+          }
+          teamRosterSize {
+            minPlayers
+            maxPlayers
+          }
         }
       }
     }

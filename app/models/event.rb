@@ -9,6 +9,14 @@ class Event < ApplicationRecord
   # Asegurar que el ID del evento de Start.gg (si se conoce) sea único por torneo
   validates :start_gg_event_id, uniqueness: { scope: :tournament_id, allow_nil: true }, if: :start_gg_event_id_present?
 
+  # Constantes para identificación de eventos válidos
+  SMASH_ULTIMATE_VIDEOGAME_ID = 1386
+
+  # Scopes para filtrar eventos
+  scope :smash_ultimate, -> { where(videogame_id: SMASH_ULTIMATE_VIDEOGAME_ID) }
+  scope :singles_only, -> { where('team_max_players IS NULL OR team_max_players <= 1') }
+  scope :valid_smash_singles, -> { smash_ultimate.singles_only }
+
   # Callback para generar la URL de start.gg del evento
   before_save :generate_start_gg_event_url, if: :slug_changed?
 
@@ -38,6 +46,27 @@ class Event < ApplicationRecord
   # Método para verificar si start_gg_event_id está presente y no es 0
   def start_gg_event_id_present?
     start_gg_event_id.present? && start_gg_event_id != 0
+  end
+
+  # Métodos para identificar el tipo de evento
+  def smash_ultimate?
+    videogame_id == SMASH_ULTIMATE_VIDEOGAME_ID
+  end
+
+  def singles_event?
+    team_max_players.nil? || team_max_players <= 1
+  end
+
+  def doubles_event?
+    !singles_event?
+  end
+
+  def valid_smash_singles?
+    smash_ultimate? && singles_event?
+  end
+
+  def other_game_event?
+    videogame_id.present? && videogame_id != SMASH_ULTIMATE_VIDEOGAME_ID
   end
 
   # Generar la URL del evento en start.gg
