@@ -46,4 +46,7 @@ Rails.application.routes.draw do
 
   # Mission Control Jobs - Panel de administración de jobs
   mount MissionControl::Jobs::Engine, at: "/jobs"
+
+  # Estadísticas
+  get "stats" => "stats#index", as: :stats
 end

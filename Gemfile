@@ -103,3 +103,5 @@ gem "solid_queue", "~> 1.1"
 gem "mission_control-jobs", "~> 1.0"
 
 gem "devise", "~> 4.9" # Autenticación de usuarios
+
+gem "groupdate", "~> 6.4" # Para agrupación de datos por fechas

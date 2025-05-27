@@ -1,0 +1,151 @@
+<div class="pt-20 pb-12 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen"
+     data-controller="stats"
+     data-stats-region-data-value="<%= @tournaments_by_region.to_json %>"
+     data-stats-modality-data-value="<%= { 'Presenciales' => @presential_tournaments, 'Online' => @online_tournaments }.to_json %>"
+     data-stats-year-data-value="<%= @tournaments_by_year.to_json %>"
+     data-stats-size-data-value="<%= @tournament_size_distribution.to_json %>"
+     data-stats-active-players-data-value="<%= @most_active_players.to_json %>">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-bold text-white mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 inline-block mr-3 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+        </svg>
+        Estadísticas Globales
+      </h1>
+      <p class="text-xl text-slate-300">Análisis completo del ecosistema competitivo de Smash Ultimate en Chile</p>
+    </div>
+
+    <!-- Métricas principales -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+      <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 text-center">
+        <div class="text-3xl font-bold text-red-400 mb-2"><%= number_with_delimiter(@total_tournaments) %></div>
+        <div class="text-slate-300 text-sm">Torneos</div>
+      </div>
+      <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 text-center">
+        <div class="text-3xl font-bold text-blue-400 mb-2"><%= number_with_delimiter(@valid_events) %></div>
+        <div class="text-slate-300 text-sm">Eventos Válidos</div>
+      </div>
+      <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 text-center">
+        <div class="text-3xl font-bold text-green-400 mb-2"><%= number_with_delimiter(@total_players) %></div>
+        <div class="text-slate-300 text-sm">Jugadores</div>
+      </div>
+      <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 text-center">
+        <div class="text-3xl font-bold text-yellow-400 mb-2"><%= number_with_delimiter(@total_seeds) %></div>
+        <div class="text-slate-300 text-sm">Participaciones</div>
+      </div>
+    </div>
+
+    <!-- Actividad reciente -->
+    <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 mb-8">
+      <h3 class="text-xl font-semibold text-white mb-4">📈 Actividad Reciente (30 días)</h3>
+      <div class="grid grid-cols-3 gap-4">
+        <div class="text-center">
+          <div class="text-2xl font-bold text-green-400"><%= @recent_tournaments %></div>
+          <div class="text-slate-300 text-sm">Nuevos Torneos</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-blue-400"><%= @recent_events %></div>
+          <div class="text-slate-300 text-sm">Nuevos Eventos</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-purple-400"><%= @recent_players %></div>
+          <div class="text-slate-300 text-sm">Nuevos Jugadores</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráficos principales -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      
+      <!-- Distribución por región -->
+      <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+        <h3 class="text-xl font-semibold text-white mb-4">🌎 Distribución por Región</h3>
+        <div class="h-48">
+          <canvas data-stats-target="regionChart" class="w-full h-full"></canvas>
+        </div>
+      </div>
+
+      <!-- Modalidades de torneos -->
+      <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+        <h3 class="text-xl font-semibold text-white mb-4">🏠 Modalidades de Torneos</h3>
+        <div class="h-48">
+          <canvas data-stats-target="modalityChart" class="w-full h-full"></canvas>
+        </div>
+      </div>
+
+      <!-- Crecimiento temporal -->
+      <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 lg:col-span-2">
+        <h3 class="text-xl font-semibold text-white mb-4">📅 Torneos por Año</h3>
+        <div class="h-48">
+          <canvas data-stats-target="yearChart" class="w-full h-full"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Tamaños de torneos -->
+    <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 mb-8">
+      <h3 class="text-xl font-semibold text-white mb-4">📊 Distribución por Tamaño de Torneos</h3>
+      <div class="h-64">
+        <canvas data-stats-target="sizeChart" class="w-full h-full"></canvas>
+      </div>
+    </div>
+
+    <!-- Top jugadores más activos -->
+    <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 mb-8">
+      <h3 class="text-xl font-semibold text-white mb-4">🏆 Jugadores Más Activos (por Torneos)</h3>
+      <div class="h-64 overflow-hidden">
+        <canvas data-stats-target="activePlayersChart" class="w-full h-full"></canvas>
+      </div>
+    </div>
+
+    <!-- Estadísticas adicionales -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      
+      <!-- Promedios -->
+      <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+        <h3 class="text-xl font-semibold text-white mb-4">📈 Promedios Generales</h3>
+        <div class="space-y-4">
+          <div class="flex justify-between">
+            <span class="text-slate-300">Asistentes por torneo:</span>
+            <span class="text-white font-semibold"><%= @avg_attendees_overall %></span>
+          </div>
+          <div class="border-t border-slate-600 pt-4">
+            <div class="text-slate-400 text-sm mb-2">Por región:</div>
+            <% @avg_attendees_by_region.each do |region, avg| %>
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-300"><%= region || 'Sin región' %>:</span>
+                <span class="text-slate-200"><%= avg %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Récords por región -->
+      <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+        <h3 class="text-xl font-semibold text-white mb-4">🥇 Récords por Región</h3>
+        <div class="space-y-3">
+          <% @biggest_tournaments_by_region.sort_by { |region, tournament_data| -tournament_data[2] }.each do |region, tournament_data| %>
+            <div class="border-b border-slate-600 pb-2">
+              <div class="flex justify-between items-start">
+                <span class="text-slate-300 font-medium"><%= region || 'Sin región' %>:</span>
+                <span class="text-white font-semibold"><%= tournament_data[2] %> asistentes</span>
+              </div>
+              <div class="text-sm text-slate-400 mt-1">
+                <%= tournament_data[1] %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+ 
