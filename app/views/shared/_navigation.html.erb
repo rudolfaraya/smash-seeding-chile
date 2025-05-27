@@ -31,6 +31,59 @@
             </svg>
             Jugadores
           <% end %>
+
+          <!-- Enlaces de autenticación -->
+          <% if user_signed_in? %>
+            <!-- Menú de usuario -->
+            <div class="relative ml-3" data-controller="dropdown">
+              <button type="button" 
+                      class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-slate-100 transition-colors duration-200"
+                      data-action="click->dropdown#toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
+                </svg>
+                <%= current_user.email.split('@').first %>
+                <svg class="ml-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              
+              <div class="hidden absolute right-0 mt-2 w-48 bg-slate-800 rounded-md shadow-lg py-1 z-50 border border-slate-700"
+                   data-dropdown-target="menu">
+                <%= link_to edit_user_registration_path, 
+                      class: "flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors duration-200" do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                  </svg>
+                  Editar Perfil
+                <% end %>
+                <%= button_to destroy_user_session_path, 
+                      method: :delete,
+                      data: { turbo: false },
+                      class: "w-full text-left flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors duration-200" do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                  </svg>
+                  Cerrar Sesión
+                <% end %>
+              </div>
+            </div>
+          <% else %>
+            <%= link_to new_user_session_path, 
+                  class: "flex items-center px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-slate-100 transition-colors duration-200" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+              Iniciar Sesión
+            <% end %>
+            <%= link_to new_user_registration_path, 
+                  class: "flex items-center px-3 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors duration-200 shadow-lg" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+              </svg>
+              Registrarse
+            <% end %>
+          <% end %>
         </div>
       </div>
 
@@ -63,6 +116,49 @@
             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
           </svg>
           Jugadores
+        <% end %>
+
+        <!-- Enlaces de autenticación (móvil) -->
+        <% if user_signed_in? %>
+          <div class="border-t border-slate-700 pt-3 mt-3">
+            <div class="px-3 py-2">
+              <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Usuario</p>
+              <p class="text-sm text-slate-300 mt-1"><%= current_user.email %></p>
+            </div>
+            <%= link_to edit_user_registration_path, 
+                  class: "flex items-center px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800 hover:text-slate-100 transition-colors duration-200" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+              </svg>
+              Editar Perfil
+            <% end %>
+            <%= button_to destroy_user_session_path, 
+                  method: :delete,
+                  data: { turbo: false },
+                  class: "w-full text-left flex items-center px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800 hover:text-slate-100 transition-colors duration-200" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+              </svg>
+              Cerrar Sesión
+            <% end %>
+          </div>
+        <% else %>
+          <div class="border-t border-slate-700 pt-3 mt-3 space-y-1">
+            <%= link_to new_user_session_path, 
+                  class: "flex items-center px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800 hover:text-slate-100 transition-colors duration-200" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+              Iniciar Sesión
+            <% end %>
+            <%= link_to new_user_registration_path, 
+                  class: "flex items-center px-3 py-2 rounded-md text-base font-medium text-white bg-red-600 hover:bg-red-700 transition-colors duration-200" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+              </svg>
+              Registrarse
+            <% end %>
+          </div>
         <% end %>
       </div>
     </div>

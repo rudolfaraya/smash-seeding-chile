@@ -1,4 +1,7 @@
 class EventsController < ApplicationController
+  # Requerir autenticación para sync_seeds
+  before_action :authenticate_user!, only: [:sync_seeds]
+  
   before_action :set_tournament, only: [ :index, :show, :seeds, :sync_seeds ]
   before_action :set_event, only: [ :show, :seeds, :sync_seeds ]
 

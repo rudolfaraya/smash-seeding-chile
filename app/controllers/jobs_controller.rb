@@ -1,4 +1,7 @@
 class JobsController < ApplicationController
+  # Todas las acciones de jobs requieren autenticación
+  before_action :authenticate_user!
+
   def index
     # Redirigir al panel de Mission Control
     redirect_to "/jobs"

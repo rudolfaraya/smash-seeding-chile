@@ -1,0 +1,29 @@
+<div class="text-center space-y-3">
+  <%- if controller_name != 'sessions' %>
+    <%= link_to "¿Ya tienes cuenta? Inicia sesión", new_user_session_path, 
+          class: "text-sm text-red-400 hover:text-red-300 transition-colors duration-200" %>
+  <% end %>
+
+  <%- if devise_mapping.registerable? && controller_name != 'registrations' %>
+    <%= link_to "¿No tienes cuenta? Regístrate", new_user_registration_path, 
+          class: "text-sm text-red-400 hover:text-red-300 transition-colors duration-200" %>
+  <% end %>
+
+  <%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
+    <%= link_to "¿Olvidaste tu contraseña?", new_user_password_path, 
+          class: "text-sm text-slate-400 hover:text-slate-300 transition-colors duration-200" %>
+  <% end %>
+
+  <%- if devise_mapping.confirmable? && controller_name != 'confirmations' %>
+    <%= link_to "¿No recibiste las instrucciones de confirmación?", new_user_confirmation_path, 
+          class: "text-sm text-slate-400 hover:text-slate-300 transition-colors duration-200" %>
+  <% end %>
+
+  <%- if devise_mapping.omniauthable? %>
+    <%- resource_class.omniauth_providers.each do |provider| %>
+      <%= button_to "Iniciar sesión con #{OmniAuth::Utils.camelize(provider)}", omniauth_authorize_path(resource_name, provider), 
+            data: { turbo: false },
+            class: "w-full mt-3 py-2 px-4 border border-slate-600 rounded-md text-sm font-medium text-slate-300 bg-slate-700 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors duration-200" %>
+    <% end %>
+  <% end %>
+</div>

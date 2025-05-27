@@ -4,16 +4,18 @@
     Torneos de Smash
   </h1>
   
-  <div class="action-group">
-    <%= link_to sync_new_tournaments_tournaments_path,
-                method: :post,
-                class: "action-button-primary",
-                data: { 
-                  turbo_method: :post,
-                  confirm: "¿Sincronizar solo torneos nuevos? (Verificará eficientemente qué torneos no están en la base de datos)"
-                } do %>
-      <%= render 'shared/icons/plus', class: 'action-button-icon' %>
-      Sincronizar Nuevos Torneos ⚡
-    <% end %>
-  </div>
+  <% if user_signed_in? %>
+    <div class="action-group">
+      <%= link_to sync_new_tournaments_tournaments_path,
+                  method: :post,
+                  class: "action-button-primary",
+                  data: { 
+                    turbo_method: :post,
+                    confirm: "¿Sincronizar solo torneos nuevos? (Verificará eficientemente qué torneos no están en la base de datos)"
+                  } do %>
+        <%= render 'shared/icons/plus', class: 'action-button-icon' %>
+        Sincronizar Nuevos Torneos ⚡
+      <% end %>
+    </div>
+  <% end %>
 </div> 

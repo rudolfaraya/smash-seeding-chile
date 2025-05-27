@@ -1,0 +1,61 @@
+<% content_for :title, "Iniciar Sesión - Smash Seeding Chile" %>
+
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <div>
+      <div class="mx-auto h-12 w-12 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500" viewBox="0 0 20 20" fill="currentColor" style="filter: drop-shadow(0 0 6px #f87171);">
+          <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-slate-100">
+        Iniciar Sesión
+      </h2>
+      <p class="mt-2 text-center text-sm text-slate-400">
+        Accede a tu cuenta de Smash Seeding Chile
+      </p>
+    </div>
+
+    <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg shadow-xl p-8">
+      <%= form_for(resource, as: resource_name, url: session_path(resource_name), 
+                   local: true, 
+                   class: "space-y-6",
+                   data: { turbo: false }) do |f| %>
+        
+        <div>
+          <%= f.label :email, "Correo Electrónico", class: "block text-sm font-medium text-slate-300 mb-2" %>
+          <%= f.email_field :email, 
+                autofocus: true, 
+                autocomplete: "email",
+                class: "appearance-none relative block w-full px-3 py-3 border border-slate-600 placeholder-slate-400 text-slate-100 bg-slate-700/50 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm transition-colors duration-200",
+                placeholder: "tu@email.com" %>
+        </div>
+
+        <div>
+          <%= f.label :password, "Contraseña", class: "block text-sm font-medium text-slate-300 mb-2" %>
+          <%= f.password_field :password, 
+                autocomplete: "current-password",
+                class: "appearance-none relative block w-full px-3 py-3 border border-slate-600 placeholder-slate-400 text-slate-100 bg-slate-700/50 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm transition-colors duration-200",
+                placeholder: "Tu contraseña" %>
+        </div>
+
+        <% if devise_mapping.rememberable? %>
+          <div class="flex items-center">
+            <%= f.check_box :remember_me, 
+                  class: "h-4 w-4 text-red-600 focus:ring-red-500 border-slate-600 bg-slate-700 rounded" %>
+            <%= f.label :remember_me, "Recordarme", class: "ml-2 block text-sm text-slate-300" %>
+          </div>
+        <% end %>
+
+        <div>
+          <%= f.submit "Iniciar Sesión", 
+                class: "group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200 shadow-lg hover:shadow-xl" %>
+        </div>
+      <% end %>
+
+      <div class="mt-6">
+        <%= render "devise/shared/links" %>
+      </div>
+    </div>
+  </div>
+</div>

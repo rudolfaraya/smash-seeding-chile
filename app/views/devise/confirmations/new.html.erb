@@ -1,0 +1,49 @@
+<% content_for :title, "Reenviar Confirmación - Smash Seeding Chile" %>
+
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <div>
+      <div class="mx-auto h-12 w-12 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500" viewBox="0 0 20 20" fill="currentColor" style="filter: drop-shadow(0 0 6px #f87171);">
+          <path fill-rule="evenodd" d="M2.94 6.412A2 2 0 002 8.108V16a2 2 0 002 2h12a2 2 0 002-2V8.108a2 2 0 00-.94-1.696l-6-3.75a2 2 0 00-2.12 0l-6 3.75zm2.615 2.423a1 1 0 10-1.11 1.664l5 3.333a1 1 0 001.11 0l5-3.333a1 1 0 00-1.11-1.664L10 11.798 5.555 8.835z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-slate-100">
+        Reenviar Confirmación
+      </h2>
+      <p class="mt-2 text-center text-sm text-slate-400">
+        Te enviaremos nuevamente las instrucciones de confirmación
+      </p>
+    </div>
+
+    <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg shadow-xl p-8">
+      <%= form_for(resource, as: resource_name, url: confirmation_path(resource_name), 
+                   html: { method: :post }, 
+                   local: true, 
+                   class: "space-y-6",
+                   data: { turbo: false }) do |f| %>
+        
+        <%= render "devise/shared/error_messages", resource: resource %>
+
+        <div>
+          <%= f.label :email, "Correo Electrónico", class: "block text-sm font-medium text-slate-300 mb-2" %>
+          <%= f.email_field :email, 
+                autofocus: true, 
+                autocomplete: "email",
+                value: (resource.pending_reconfirmation? ? resource.unconfirmed_email : resource.email),
+                class: "appearance-none relative block w-full px-3 py-3 border border-slate-600 placeholder-slate-400 text-slate-100 bg-slate-700/50 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm transition-colors duration-200",
+                placeholder: "tu@email.com" %>
+        </div>
+
+        <div>
+          <%= f.submit "Reenviar Instrucciones", 
+                class: "group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200 shadow-lg hover:shadow-xl" %>
+        </div>
+      <% end %>
+
+      <div class="mt-6">
+        <%= render "devise/shared/links" %>
+      </div>
+    </div>
+  </div>
+</div>

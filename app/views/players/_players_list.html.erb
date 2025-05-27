@@ -133,27 +133,36 @@
           </td>
           <td class="py-4 px-6">
             <div class="flex space-x-3">
-              <!-- Botón para editar información del jugador -->
-              <button 
-                onclick="openEditInfoModal(<%= player.id %>)" 
-                class="inline-flex items-center px-2 py-1 border border-purple-500 text-purple-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200 cursor-pointer text-xs" 
-                title="Editar información del jugador">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
-                </svg>
-                <span>Editar Jugador</span>
-              </button>
-              
-              <!-- Botón para editar personajes de Smash -->
-              <button 
-                onclick="openSmashCharacterModal(<%= player.id %>)" 
-                class="inline-flex items-center px-2 py-1 border border-green-500 text-green-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 cursor-pointer text-xs" 
-                title="Editar personajes de Smash">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                </svg>
-                <span>Personajes</span>
-              </button>
+              <% if user_signed_in? %>
+                <!-- Botón para editar información del jugador -->
+                <button 
+                  onclick="openEditInfoModal(<%= player.id %>)" 
+                  class="inline-flex items-center px-2 py-1 border border-purple-500 text-purple-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200 cursor-pointer text-xs" 
+                  title="Editar información del jugador">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
+                  </svg>
+                  <span>Editar Jugador</span>
+                </button>
+                
+                <!-- Botón para editar personajes de Smash -->
+                <button 
+                  onclick="openSmashCharacterModal(<%= player.id %>)" 
+                  class="inline-flex items-center px-2 py-1 border border-green-500 text-green-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 cursor-pointer text-xs" 
+                  title="Editar personajes de Smash">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                  </svg>
+                  <span>Personajes</span>
+                </button>
+              <% else %>
+                <span class="inline-flex items-center px-2 py-1 border border-slate-600 text-slate-500 bg-slate-800 rounded-md cursor-not-allowed text-xs">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                  </svg>
+                  <span>Requiere Login</span>
+                </span>
+              <% end %>
               
               <!-- Botón para ver eventos (dropdown) -->
               <% if total_events > 0 %>
@@ -382,27 +391,36 @@
       
       <!-- Acciones -->
       <div class="p-4 border-t border-slate-700 flex flex-col space-y-2">
-        <!-- Botón para editar información del jugador -->
-        <button 
-          onclick="openEditInfoModal(<%= player.id %>)" 
-          class="w-full inline-flex items-center justify-center px-4 py-2 border border-purple-500 text-purple-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200 cursor-pointer text-sm" 
-          title="Editar información del jugador">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
-          </svg>
-          Editar Información
-        </button>
-        
-        <!-- Botón para editar personajes -->
-        <button 
-          onclick="openSmashCharacterModal(<%= player.id %>)" 
-          class="w-full inline-flex items-center justify-center px-4 py-2 border border-green-500 text-green-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 cursor-pointer text-sm" 
-          title="Editar personajes de Smash">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-          </svg>
-          Editar Personajes
-        </button>
+        <% if user_signed_in? %>
+          <!-- Botón para editar información del jugador -->
+          <button 
+            onclick="openEditInfoModal(<%= player.id %>)" 
+            class="w-full inline-flex items-center justify-center px-4 py-2 border border-purple-500 text-purple-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200 cursor-pointer text-sm" 
+            title="Editar información del jugador">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
+            </svg>
+            Editar Información
+          </button>
+          
+          <!-- Botón para editar personajes -->
+          <button 
+            onclick="openSmashCharacterModal(<%= player.id %>)" 
+            class="w-full inline-flex items-center justify-center px-4 py-2 border border-green-500 text-green-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 cursor-pointer text-sm" 
+            title="Editar personajes de Smash">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+            </svg>
+            Editar Personajes
+          </button>
+        <% else %>
+          <div class="w-full inline-flex items-center justify-center px-4 py-2 border border-slate-600 text-slate-500 bg-slate-800 rounded-md cursor-not-allowed text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+            </svg>
+            Requiere login para editar
+          </div>
+        <% end %>
         
         <!-- Botón para ver eventos -->
         <% if total_events > 0 %>

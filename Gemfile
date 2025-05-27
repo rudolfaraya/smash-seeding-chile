@@ -59,6 +59,9 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+  
+  # Mailcatcher para capturar emails en desarrollo
+  gem "mailcatcher"
 end
 
 group :test do
@@ -98,3 +101,5 @@ gem "kaminari", "~> 1.2" # Para paginación
 gem "solid_queue", "~> 1.1"
 
 gem "mission_control-jobs", "~> 1.0"
+
+gem "devise", "~> 4.9" # Autenticación de usuarios

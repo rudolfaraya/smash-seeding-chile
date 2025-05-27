@@ -1,2 +1,11 @@
+# Servidor web principal
 web: bin/rails server
+
+# Watcher para CSS (Tailwind)
 css: bin/rails tailwindcss:watch
+
+# Procesamiento de jobs en segundo plano
+jobs: bin/rails solid_queue:start
+
+# Mailcatcher para desarrollo (emails)
+mail: mailcatcher --foreground --http-ip=0.0.0.0 --smtp-ip=0.0.0.0

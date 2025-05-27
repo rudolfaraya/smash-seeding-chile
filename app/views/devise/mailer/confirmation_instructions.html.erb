@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirma tu cuenta - Smash Seeding Chile</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: #e2e8f0;
+      background-color: #0f172a;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      padding: 40px 0;
+      border-bottom: 1px solid #334155;
+    }
+    .logo {
+      color: #ef4444;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .content {
+      padding: 40px 0;
+      text-align: center;
+    }
+    .title {
+      color: #f1f5f9;
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .message {
+      color: #94a3b8;
+      font-size: 16px;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+    .button {
+      display: inline-block;
+      background-color: #ef4444;
+      color: white;
+      text-decoration: none;
+      padding: 15px 30px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      margin: 20px 0;
+      transition: background-color 0.2s;
+    }
+    .button:hover {
+      background-color: #dc2626;
+    }
+    .footer {
+      border-top: 1px solid #334155;
+      padding: 30px 0;
+      text-align: center;
+      color: #64748b;
+      font-size: 14px;
+    }
+    .link {
+      color: #ef4444;
+      text-decoration: none;
+    }
+    .link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">🔥 Smash Seeding Chile</div>
+      <p style="color: #64748b; margin: 0;">Plataforma de Seeding para Torneos</p>
+    </div>
+    
+    <div class="content">
+      <h1 class="title">¡Bienvenido a Smash Seeding Chile!</h1>
+      
+      <p class="message">
+        Hola <strong><%= @email %></strong>,<br><br>
+        Gracias por registrarte en nuestra plataforma. Para completar tu registro y activar tu cuenta, 
+        necesitas confirmar tu dirección de correo electrónico.
+      </p>
+      
+      <%= link_to "Confirmar mi cuenta", confirmation_url(@resource, confirmation_token: @token), 
+            class: "button", 
+            style: "background-color: #ef4444; color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;" %>
+      
+      <p class="message">
+        Una vez confirmada tu cuenta, podrás acceder a todas las funcionalidades de la plataforma, 
+        incluyendo la gestión de torneos, seeds y rankings.
+      </p>
+      
+      <p style="color: #64748b; font-size: 14px; margin-top: 30px;">
+        Si no puedes hacer clic en el botón, copia y pega este enlace en tu navegador:<br>
+        <a href="<%= confirmation_url(@resource, confirmation_token: @token) %>" class="link">
+          <%= confirmation_url(@resource, confirmation_token: @token) %>
+        </a>
+      </p>
+    </div>
+    
+    <div class="footer">
+      <p>
+        Este correo fue enviado desde <strong>Smash Seeding Chile</strong><br>
+        Si no creaste una cuenta con nosotros, puedes ignorar este mensaje.
+      </p>
+      <p style="margin-top: 20px;">
+        <a href="http://localhost:3000" class="link">Visitar la plataforma</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,4 +1,7 @@
 class TournamentsController < ApplicationController
+  # Requerir autenticación para acciones de sincronización
+  before_action :authenticate_user!, only: [:sync, :sync_new_tournaments, :sync_events]
+
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
 
   def index

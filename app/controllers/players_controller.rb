@@ -1,4 +1,7 @@
 class PlayersController < ApplicationController
+  # Requerir autenticación para update_smash_characters y update_info
+  before_action :authenticate_user!, only: [:update_smash_characters, :update_info]
+
   def index
     @query = params[:query]
     @character_filter = params[:character_filter]

@@ -1,9 +1,24 @@
 #!/usr/bin/env sh
 
+# Script de desarrollo para Smash Seeding Chile
+# Ejecuta todos los servicios necesarios para desarrollo usando foreman
+
 if ! gem list foreman -i --silent; then
-  echo "Installing foreman..."
+  echo "🔧 Instalando foreman..."
   gem install foreman
 fi
+
+echo "🚀 Iniciando servicios de desarrollo..."
+echo "   - Rails server (puerto 3000)"
+echo "   - Tailwind CSS watcher"
+echo "   - Solid Queue (jobs en segundo plano)"
+echo "   - Mailcatcher (puerto 1080 para web, 1025 para SMTP)"
+echo ""
+echo "📝 Para detener todos los servicios: Ctrl+C"
+echo "🌐 Aplicación: http://localhost:3000"
+echo "📧 Mailcatcher: http://localhost:1080"
+echo "💼 Jobs: http://localhost:3000/jobs"
+echo ""
 
 # Default to port 3000 if not specified
 export PORT="${PORT:-3000}"
