@@ -116,6 +116,71 @@ RSpec.describe Tournament, type: :model do
         end
       end
     end
+
+    describe '#calculated_smash_attendees_count and #best_attendees_count' do
+      let(:tournament) { create(:tournament) }
+      let(:smash_event) { create(:event, tournament: tournament, videogame_id: Event::SMASH_ULTIMATE_VIDEOGAME_ID, team_max_players: 1) }
+      let(:non_smash_event) { create(:event, tournament: tournament, videogame_id: 999, team_max_players: 1) }
+      let(:player1) { create(:player) }
+      let(:player2) { create(:player) }
+      let(:player3) { create(:player) }
+
+      before do
+        # Crear seeds para evento de Smash
+        create(:event_seed, event: smash_event, player: player1)
+        create(:event_seed, event: smash_event, player: player2)
+        
+        # Crear seed para evento no-Smash
+        create(:event_seed, event: non_smash_event, player: player3)
+      end
+
+      describe '#calculated_smash_attendees_count' do
+        it 'cuenta solo participantes únicos de eventos de Smash válidos' do
+          expect(tournament.calculated_smash_attendees_count).to eq(2)
+        end
+
+        it 'no cuenta participantes de eventos que no son Smash' do
+          # El player3 está en un evento no-Smash, no debería contarse
+          expect(tournament.calculated_smash_attendees_count).not_to eq(3)
+        end
+
+        it 'no cuenta duplicados si un jugador está en múltiples eventos de Smash' do
+          other_smash_event = create(:event, tournament: tournament, videogame_id: Event::SMASH_ULTIMATE_VIDEOGAME_ID, team_max_players: 1)
+          create(:event_seed, event: other_smash_event, player: player1) # player1 ya está en smash_event
+          
+          expect(tournament.calculated_smash_attendees_count).to eq(2) # Sigue siendo 2, no 3
+        end
+      end
+
+      describe '#best_attendees_count' do
+        context 'cuando hay participantes de Smash' do
+          it 'retorna el conteo calculado de Smash' do
+            expect(tournament.best_attendees_count).to eq(2)
+          end
+
+          it 'prioriza el conteo de Smash sobre attendees_count de la API' do
+            tournament.update(attendees_count: 100) # API dice 100 pero solo hay 2 de Smash
+            expect(tournament.best_attendees_count).to eq(2)
+          end
+        end
+
+        context 'cuando no hay participantes de Smash' do
+          let(:empty_tournament) { create(:tournament, attendees_count: 50) }
+
+          it 'retorna attendees_count de la API como fallback' do
+            expect(empty_tournament.best_attendees_count).to eq(50)
+          end
+        end
+
+        context 'cuando no hay participantes de Smash ni attendees_count' do
+          let(:empty_tournament) { create(:tournament, attendees_count: nil) }
+
+          it 'retorna nil' do
+            expect(empty_tournament.best_attendees_count).to be_nil
+          end
+        end
+      end
+    end
   end
 
   describe 'callbacks' do

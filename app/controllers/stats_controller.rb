@@ -49,14 +49,28 @@ class StatsController < ApplicationController
     @online_tournaments = Tournament.where(region: 'Online').count
     @presential_tournaments = @total_tournaments - @online_tournaments
     
-    # Promedio de asistentes
-    @avg_attendees_overall = Tournament.where.not(attendees_count: nil)
-                                     .average(:attendees_count)&.round(1) || 0
+    # Promedio de asistentes (usando conteo corregido de Smash)
+    tournaments_with_attendees = Tournament.joins(events: :event_seeds)
+                                          .where(events: { videogame_id: Event::SMASH_ULTIMATE_VIDEOGAME_ID })
+                                          .where('events.team_max_players IS NULL OR events.team_max_players <= 1')
+                                          .select('tournaments.*, COUNT(DISTINCT event_seeds.player_id) as smash_attendees')
+                                          .group('tournaments.id')
+                                          .having('COUNT(DISTINCT event_seeds.player_id) > 0')
+
+    smash_attendees_counts = tournaments_with_attendees.map(&:smash_attendees)
+    @avg_attendees_overall = smash_attendees_counts.empty? ? 0 : (smash_attendees_counts.sum.to_f / smash_attendees_counts.size).round(1)
     
-    avg_attendees_raw = Tournament.where.not(attendees_count: nil)
-                                  .group(:region)
-                                  .average(:attendees_count)
-                                  .transform_values { |avg| avg&.round(1) || 0 }
+    # Promedio por región usando conteo de Smash
+    avg_attendees_raw = {}
+    tournaments_with_attendees.each do |tournament|
+      region = tournament.region || 'Sin región'
+      avg_attendees_raw[region] ||= []
+      avg_attendees_raw[region] << tournament.smash_attendees
+    end
+    
+    avg_attendees_raw = avg_attendees_raw.transform_values do |counts|
+      (counts.sum.to_f / counts.size).round(1)
+    end
     
     # Orden geográfico de las regiones (de norte a sur)
     region_order = [
@@ -121,14 +135,30 @@ class StatsController < ApplicationController
       ]
     end
     
-    # Distribución de tamaños de torneos
+    # Distribución de tamaños de torneos (usando conteo corregido de Smash)
     @tournament_size_distribution = {
-      'Pequeño (≤16)' => Tournament.where('attendees_count <= ?', 16).count,
-      'Mediano (17-32)' => Tournament.where(attendees_count: 17..32).count,
-      'Grande (33-64)' => Tournament.where(attendees_count: 33..64).count,
-      'Muy Grande (65-128)' => Tournament.where(attendees_count: 65..128).count,
-      'Masivo (>128)' => Tournament.where('attendees_count > ?', 128).count
+      'Pequeño (≤16)' => 0,
+      'Mediano (17-32)' => 0,
+      'Grande (33-64)' => 0,
+      'Muy Grande (65-128)' => 0,
+      'Masivo (>128)' => 0
     }
+    
+    tournaments_with_attendees.each do |tournament|
+      count = tournament.smash_attendees
+      case count
+      when 0..16
+        @tournament_size_distribution['Pequeño (≤16)'] += 1
+      when 17..32
+        @tournament_size_distribution['Mediano (17-32)'] += 1
+      when 33..64
+        @tournament_size_distribution['Grande (33-64)'] += 1
+      when 65..128
+        @tournament_size_distribution['Muy Grande (65-128)'] += 1
+      else
+        @tournament_size_distribution['Masivo (>128)'] += 1
+      end
+    end
     
     # Eliminamos las estadísticas de videojuegos ya que serán 100% Smash
     
@@ -139,12 +169,12 @@ class StatsController < ApplicationController
                                       .distinct
                                       .count(:player_id)
     
-    # Torneos más grandes por región con nombres (simplificado)
+    # Torneos más grandes por región con nombres (usando conteo corregido de Smash)
     region_records = {}
-    Tournament.where.not(attendees_count: nil).each do |tournament|
+    tournaments_with_attendees.each do |tournament|
       region = tournament.region || 'Sin región'
-      if !region_records[region] || tournament.attendees_count > region_records[region][2]
-        region_records[region] = [region, tournament.name, tournament.attendees_count]
+      if !region_records[region] || tournament.smash_attendees > region_records[region][2]
+        region_records[region] = [region, tournament.name, tournament.smash_attendees]
       end
     end
     @biggest_tournaments_by_region = region_records

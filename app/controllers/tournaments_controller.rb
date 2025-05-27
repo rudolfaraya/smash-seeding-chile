@@ -29,9 +29,11 @@ class TournamentsController < ApplicationController
     session[:tournaments_end_date] = @end_date_filter
     session[:tournaments_sort] = @sort_filter
 
+    # Configurar opciones de filtros primero
+    set_filter_options
+    
     @tournaments = apply_filters(Tournament.all)
     @tournaments = apply_sorting(@tournaments)
-    set_filter_options
 
     # Aplicar paginación con Kaminari - 100 torneos por página
     @tournaments = @tournaments.page(params[:page]).per(100)
@@ -238,9 +240,13 @@ class TournamentsController < ApplicationController
     when "newest"
       tournaments_scope.order(start_at: :desc)
     when "most_attendees"
-      tournaments_scope.order(Arel.sql("COALESCE(attendees_count, 0) DESC, start_at DESC"))
+      # Para ordenamiento por asistentes, usar el scope especial con conteo de Smash
+      tournaments_scope = tournaments_scope.with_smash_attendees_count if tournaments_scope.respond_to?(:with_smash_attendees_count)
+      tournaments_scope.order(Arel.sql("COALESCE(smash_attendees_count_data, attendees_count, 0) DESC, start_at DESC"))
     when "least_attendees"
-      tournaments_scope.order(Arel.sql("COALESCE(attendees_count, 0) ASC, start_at DESC"))
+      # Para ordenamiento por asistentes, usar el scope especial con conteo de Smash
+      tournaments_scope = tournaments_scope.with_smash_attendees_count if tournaments_scope.respond_to?(:with_smash_attendees_count)
+      tournaments_scope.order(Arel.sql("COALESCE(smash_attendees_count_data, attendees_count, 0) ASC, start_at DESC"))
     when "alphabetical_az"
       tournaments_scope.order(Arel.sql("LOWER(tournaments.name) ASC"))
     when "alphabetical_za"

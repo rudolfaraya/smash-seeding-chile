@@ -113,6 +113,42 @@ class Tournament < ApplicationRecord
     attributes["total_event_seeds_count_data"] || event_seeds.size # Fallback
   end
 
+  # Método para calcular asistentes reales basado en participantes únicos de eventos de Smash
+  def calculated_smash_attendees_count
+    # Si ya tenemos el conteo calculado desde una consulta optimizada, usarlo
+    if attributes.key?("smash_attendees_count_data")
+      return attributes["smash_attendees_count_data"]
+    end
+
+    # Fallback: calcular participantes únicos de eventos de Smash válidos
+    event_seeds.joins(:event)
+              .where(events: { videogame_id: Event::SMASH_ULTIMATE_VIDEOGAME_ID })
+              .where('events.team_max_players IS NULL OR events.team_max_players <= 1')
+              .distinct
+              .count(:player_id)
+  end
+
+  # Método para determinar qué conteo de asistentes usar (prioriza el calculado sobre el de la API)
+  def best_attendees_count
+    smash_count = calculated_smash_attendees_count
+    
+    # Si tenemos participantes de Smash, usar ese conteo
+    if smash_count > 0
+      smash_count
+    else
+      # Fallback al conteo de la API si no hay datos de Smash
+      attendees_count
+    end
+  end
+
+  # Método de clase para precargar asistentes de Smash de manera eficiente
+  def self.with_smash_attendees_count
+    left_joins("LEFT JOIN events AS smash_events ON smash_events.tournament_id = tournaments.id AND smash_events.videogame_id = #{Event::SMASH_ULTIMATE_VIDEOGAME_ID} AND (smash_events.team_max_players IS NULL OR smash_events.team_max_players <= 1)")
+      .left_joins("LEFT JOIN event_seeds AS smash_seeds ON smash_seeds.event_id = smash_events.id")
+      .select("tournaments.*, COUNT(DISTINCT smash_seeds.player_id) AS smash_attendees_count_data")
+      .group("tournaments.id")
+  end
+
   private
 
   def parse_location_from_venue_address

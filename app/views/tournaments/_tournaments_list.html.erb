@@ -5,11 +5,11 @@
       <table class="min-w-full bg-slate-800 divide-y divide-slate-600">
         <thead>
           <tr class="bg-gradient-to-r from-slate-900 to-blue-900 border-b-2 border-red-500">
-            <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider">Torneo</th>
-            <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider">Fecha</th>
-            <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider">Ubicación</th>
-            <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider">Eventos</th>
-            <th class="py-3 px-6 text-center text-xs font-semibold text-blue-300 uppercase tracking-wider">Acciones</th>
+            <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider w-1/4">Torneo</th>
+            <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider w-12">Fecha</th>
+            <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider w-1/6">Ubicación</th>
+            <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider w-80">Eventos</th>
+            <th class="py-3 px-6 text-center text-xs font-semibold text-blue-300 uppercase tracking-wider w-16">Acciones</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-600">
@@ -47,17 +47,30 @@
                 </div>
               </td>
               <td class="py-3 px-6 text-slate-300">
-                <div class="flex items-center">
-                  <span class="text-sm font-medium"><%= tournament.calculated_events_count %> evento(s)</span>
-                  <% if tournament.calculated_events_count > 0 %>
-                    <span class="ml-2 text-xs text-blue-400">
-                      <% if tournament.attendees_count.present? %>
-                        <%= tournament.attendees_count %> <%= tournament.attendees_count == 1 ? 'asistente' : 'asistentes' %>
-                      <% else %>
+                <div class="flex flex-col space-y-1">
+                  <!-- Primera línea: Asistentes -->
+                  <div class="flex items-center">
+                    <% best_count = tournament.best_attendees_count %>
+                    <% if best_count.present? && best_count > 0 %>
+                      <span class="text-sm font-medium text-blue-400">
+                        <%= best_count %> <%= best_count == 1 ? 'asistente' : 'asistentes' %>
+                        <% if tournament.calculated_smash_attendees_count > 0 && tournament.attendees_count.present? && tournament.calculated_smash_attendees_count != tournament.attendees_count %>
+                          <span class="text-xs text-green-400 ml-1" title="Conteo corregido: solo participantes de Smash">*</span>
+                        <% end %>
+                      </span>
+                    <% else %>
+                      <span class="text-sm font-medium text-slate-500">
                         <%= pluralize(tournament.calculated_total_event_seeds_count, 'seed') %>
-                      <% end %>
+                      </span>
+                    <% end %>
+                  </div>
+                  
+                  <!-- Segunda línea: Cantidad de eventos -->
+                  <div class="flex items-center">
+                    <span class="text-xs text-slate-400">
+                      <%= tournament.calculated_events_count %> <%= tournament.calculated_events_count == 1 ? 'evento' : 'eventos' %>
                     </span>
-                  <% end %>
+                  </div>
                 </div>
               </td>
               <td class="py-3 px-6 text-center">
@@ -178,8 +191,35 @@
                 <%= tournament.online? ? "🌐 Online" : "📍 Presencial" %>
               </span>
               <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300">
-                <%= tournament.calculated_events_count %> evento(s)
+                <%= tournament.calculated_events_count %> <%= tournament.calculated_events_count == 1 ? 'evento' : 'eventos' %>
               </span>
+            </div>
+            
+            <!-- Información de asistentes en móvil -->
+            <div class="mb-2">
+              <% best_count = tournament.best_attendees_count %>
+              <% if best_count.present? && best_count > 0 %>
+                <div class="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="text-sm font-medium text-blue-400">
+                    <%= best_count %> <%= best_count == 1 ? 'asistente' : 'asistentes' %>
+                    <% if tournament.calculated_smash_attendees_count > 0 && tournament.attendees_count.present? && tournament.calculated_smash_attendees_count != tournament.attendees_count %>
+                      <span class="text-xs text-green-400 ml-1" title="Conteo corregido: solo participantes de Smash">*</span>
+                    <% end %>
+                  </span>
+                </div>
+              <% elsif tournament.calculated_total_event_seeds_count > 0 %>
+                <div class="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="text-sm font-medium text-slate-500">
+                    <%= pluralize(tournament.calculated_total_event_seeds_count, 'seed') %>
+                  </span>
+                </div>
+              <% end %>
             </div>
           </div>
         </div>

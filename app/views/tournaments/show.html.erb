@@ -13,7 +13,17 @@
         </p>
         <p class="text-gray-600 mb-4">
           <span class="font-semibold">Participantes:</span> 
-          <%= @tournament.attendees_count || 'No especificado' %>
+          <% best_count = @tournament.best_attendees_count %>
+          <% if best_count.present? && best_count > 0 %>
+            <%= best_count %>
+            <% if @tournament.calculated_smash_attendees_count > 0 && @tournament.attendees_count.present? && @tournament.calculated_smash_attendees_count != @tournament.attendees_count %>
+              <span class="text-green-600 text-sm" title="Conteo corregido: solo participantes de Smash">
+                (corregido de <%= @tournament.attendees_count %>)
+              </span>
+            <% end %>
+          <% else %>
+            No especificado
+          <% end %>
         </p>
       </div>
       
