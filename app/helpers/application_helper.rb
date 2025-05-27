@@ -121,4 +121,60 @@ module ApplicationHelper
       cities: Tournament.where.not(city: [ nil, "" ]).distinct.pluck(:city).sort
     }
   end
+
+  # Helper específico para mostrar el personaje principal en la vista de players
+  # Optimizado para mostrar como avatar cuadrado recortado cerca de los ojos
+  def player_main_character_avatar(player, options = {})
+    return "" if player.character_1.blank?
+
+    # Configurar opciones por defecto para avatar
+    default_options = {
+      class: "player-character-avatar",
+      alt: Player::SMASH_CHARACTERS[player.character_1] || player.character_1.humanize,
+      title: "#{Player::SMASH_CHARACTERS[player.character_1] || player.character_1.humanize} (Skin #{player.skin_1 || 1})",
+      width: 48,
+      height: 48
+    }
+
+    options = default_options.merge(options)
+
+    # Intentar primero con character_individual_skins
+    skin_number = player.skin_1 || 1
+    skin_file_number = skin_number - 1
+    individual_asset_path = "smash/character_individual_skins/#{player.character_1}/#{player.character_1}_skin_#{skin_file_number}.png"
+    
+    # Fallback a characters con skin
+    characters_asset_path = "smash/characters/#{player.character_1}_#{skin_number}.png"
+    
+    # Determinar qué asset usar
+    asset_path = nil
+    if Rails.application.assets&.find_asset(individual_asset_path) || File.exist?(Rails.root.join("app", "assets", "images", individual_asset_path))
+      asset_path = individual_asset_path
+    elsif Rails.application.assets&.find_asset(characters_asset_path) || File.exist?(Rails.root.join("app", "assets", "images", characters_asset_path))
+      asset_path = characters_asset_path
+    end
+
+    if asset_path
+      # Estilos diferentes para avatar grande vs pequeño
+      if options[:class]&.include?("large-character-avatar")
+        image_tag(asset_path, options.merge(
+          class: "#{options[:class]}",
+          style: "position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(3.5); width: #{options[:width]}px; height: #{options[:height]}px; object-fit: cover; object-position: center 5%; filter: contrast(1.1) saturate(1.1) brightness(1.05);"
+        ))
+      else
+        image_tag(asset_path, options.merge(
+          class: "#{options[:class]} rounded-lg border-2 border-slate-600 bg-slate-800 shadow-lg object-cover object-top",
+          style: "filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)); object-position: center 20%;"
+        ))
+      end
+    else
+      # Placeholder si no existe el asset
+      content_tag(:div,
+        content_tag(:span, player.character_1[0].upcase, class: "text-lg font-bold"),
+        class: "#{options[:class]} bg-gradient-to-br from-slate-600 to-slate-700 text-slate-200 rounded-lg flex items-center justify-center border-2 border-slate-600 shadow-lg",
+        style: "width: #{options[:width]}px; height: #{options[:height]}px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));",
+        title: options[:title]
+      )
+    end
+  end
 end

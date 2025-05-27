@@ -1,0 +1,137 @@
+/* Estilos específicos para la vista de players */
+
+/* Avatares de personajes principales */
+.player-character-avatar {
+  transition: all 0.3s ease;
+  object-fit: cover;
+  object-position: center 20%; /* Posicionar cerca de los ojos/cara */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.player-character-avatar:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  border-color: #3b82f6; /* blue-500 */
+}
+
+/* Avatar grande para la columna de personaje */
+.large-character-avatar {
+  transition: all 0.3s ease;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  z-index: 1;
+}
+
+.large-character-avatar:hover {
+  transform: translate(-50%, -50%) scale(4.0) !important;
+  filter: contrast(1.15) saturate(1.2) brightness(1.1) !important;
+}
+
+/* Contenedor del avatar con efecto de hover */
+.character-avatar-container {
+  position: relative;
+  display: inline-block;
+}
+
+.character-avatar-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.character-avatar-container:hover::after {
+  opacity: 1;
+}
+
+/* Placeholder para personajes sin asignar */
+.character-placeholder {
+  background: linear-gradient(135deg, #475569, #334155);
+  border: 2px dashed #64748b;
+  transition: all 0.3s ease;
+}
+
+.character-placeholder:hover {
+  border-color: #94a3b8;
+  background: linear-gradient(135deg, #64748b, #475569);
+}
+
+/* Responsive: ocultar columna de personaje en móvil */
+@media (max-width: 768px) {
+  .player-character-column {
+    display: none !important;
+  }
+}
+
+/* Ajustes para las imágenes de character_individual_skins */
+.player-character-avatar img {
+  /* Recorte optimizado para mostrar la cara/ojos del personaje */
+  object-fit: cover;
+  object-position: center 15%;
+  
+  /* Filtros para mejorar la visualización */
+  filter: 
+    contrast(1.1) 
+    saturate(1.1) 
+    brightness(1.05)
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+/* Efecto de brillo sutil en hover */
+.player-character-avatar:hover img {
+  filter: 
+    contrast(1.15) 
+    saturate(1.2) 
+    brightness(1.1)
+    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+}
+
+/* Texto del nombre del personaje */
+.character-name-text {
+  font-size: 10px;
+  line-height: 1.2;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Animación suave para la carga de imágenes */
+.player-character-avatar {
+  opacity: 0;
+  animation: fadeInAvatar 0.5s ease forwards;
+}
+
+@keyframes fadeInAvatar {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Mejoras para la tabla en general */
+.players-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.players-table td {
+  border-bottom: 1px solid #475569;
+}
+
+.players-table tr:hover .player-character-avatar {
+  transform: scale(1.05);
+} 
