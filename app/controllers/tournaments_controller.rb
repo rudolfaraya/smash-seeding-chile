@@ -1,6 +1,6 @@
 class TournamentsController < ApplicationController
   # Requerir autenticación para acciones de sincronización
-  before_action :authenticate_user!, only: [:sync, :sync_new_tournaments, :sync_events]
+  before_action :authenticate_user!, only: [:sync, :sync_new_tournaments, :sync_events, :sync_latest_tournaments]
 
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
 
@@ -155,6 +155,43 @@ class TournamentsController < ApplicationController
         format.html { redirect_to tournaments_path, alert: "Error al iniciar sincronización de eventos: #{e.message}" }
         format.turbo_stream {
           flash.now[:alert] = "Error al iniciar sincronización de eventos: #{e.message}"
+          load_tournaments_with_session_filters
+          render turbo_stream: [
+            turbo_stream.replace("tournaments_results",
+              partial: "tournaments/tournaments_list",
+              locals: { tournaments: @tournaments }),
+            turbo_stream.replace("flash",
+              partial: "shared/flash")
+          ]
+        }
+      end
+    end
+  end
+
+  def sync_latest_tournaments
+    begin
+      # Encolar job de actualización de los últimos 20 torneos
+      job = SyncLatestTournamentsJob.perform_later({ limit: 20, force: true })
+
+      respond_to do |format|
+        format.html { redirect_to tournaments_path, notice: "Actualización forzada de los últimos 20 torneos iniciada en segundo plano. Job ID: #{job.job_id}" }
+        format.turbo_stream {
+          flash.now[:notice] = "Actualización forzada de los últimos 20 torneos iniciada en segundo plano. Puedes monitorear el progreso en Mission Control."
+          load_tournaments_with_session_filters
+          render turbo_stream: [
+            turbo_stream.replace("tournaments_results",
+              partial: "tournaments/tournaments_list",
+              locals: { tournaments: @tournaments }),
+            turbo_stream.replace("flash",
+              partial: "shared/flash")
+          ]
+        }
+      end
+    rescue StandardError => e
+      respond_to do |format|
+        format.html { redirect_to tournaments_path, alert: "❌ Error al iniciar actualización de últimos torneos: #{e.message}" }
+        format.turbo_stream {
+          flash.now[:alert] = "❌ Error al iniciar actualización de últimos torneos: #{e.message}"
           load_tournaments_with_session_filters
           render turbo_stream: [
             turbo_stream.replace("tournaments_results",

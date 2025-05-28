@@ -16,6 +16,17 @@
         <%= render 'shared/icons/plus', class: 'action-button-icon' %>
         Sincronizar Nuevos Torneos ⚡
       <% end %>
+      
+      <%= link_to sync_latest_tournaments_tournaments_path,
+                  method: :post,
+                  class: "action-button-secondary",
+                  data: { 
+                    turbo_method: :post,
+                    confirm: "¿Actualizar forzadamente los últimos 20 torneos? (Esto actualizará completamente todos sus eventos y seeds)"
+                  } do %>
+        <%= render 'shared/icons/refresh', class: 'action-button-icon' %>
+        Actualizar Últimos Torneos (20) 🔄
+      <% end %>
     </div>
   <% end %>
 </div> 

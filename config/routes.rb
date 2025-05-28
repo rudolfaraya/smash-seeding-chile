@@ -5,6 +5,7 @@ Rails.application.routes.draw do
     collection do
       post :sync # Ruta para sincronizar torneos y eventos
       post :sync_new_tournaments # Nueva ruta para sincronizar solo nuevos torneos
+      post :sync_latest_tournaments # Nueva ruta para actualizar últimos torneos
     end
 
     member do
@@ -59,7 +60,10 @@ Rails.application.routes.draw do
   end
 
   # Mission Control Jobs - Panel de administración de jobs
-  mount MissionControl::Jobs::Engine, at: "/jobs"
+  # Solo accesible para usuarios autenticados
+  authenticate :user do
+    mount MissionControl::Jobs::Engine, at: "/jobs"
+  end
 
   # Estadísticas
   get "stats" => "stats#index", as: :stats

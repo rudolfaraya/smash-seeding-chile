@@ -40,3 +40,5 @@
 # Ignore all files coverage
 coverage/*
 
+
+/config/credentials/development.key

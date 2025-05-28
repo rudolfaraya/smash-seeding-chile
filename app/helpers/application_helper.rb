@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ApplicationHelper
   # Formatear fecha y hora para mostrar en Chile
   def format_datetime_cl(datetime)
@@ -213,5 +215,17 @@ module ApplicationHelper
         display_name: team.display_name
       }
     end
+  end
+
+  # Helper para verificar si el usuario puede acceder a Mission Control Jobs
+  def can_access_jobs?
+    user_signed_in?
+  end
+
+  # Helper para obtener la ruta de Mission Control Jobs de forma segura
+  def safe_mission_control_jobs_path
+    return new_user_session_path unless can_access_jobs?
+    
+    "/jobs"
   end
 end
