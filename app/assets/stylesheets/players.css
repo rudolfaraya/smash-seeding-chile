@@ -4,7 +4,6 @@
 .player-character-avatar {
   transition: all 0.3s ease;
   object-fit: cover;
-  object-position: center 20%; /* Posicionar cerca de los ojos/cara */
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
@@ -22,10 +21,19 @@
   border-radius: 0 !important;
   box-shadow: none !important;
   z-index: 1;
+  /* Forzar que ocupe toda la celda */
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center 30% !important; /* Centrar un poco más arriba para mostrar mejor los personajes */
+  max-width: none !important;
+  max-height: none !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
 }
 
 .large-character-avatar:hover {
-  transform: translate(-50%, -50%) scale(4.0) !important;
+  transform: scale(1.05) !important;
   filter: contrast(1.15) saturate(1.2) brightness(1.1) !important;
 }
 
@@ -65,6 +73,17 @@
   background: linear-gradient(135deg, #64748b, #475569);
 }
 
+/* Ajustes específicos para la columna de personaje */
+.player-character-column {
+  /* Asegurar que la columna tenga el ancho adecuado para imágenes de 430x150px */
+  min-width: 180px !important;
+  max-width: 250px !important;
+  width: 220px !important;
+  padding: 0 !important;
+  position: relative;
+  overflow: hidden;
+}
+
 /* Responsive: ocultar columna de personaje en móvil */
 @media (max-width: 768px) {
   .player-character-column {
@@ -72,64 +91,16 @@
   }
 }
 
-/* Ajustes para las imágenes de character_individual_skins */
-.player-character-avatar img {
-  /* Recorte optimizado para mostrar la cara/ojos del personaje */
-  object-fit: cover;
-  object-position: center 15%;
-  
-  /* Filtros para mejorar la visualización */
-  filter: 
-    contrast(1.1) 
-    saturate(1.1) 
-    brightness(1.05)
-    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
-}
-
-/* Efecto de brillo sutil en hover */
-.player-character-avatar:hover img {
-  filter: 
-    contrast(1.15) 
-    saturate(1.2) 
-    brightness(1.1)
-    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
-}
-
-/* Texto del nombre del personaje */
-.character-name-text {
-  font-size: 10px;
-  line-height: 1.2;
-  max-width: 60px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Animación suave para la carga de imágenes */
-.player-character-avatar {
-  opacity: 0;
-  animation: fadeInAvatar 0.5s ease forwards;
-}
-
-@keyframes fadeInAvatar {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
 /* Mejoras para la tabla en general */
 .players-table {
   border-collapse: separate;
   border-spacing: 0;
+  table-layout: fixed; /* Forzar anchos fijos */
 }
 
 .players-table td {
   border-bottom: 1px solid #475569;
+  vertical-align: middle; /* Centrar contenido verticalmente */
 }
 
 .players-table tr:hover .player-character-avatar {

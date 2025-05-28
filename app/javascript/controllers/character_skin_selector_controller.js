@@ -46,7 +46,27 @@ export default class extends Controller {
   
   changeSkin(skinIndex) {
     const characterName = this.characterValue
-    const newImagePath = `/assets/smash/character_individual_skins/${characterName}/${characterName}_skin_${skinIndex}.png`
+    
+    // Determinar la ruta según la nueva estructura
+    let newImagePath;
+    
+    // Verificar si es un personaje Mii (sin skins)
+    const charactersWithoutSkins = ['mii_brawler', 'mii_swordfighter', 'mii_gunner'];
+    if (charactersWithoutSkins.includes(characterName)) {
+      // Para Mii: usar solo el nombre del personaje
+      let miiName;
+      switch(characterName) {
+        case 'mii_brawler': miiName = 'brawler'; break;
+        case 'mii_gunner': miiName = 'gunner'; break;
+        case 'mii_swordfighter': miiName = 'swordfighter'; break;
+        default: miiName = characterName;
+      }
+      newImagePath = `/assets/smash/character_individual_skins/${characterName}/${miiName}.png`;
+    } else {
+      // Para personajes normales: usar skin del 1 al 8
+      const skinNumber = skinIndex + 1;
+      newImagePath = `/assets/smash/character_individual_skins/${characterName}/${skinNumber}.png`;
+    }
     
     // Cambiar imagen principal
     this.mainImageTarget.src = newImagePath

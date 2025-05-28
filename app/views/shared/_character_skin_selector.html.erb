@@ -3,7 +3,23 @@
   <!-- Personaje principal con skin seleccionada -->
   <div class="character-display">
     <div class="character-main-image">
-      <%= image_tag "smash/character_individual_skins/#{character_name}/#{character_name}_skin_0.png", 
+      <% 
+        # Determinar la ruta de la imagen según la nueva estructura
+        if Player::CHARACTERS_WITHOUT_SKINS.include?(character_name)
+          # Para Mii: usar solo el nombre del personaje
+          mii_name = case character_name
+                     when "mii_brawler" then "brawler"
+                     when "mii_gunner" then "gunner"
+                     when "mii_swordfighter" then "swordfighter"
+                     else character_name
+                     end
+          image_path = "smash/character_individual_skins/#{character_name}/#{mii_name}.png"
+        else
+          # Para personajes normales: usar skin 1 por defecto
+          image_path = "smash/character_individual_skins/#{character_name}/1.png"
+        end
+      %>
+      <%= image_tag image_path, 
                     alt: "#{character_name.humanize} - Skin 1",
                     class: "character-skin-image active",
                     data: { character_skin_selector_target: "mainImage" } %>
@@ -29,13 +45,22 @@
   <!-- Selector de skins -->
   <div class="skin-selector">
     <div class="skin-grid">
-      <% 8.times do |i| %>
-        <div class="skin-option <%= 'active' if i == 0 %>" 
+      <% if Player::CHARACTERS_WITHOUT_SKINS.include?(character_name) %>
+        <!-- Para Mii: solo mostrar una opción -->
+        <% 
+          mii_name = case character_name
+                     when "mii_brawler" then "brawler"
+                     when "mii_gunner" then "gunner"
+                     when "mii_swordfighter" then "swordfighter"
+                     else character_name
+                     end
+        %>
+        <div class="skin-option active" 
              data-action="click->character-skin-selector#selectSkin"
-             data-skin-index="<%= i %>"
+             data-skin-index="0"
              data-character-skin-selector-target="skinOption">
-          <%= image_tag "smash/character_individual_skins/#{character_name}/#{character_name}_skin_#{i}.png",
-                        alt: "#{character_name.humanize} - Skin #{i + 1}",
+          <%= image_tag "smash/character_individual_skins/#{character_name}/#{mii_name}.png",
+                        alt: "#{character_name.humanize} - Personalizable",
                         class: "skin-thumbnail",
                         loading: "lazy" %>
           
@@ -43,8 +68,27 @@
           <div class="selection-indicator"></div>
           
           <!-- Número de skin -->
-          <span class="skin-number"><%= i + 1 %></span>
+          <span class="skin-number">1</span>
         </div>
+      <% else %>
+        <!-- Para personajes normales: mostrar 8 skins -->
+        <% 8.times do |i| %>
+          <div class="skin-option <%= 'active' if i == 0 %>" 
+               data-action="click->character-skin-selector#selectSkin"
+               data-skin-index="<%= i %>"
+               data-character-skin-selector-target="skinOption">
+            <%= image_tag "smash/character_individual_skins/#{character_name}/#{i + 1}.png",
+                          alt: "#{character_name.humanize} - Skin #{i + 1}",
+                          class: "skin-thumbnail",
+                          loading: "lazy" %>
+            
+            <!-- Indicador de selección -->
+            <div class="selection-indicator"></div>
+            
+            <!-- Número de skin -->
+            <span class="skin-number"><%= i + 1 %></span>
+          </div>
+        <% end %>
       <% end %>
     </div>
   </div>

@@ -65,12 +65,9 @@ module ApplicationHelper
 
     options = default_options.merge(options)
 
-    # Construir la ruta del asset
-    if is_character_without_skins
-      asset_path = "smash/characters/#{character}.png"
-    else
-      asset_path = "smash/characters/#{character}_#{skin}.png"
-    end
+    # Usar la estructura correcta para iconos pequeños: smash/characters/nombre_personaje_numero_skin.png
+    skin_number = is_character_without_skins ? 1 : (skin || 1)
+    asset_path = "smash/characters/#{character}_#{skin_number}.png"
 
     # Verificar si el asset existe, si no usar un placeholder
     if Rails.application.assets&.find_asset(asset_path) || File.exist?(Rails.root.join("app", "assets", "images", asset_path))
@@ -138,33 +135,40 @@ module ApplicationHelper
 
     options = default_options.merge(options)
 
-    # Intentar primero con character_individual_skins
-    skin_number = player.skin_1 || 1
-    skin_file_number = skin_number - 1
-    individual_asset_path = "smash/character_individual_skins/#{player.character_1}/#{player.character_1}_skin_#{skin_file_number}.png"
-    
-    # Fallback a characters con skin
-    characters_asset_path = "smash/characters/#{player.character_1}_#{skin_number}.png"
-    
-    # Determinar qué asset usar
+    # Determinar la ruta del asset según la nueva estructura
     asset_path = nil
-    if Rails.application.assets&.find_asset(individual_asset_path) || File.exist?(Rails.root.join("app", "assets", "images", individual_asset_path))
-      asset_path = individual_asset_path
-    elsif Rails.application.assets&.find_asset(characters_asset_path) || File.exist?(Rails.root.join("app", "assets", "images", characters_asset_path))
-      asset_path = characters_asset_path
+    
+    # Verificar si es un personaje Mii (sin skins)
+    if Player::CHARACTERS_WITHOUT_SKINS.include?(player.character_1)
+      # Para Mii: usar solo el nombre del personaje (brawler.png, gunner.png, swordfighter.png)
+      mii_name = case player.character_1
+                 when "mii_brawler" then "brawler"
+                 when "mii_gunner" then "gunner"
+                 when "mii_swordfighter" then "swordfighter"
+                 else player.character_1
+                 end
+      asset_path = "smash/character_individual_skins/#{player.character_1}/#{mii_name}.png"
+    else
+      # Para personajes normales: usar skin del 1 al 8
+      skin_number = player.skin_1 || 1
+      asset_path = "smash/character_individual_skins/#{player.character_1}/#{skin_number}.png"
     end
 
-    if asset_path
-      # Estilos diferentes para avatar grande vs pequeño
+    # Verificar si el asset existe
+    if Rails.application.assets&.find_asset(asset_path) || File.exist?(Rails.root.join("app", "assets", "images", asset_path))
+      # Estilos optimizados para imágenes de 430x150px
       if options[:class]&.include?("large-character-avatar")
-        image_tag(asset_path, options.merge(
-          class: "#{options[:class]}",
-          style: "position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(3.5); width: #{options[:width]}px; height: #{options[:height]}px; object-fit: cover; object-position: center 5%; filter: contrast(1.1) saturate(1.1) brightness(1.05);"
-        ))
+        # Para la columna de personaje: ocupar toda la celda disponible
+        # Respetar estilos forzados si se pasan como parámetro
+        final_options = options.dup
+        if options[:style].present?
+          final_options[:style] = options[:style]
+        end
+        image_tag(asset_path, final_options)
       else
         image_tag(asset_path, options.merge(
-          class: "#{options[:class]} rounded-lg border-2 border-slate-600 bg-slate-800 shadow-lg object-cover object-top",
-          style: "filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)); object-position: center 20%;"
+          class: "#{options[:class]}",
+          style: "width: #{options[:width]}px; height: #{options[:height]}px; object-fit: cover;"
         ))
       end
     else
@@ -172,7 +176,7 @@ module ApplicationHelper
       content_tag(:div,
         content_tag(:span, player.character_1[0].upcase, class: "text-lg font-bold"),
         class: "#{options[:class]} bg-gradient-to-br from-slate-600 to-slate-700 text-slate-200 rounded-lg flex items-center justify-center border-2 border-slate-600 shadow-lg",
-        style: "width: #{options[:width]}px; height: #{options[:height]}px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));",
+        style: "width: #{options[:width]}px; height: #{options[:height]}px;",
         title: options[:title]
       )
     end
