@@ -268,169 +268,110 @@ function createMobileSeedsView(container, table) {
   
   rows.forEach((row, index) => {
     const cells = row.querySelectorAll('td')
-    if (cells.length >= 3) {
-      const seed = cells[0].textContent.trim()
-      const player = cells[1].textContent.trim()
-      const entrant = cells[2].textContent.trim()
+    if (cells.length >= 4) {
+      // Nueva estructura: [Seed, Equipo, Nombre, Personajes]
+      const seedNumber = cells[0]?.textContent?.trim() || ''
+      const equipoCell = cells[1] // Nueva columna de equipos
+      const nombreCell = cells[2]
+      const personajesCell = cells[3]
       
-      // Extraer personajes de la cuarta columna si existe
-      let charactersHTML = ''
-      if (cells.length >= 4) {
-        const charactersCell = cells[3]
-        const characterDivs = charactersCell.querySelectorAll('.inline-flex')
+      // Extraer información de equipos
+      let equiposHTML = ''
+      if (equipoCell) {
+        const equipoImgs = equipoCell.querySelectorAll('img')
+        const equipoDivs = equipoCell.querySelectorAll('div.flex.items-center.justify-center')
         
-        if (characterDivs.length > 0) {
-          let charactersArray = []
-          characterDivs.forEach(div => {
-            const characterImg = div.querySelector('img')
-            const characterName = div.querySelector('span')?.textContent?.trim()
-            
-            if (characterImg && characterName && characterName !== 'Sin registrar') {
-              charactersArray.push({
-                name: characterName,
-                icon: characterImg.outerHTML
-              })
+        if (equipoImgs.length > 0 || equipoDivs.length > 0) {
+          equiposHTML = '<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 4px;">'
+          
+          // Procesar imágenes de logos de equipos
+          equipoImgs.forEach(img => {
+            if (img.src && !img.src.includes('users-slash')) {
+              equiposHTML += `<img src="${img.src}" style="width: 16px; height: 16px; border-radius: 2px;" alt="Team logo">`
             }
           })
           
-          if (charactersArray.length > 0) {
-            charactersHTML = `
-              <div style="
-                margin-top: 6px;
-                margin-left: 28px;
+          // Procesar cuadrados con siglas de equipos
+          equipoDivs.forEach(div => {
+            const siglaSpan = div.querySelector('span')
+            if (siglaSpan && siglaSpan.textContent.trim()) {
+              equiposHTML += `<div style="
+                width: 16px;
+                height: 16px;
+                background: linear-gradient(135deg, #7c3aed, #a855f7);
+                border-radius: 2px;
                 display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
                 align-items: center;
-              ">
-                ${charactersArray.map(char => `
-                  <div style="
-                    background: #065f46;
-                    color: #d1fae5;
-                    padding: 3px 6px;
-                    border-radius: 6px;
-                    font-size: 9px;
-                    font-weight: 500;
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                  ">
-                    <div style="width: 16px; height: 16px; flex-shrink: 0;">
-                      ${char.icon.replace('width="28"', 'width="16"').replace('height="28"', 'height="16"')}
-                    </div>
-                    <span>${char.name}</span>
-                  </div>
-                `).join('')}
-              </div>
-            `
-          }
-        } else {
-          // Si no hay divs .inline-flex, buscar directamente imágenes e íconos
-          const allImages = charactersCell.querySelectorAll('img')
-          const textContent = charactersCell.textContent.trim()
-          
-          if (allImages.length > 0 && textContent !== 'Sin registrar' && textContent !== 'N/A') {
-            let charactersArray = []
-            allImages.forEach(img => {
-              // Buscar el texto asociado al ícono
-              let characterName = 'Personaje'
-              const nextSibling = img.nextSibling
-              if (nextSibling && nextSibling.textContent) {
-                characterName = nextSibling.textContent.trim()
-              } else {
-                // Buscar en el contenedor padre
-                const parentText = img.closest('div')?.textContent?.trim()
-                if (parentText && parentText !== 'Sin registrar') {
-                  characterName = parentText
-                }
-              }
-              
-              charactersArray.push({
-                name: characterName,
-                icon: img.outerHTML
-              })
-            })
-            
-            if (charactersArray.length > 0) {
-              charactersHTML = `
-                <div style="
-                  margin-top: 6px;
-                  margin-left: 28px;
-                  display: flex;
-                  flex-wrap: wrap;
-                  gap: 6px;
-                  align-items: center;
-                ">
-                  ${charactersArray.map(char => `
-                    <div style="
-                      background: #065f46;
-                      color: #d1fae5;
-                      padding: 3px 6px;
-                      border-radius: 6px;
-                      font-size: 9px;
-                      font-weight: 500;
-                      display: flex;
-                      align-items: center;
-                      gap: 4px;
-                    ">
-                      <div style="width: 16px; height: 16px; flex-shrink: 0;">
-                        ${char.icon.replace(/width="[^"]*"/g, 'width="16"').replace(/height="[^"]*"/g, 'height="16"')}
-                      </div>
-                      <span>${char.name}</span>
-                    </div>
-                  `).join('')}
-                </div>
-              `
+                justify-content: center;
+                font-size: 8px;
+                font-weight: bold;
+                color: white;
+              ">${siglaSpan.textContent.trim()}</div>`
             }
-          }
+          })
+          
+          equiposHTML += '</div>'
         }
       }
       
+      // Extraer personajes
+      let personajesHTML = ''
+      if (personajesCell) {
+        const personajeImgs = personajesCell.querySelectorAll('img')
+        if (personajeImgs.length > 0) {
+          personajesHTML = '<div style="display: flex; gap: 2px; flex-wrap: wrap;">'
+          personajeImgs.forEach(img => {
+            if (img.src) {
+              personajesHTML += `<img src="${img.src}" style="width: 20px; height: 20px; border-radius: 3px;" alt="${img.alt || 'Character'}">`
+            }
+          })
+          personajesHTML += '</div>'
+        }
+      }
+      
+      // Extraer nombre
+      const nombre = nombreCell?.textContent?.trim() || ''
+      
       mobileHTML += `
         <div style="
-          background: ${index % 2 === 0 ? '#1e293b' : '#0f172a'};
+          background: #334155;
+          border-radius: 6px;
           padding: 8px;
-          margin: 2px 0;
-          border-radius: 4px;
-          border-left: 3px solid #ef4444;
+          margin: 6px 0;
+          border: 1px solid #475569;
         ">
-          <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="
-              background: #7f1d1d;
-              color: #fecaca;
-              padding: 2px 6px;
-              border-radius: 50%;
-              font-size: 10px;
+          <div style="
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+          ">
+            <div style="
+              background: #ef4444;
+              color: white;
               font-weight: bold;
-              margin-right: 8px;
+              font-size: 12px;
+              padding: 2px 6px;
+              border-radius: 3px;
               min-width: 20px;
               text-align: center;
-            ">${seed}</span>
-            <span style="color: #f8fafc; font-size: 11px; font-weight: 600;">
-              ${entrant !== 'N/A' ? entrant : 'Sin tag'}
-            </span>
+            ">${seedNumber}</div>
+            ${equiposHTML}
           </div>
-          ${player !== 'N/A' ? `
-            <div style="color: #94a3b8; font-size: 10px; margin-left: 28px;">
-              Nombre: ${player}
-            </div>
-          ` : ''}
-          ${charactersHTML}
+          
+          <div style="
+            color: #f8fafc;
+            font-size: 11px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            word-break: break-word;
+          ">${nombre}</div>
+          
+          ${personajesHTML}
         </div>
       `
     }
   })
   
-  container.style.cssText = `
-    padding: 8px;
-    width: 100%;
-    overflow: visible !important;
-    height: auto !important;
-    max-height: none !important;
-    box-sizing: border-box;
-  `
-  
   container.innerHTML = mobileHTML
-  
-  console.log("Vista móvil propia creada exitosamente")
 } 

@@ -38,72 +38,81 @@
     <table class="min-w-full divide-y divide-slate-600">
       <thead>
         <tr class="bg-slate-900">
-          <th scope="col" class="px-2 py-1 text-left text-[9px] font-medium text-blue-300 uppercase tracking-wider w-1/8">Seed</th>
-          <th scope="col" class="px-2 py-1 text-left text-[9px] font-medium text-blue-300 uppercase tracking-wider w-1/4">Nombre en Torneo</th>
-          <th scope="col" class="px-2 py-1 text-left text-[9px] font-medium text-blue-300 uppercase tracking-wider w-3/8">Personajes</th>
-          <th scope="col" class="px-2 py-1 text-left text-[9px] font-medium text-blue-300 uppercase tracking-wider w-1/4">Jugador</th>
+          <th scope="col" class="px-1 py-1 text-left text-[8px] font-medium text-blue-300 uppercase tracking-wider w-8">Seed</th>
+          <th scope="col" class="px-1 py-1 text-center text-[8px] font-medium text-blue-300 uppercase tracking-wider w-16">Equipo</th>
+          <th scope="col" class="px-1 py-1 text-left text-[8px] font-medium text-blue-300 uppercase tracking-wider w-20">Nombre</th>
+          <th scope="col" class="px-1 py-1 text-center text-[8px] font-medium text-blue-300 uppercase tracking-wider">Personajes</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-slate-600">
-        <% seeds.each_with_index do |event_seed, index| %>
-          <tr class="<%= index % 2 == 0 ? 'bg-slate-800' : 'bg-slate-700' %> hover:bg-slate-600 transition-colors duration-150 ease-in-out">
-            <td class="px-2 py-1 whitespace-nowrap text-[9px] font-medium">
-              <span class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-red-900 text-red-200 text-[9px] border border-red-500" style="text-shadow: 0 0 3px #f87171;">
-                <%= event_seed.seed_num %>
-              </span>
+      <tbody class="divide-y divide-slate-700">
+        <% event_seeds.each do |event_seed| %>
+          <tr class="bg-slate-800 hover:bg-slate-700">
+            <td class="px-1 py-1.5 whitespace-nowrap text-[10px] font-medium text-white text-center">
+              <%= event_seed.seed_num %>
             </td>
-            <td class="px-2 py-1 whitespace-nowrap text-[9px]">
-              <% if event_seed.player&.entrant_name %>
-                <div class="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 mr-1 text-purple-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
-                  </svg>
-                  <span class="tracking-wide text-[9px]"><%= event_seed.player.entrant_name %></span>
-                </div>
-              <% else %>
-                <span class="text-slate-400 tracking-wide text-[9px]">N/A</span>
-              <% end %>
-            </td>
-            <td class="px-2 py-1 text-[9px]">
-              <% if event_seed.player.present? %>
-                <% player_characters = event_seed.player.smash_characters %>
-                <% if player_characters.any? %>
-                  <div class="flex flex-wrap gap-1">
-                    <% player_characters.each_with_index do |char_data, char_index| %>
-                      <div class="inline-flex items-center space-x-1" title="<%= event_seed.player.character_display_name(char_data[:character]) %>">
-                        <%= smash_character_icon(char_data[:character], char_data[:skin], 
-                              class: 'smash-character-icon', 
-                              width: 20, 
-                              height: 20) %>
-                        <span class="text-[8px] font-medium text-slate-200 leading-tight">
-                          <%= event_seed.player.character_display_name(char_data[:character]).split(' ').first %>
+            
+            <!-- Columna de Equipos -->
+            <td class="px-1 py-1.5 whitespace-nowrap text-center">
+              <% if event_seed.player.present? && event_seed.player.has_team? %>
+                <div class="flex flex-wrap items-center justify-center gap-0.5">
+                  <% event_seed.player.teams.each do |team| %>
+                    <% if team.logo_image&.attached? %>
+                      <%= image_tag team.logo_image, 
+                          class: "w-4 h-4 object-contain rounded", 
+                          alt: team.tag || team.name %>
+                    <% elsif team.logo.present? %>
+                      <%= image_tag team.logo, 
+                          class: "w-4 h-4 object-contain rounded", 
+                          alt: team.tag || team.name %>
+                    <% else %>
+                      <div class="w-4 h-4 bg-gradient-to-br from-purple-600 to-purple-800 rounded flex items-center justify-center">
+                        <span class="text-[6px] font-bold text-white leading-none">
+                          <%= team.tag.present? ? team.tag[0..1].upcase : team.name[0..1].upcase %>
                         </span>
                       </div>
                     <% end %>
-                  </div>
-                <% else %>
-                  <div class="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 mr-0.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span class="text-slate-500 tracking-wide text-[8px]">Sin registrar</span>
-                  </div>
-                <% end %>
-              <% else %>
-                <span class="text-slate-400 tracking-wide text-[8px]">N/A</span>
-              <% end %>
-            </td>
-            <td class="px-2 py-1 whitespace-nowrap text-[9px]">
-              <% if event_seed.player&.name %>
-                <div class="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 mr-1 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                  </svg>
-                  <span class="tracking-wide text-[9px]"><%= event_seed.player.name %></span>
+                  <% end %>
                 </div>
               <% else %>
-                <span class="text-slate-400 tracking-wide text-[9px]">N/A</span>
+                <div class="flex justify-center">
+                  <div class="w-4 h-4 bg-slate-700 rounded flex items-center justify-center border border-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
               <% end %>
+            </td>
+            
+            <td class="px-1 py-1.5 whitespace-nowrap">
+              <div class="text-[9px] font-medium text-white truncate max-w-[80px]">
+                <%= event_seed.player&.entrant_name || event_seed.player&.tag || "TBD" %>
+              </div>
+            </td>
+            
+            <td class="px-1 py-1.5">
+              <div class="flex flex-wrap items-center gap-0.5 justify-center">
+                <% if event_seed.player.present? %>
+                  <% player_characters = event_seed.player.smash_characters %>
+                  <% if player_characters.any? %>
+                    <% player_characters.each_with_index do |char_data, char_index| %>
+                      <%= smash_character_icon(char_data[:character], char_data[:skin], 
+                            class: 'smash-character-icon', 
+                            width: 16, 
+                            height: 16,
+                            title: event_seed.player.character_display_name(char_data[:character])) %>
+                    <% end %>
+                  <% else %>
+                    <div class="flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  <% end %>
+                <% else %>
+                  <span class="text-slate-400 tracking-wide text-[8px]">N/A</span>
+                <% end %>
+              </div>
             </td>
           </tr>
         <% end %>
