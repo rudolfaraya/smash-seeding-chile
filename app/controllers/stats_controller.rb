@@ -122,11 +122,17 @@ class StatsController < ApplicationController
                                    .select('players.entrant_name, COUNT(DISTINCT events.tournament_id) as tournament_count')
                                    .group('players.id, players.entrant_name')
                                    .order('tournament_count DESC')
-                                   .limit(10)
+                                   .limit(20)
       
       @most_active_players = active_players_data.map do |player_data|
         { name: player_data.entrant_name, participations: player_data.tournament_count }
       end
+      
+      # Log temporal para verificar
+      puts "=== DEBUG JUGADORES ACTIVOS ==="
+      puts "Cantidad de jugadores enviados: #{@most_active_players.size}"
+      puts "Primeros 5: #{@most_active_players.first(5).inspect}"
+      puts "Últimos 5: #{@most_active_players.last(5).inspect}"
     rescue => e
       # Fallback en caso de error
       Rails.logger.error "Error in most active players query: #{e.message}"
@@ -162,10 +168,11 @@ class StatsController < ApplicationController
     
     # Eliminamos las estadísticas de videojuegos ya que serán 100% Smash
     
-    # Crecimiento mensual de jugadores únicos (simplificado para SQLite)
-    @unique_players_by_month = EventSeed.joins(:event)
-                                      .where('events.created_at > ?', 1.year.ago)
-                                      .group("strftime('%Y-%m', events.created_at)")
+    # Crecimiento mensual de jugadores únicos (basado en start_at de torneos)
+    one_year_ago_timestamp = 1.year.ago.to_i
+    @unique_players_by_month = EventSeed.joins(event: :tournament)
+                                      .where('tournaments.start_at > ?', one_year_ago_timestamp)
+                                      .group("strftime('%Y-%m', datetime(tournaments.start_at, 'unixepoch'))")
                                       .distinct
                                       .count(:player_id)
     
@@ -179,10 +186,29 @@ class StatsController < ApplicationController
     end
     @biggest_tournaments_by_region = region_records
     
-    # Actividad reciente (últimos 30 días)
-    @recent_tournaments = Tournament.where('created_at > ?', 30.days.ago).count
-    @recent_events = Event.where('created_at > ?', 30.days.ago).count
-    @recent_players = Player.where('created_at > ?', 30.days.ago).count
+    # Actividad reciente (últimos 30 días basado en start_at de torneos)
+    thirty_days_ago = 30.days.ago
+    
+    # Torneos que empezaron en los últimos 30 días
+    recent_tournaments = Tournament.where('start_at > ?', thirty_days_ago)
+    @recent_tournaments = recent_tournaments.count
+    
+    # Eventos de esos torneos que empezaron en los últimos 30 días
+    @recent_events = Event.joins(:tournament)
+                         .where('tournaments.start_at > ?', thirty_days_ago)
+                         .count
+    
+    # Event_seeds (participaciones) de esos eventos de torneos recientes
+    @recent_players = EventSeed.joins(event: :tournament)
+                              .where('tournaments.start_at > ?', thirty_days_ago)
+                              .count
+    
+    # Debug logs para actividad reciente
+    puts "=== DEBUG ACTIVIDAD RECIENTE ==="
+    puts "Fecha 30 días atrás: #{thirty_days_ago}"
+    puts "Nuevos torneos: #{@recent_tournaments}"
+    puts "Nuevos eventos: #{@recent_events}"
+    puts "Participaciones recientes: #{@recent_players}"
     
     # Debug logs
     puts "=== DEBUG STATS ==="

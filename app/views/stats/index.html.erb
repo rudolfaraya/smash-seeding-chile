@@ -25,7 +25,7 @@
       </div>
       <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 text-center">
         <div class="text-3xl font-bold text-blue-400 mb-2"><%= number_with_delimiter(@valid_events) %></div>
-        <div class="text-slate-300 text-sm">Eventos Válidos</div>
+        <div class="text-slate-300 text-sm">Eventos</div>
       </div>
       <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 text-center">
         <div class="text-3xl font-bold text-green-400 mb-2"><%= number_with_delimiter(@total_players) %></div>
@@ -51,7 +51,7 @@
         </div>
         <div class="text-center">
           <div class="text-2xl font-bold text-purple-400"><%= @recent_players %></div>
-          <div class="text-slate-300 text-sm">Nuevos Jugadores</div>
+          <div class="text-slate-300 text-sm">Participaciones Recientes</div>
         </div>
       </div>
     </div>
@@ -95,8 +95,8 @@
 
     <!-- Top jugadores más activos -->
     <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 mb-8">
-      <h3 class="text-xl font-semibold text-white mb-4">🏆 Jugadores Más Activos (por Torneos)</h3>
-      <div class="h-64 overflow-hidden">
+      <h3 class="text-xl font-semibold text-white mb-4">🏆 Top 20 Jugadores Más Activos (por Torneos)</h3>
+      <div class="h-96 overflow-hidden">
         <canvas data-stats-target="activePlayersChart" class="w-full h-full"></canvas>
       </div>
     </div>

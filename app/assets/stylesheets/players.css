@@ -73,7 +73,7 @@
   background: linear-gradient(135deg, #64748b, #475569);
 }
 
-/* Ajustes específicos para la columna de personaje */
+/* Columna de personaje con imagen grande */
 .player-character-column {
   /* Asegurar que la columna tenga el ancho adecuado para imágenes de 430x150px */
   min-width: 180px !important;
@@ -101,6 +101,17 @@
 .players-table td {
   border-bottom: 1px solid #475569;
   vertical-align: middle; /* Centrar contenido verticalmente */
+}
+
+/* Asegurar que las celdas con padding 0 también tengan el borde alineado */
+.players-table td.p-0 {
+  border-bottom: 1px solid #475569;
+  position: relative;
+}
+
+/* Alinear bordes para celdas de equipo con logos */
+.players-table td:has(.team-logo-large) {
+  border-bottom: 1px solid #475569;
 }
 
 .players-table tr:hover .player-character-avatar {
