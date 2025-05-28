@@ -127,12 +127,6 @@ class StatsController < ApplicationController
       @most_active_players = active_players_data.map do |player_data|
         { name: player_data.entrant_name, participations: player_data.tournament_count }
       end
-      
-      # Log temporal para verificar
-      puts "=== DEBUG JUGADORES ACTIVOS ==="
-      puts "Cantidad de jugadores enviados: #{@most_active_players.size}"
-      puts "Primeros 5: #{@most_active_players.first(5).inspect}"
-      puts "Últimos 5: #{@most_active_players.last(5).inspect}"
     rescue => e
       # Fallback en caso de error
       Rails.logger.error "Error in most active players query: #{e.message}"
@@ -202,13 +196,6 @@ class StatsController < ApplicationController
     @recent_players = EventSeed.joins(event: :tournament)
                               .where('tournaments.start_at > ?', thirty_days_ago)
                               .count
-    
-    # Debug logs para actividad reciente
-    puts "=== DEBUG ACTIVIDAD RECIENTE ==="
-    puts "Fecha 30 días atrás: #{thirty_days_ago}"
-    puts "Nuevos torneos: #{@recent_tournaments}"
-    puts "Nuevos eventos: #{@recent_events}"
-    puts "Participaciones recientes: #{@recent_players}"
     
     # Debug logs
     puts "=== DEBUG STATS ==="

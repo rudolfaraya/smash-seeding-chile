@@ -6,15 +6,17 @@ class PlayersController < ApplicationController
     @query = params[:query]
     @character_filter = params[:character_filter]
     @team_filter = params[:team_filter]
+    @country_filter = params[:country_filter]
     @sort_by = params[:sort_by]
     @page = params[:page]
 
-    Rails.logger.info "=== Players#index called with query: '#{@query}', character_filter: '#{@character_filter}', team_filter: '#{@team_filter}', sort_by: '#{@sort_by}', page: '#{@page}', format: #{request.format} ==="
+    Rails.logger.info "=== Players#index called with query: '#{@query}', character_filter: '#{@character_filter}', team_filter: '#{@team_filter}', country_filter: '#{@country_filter}', sort_by: '#{@sort_by}', page: '#{@page}', format: #{request.format} ==="
 
     # Guardar todos los parámetros de filtro en la sesión
     session[:players_query] = @query
     session[:players_character_filter] = @character_filter
     session[:players_team_filter] = @team_filter
+    session[:players_country_filter] = @country_filter
     session[:players_sort_by] = @sort_by
     session[:players_page] = @page
 
@@ -72,6 +74,7 @@ class PlayersController < ApplicationController
           @query = session[:players_query]
           @character_filter = session[:players_character_filter]
           @team_filter = session[:players_team_filter]
+          @country_filter = session[:players_country_filter]
           @sort_by = session[:players_sort_by]
           @page = session[:players_page]
           @players = prepare_players_data
@@ -81,6 +84,7 @@ class PlayersController < ApplicationController
             query: @query,
             character_filter: @character_filter,
             team_filter: @team_filter,
+            country_filter: @country_filter,
             sort_by: @sort_by,
             page: @page
           }.compact
@@ -146,6 +150,7 @@ class PlayersController < ApplicationController
           @query = session[:players_query]
           @character_filter = session[:players_character_filter]
           @team_filter = session[:players_team_filter]
+          @country_filter = session[:players_country_filter]
           @sort_by = session[:players_sort_by]
           @page = session[:players_page]
           @players = prepare_players_data
@@ -155,6 +160,7 @@ class PlayersController < ApplicationController
             query: @query,
             character_filter: @character_filter,
             team_filter: @team_filter,
+            country_filter: @country_filter,
             sort_by: @sort_by,
             page: @page
           }.compact
@@ -224,6 +230,7 @@ class PlayersController < ApplicationController
           @query = session[:players_query]
           @character_filter = session[:players_character_filter]
           @team_filter = session[:players_team_filter]
+          @country_filter = session[:players_country_filter]
           @sort_by = session[:players_sort_by]
           @page = session[:players_page]
           @players = prepare_players_data
@@ -233,6 +240,7 @@ class PlayersController < ApplicationController
             query: @query,
             character_filter: @character_filter,
             team_filter: @team_filter,
+            country_filter: @country_filter,
             sort_by: @sort_by,
             page: @page
           }.compact
@@ -287,6 +295,7 @@ class PlayersController < ApplicationController
     # Usar parámetros de la URL o de la sesión como fallback
     character_filter = params[:character_filter].presence || session[:players_character_filter]
     team_filter = params[:team_filter].presence || session[:players_team_filter]
+    country_filter = params[:country_filter].presence || session[:players_country_filter]
     query = @query.presence || session[:players_query]
     sort_by = params[:sort_by].presence || session[:players_sort_by] || "recent_tournament"
 
@@ -316,6 +325,17 @@ class PlayersController < ApplicationController
       else
         # Jugadores que pertenecen a un equipo específico
         players_query = players_query.joins(:player_teams).where(player_teams: { team_id: team_filter })
+      end
+    end
+
+    # Aplicar filtro por país
+    if country_filter.present?
+      if country_filter == "none"
+        # Jugadores sin país asignado
+        players_query = players_query.where(country: [nil, ""])
+      else
+        # Jugadores de un país específico
+        players_query = players_query.where(country: country_filter)
       end
     end
 

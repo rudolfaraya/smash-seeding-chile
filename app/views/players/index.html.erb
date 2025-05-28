@@ -50,7 +50,7 @@
       </div>
 
       <!-- Filtros y Ordenamiento -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <!-- Filtro por Personaje -->
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-2">
@@ -110,6 +110,38 @@
                 👥 Mostrando jugadores sin equipo asignado
               <% else %>
                 🏆 Mostrando jugadores del equipo: <%= Team.find(@team_filter).display_name rescue @team_filter %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Filtro por País -->
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd" />
+            </svg>
+            Filtrar por País
+          </label>
+          <%= f.select :country_filter, 
+                options_for_select([
+                  ['Todos los países', ''],
+                  ['Sin país asignado', 'none']
+                ] + country_options, @country_filter),
+                {},
+                {
+                  class: "w-full bg-slate-700 border border-slate-600 text-slate-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500",
+                  data: { 
+                    search_target: "filter",
+                    action: "change->search#selectChanged"
+                  }
+                } %>
+          <% if @country_filter.present? %>
+            <div class="mt-1 text-xs text-yellow-400">
+              <% if @country_filter == 'none' %>
+                🌍 Mostrando jugadores sin país asignado
+              <% else %>
+                🌍 Mostrando jugadores de: <%= @country_filter %>
               <% end %>
             </div>
           <% end %>
@@ -184,7 +216,7 @@
 
       <!-- Ayuda de filtros (oculta por defecto) -->
       <div id="filtersHelp" class="hidden bg-slate-700 rounded-md p-4 mt-4 text-xs text-slate-300 border border-slate-600">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <strong class="text-slate-200 flex items-center mb-2">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -209,6 +241,19 @@
               <li>• <strong>Todos:</strong> Muestra todos los jugadores</li>
               <li>• <strong>Sin equipo:</strong> Solo jugadores sin equipo asignado</li>
               <li>• <strong>Equipo específico:</strong> Jugadores que pertenecen a ese equipo (principal o secundario)</li>
+            </ul>
+          </div>
+          <div>
+            <strong class="text-slate-200 flex items-center mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd" />
+              </svg>
+              Filtro por País:
+            </strong>
+            <ul class="space-y-1 text-slate-400 ml-4">
+              <li>• <strong>Todos:</strong> Muestra jugadores de todos los países</li>
+              <li>• <strong>Sin país:</strong> Solo jugadores sin país asignado</li>
+              <li>• <strong>País específico:</strong> Jugadores de ese país (se muestra la cantidad entre paréntesis)</li>
             </ul>
           </div>
           <div>
