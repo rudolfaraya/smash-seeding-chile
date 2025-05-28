@@ -5,14 +5,16 @@ class PlayersController < ApplicationController
   def index
     @query = params[:query]
     @character_filter = params[:character_filter]
+    @team_filter = params[:team_filter]
     @sort_by = params[:sort_by]
     @page = params[:page]
 
-    Rails.logger.info "=== Players#index called with query: '#{@query}', character_filter: '#{@character_filter}', sort_by: '#{@sort_by}', page: '#{@page}', format: #{request.format} ==="
+    Rails.logger.info "=== Players#index called with query: '#{@query}', character_filter: '#{@character_filter}', team_filter: '#{@team_filter}', sort_by: '#{@sort_by}', page: '#{@page}', format: #{request.format} ==="
 
     # Guardar todos los parámetros de filtro en la sesión
     session[:players_query] = @query
     session[:players_character_filter] = @character_filter
+    session[:players_team_filter] = @team_filter
     session[:players_sort_by] = @sort_by
     session[:players_page] = @page
 
@@ -69,6 +71,7 @@ class PlayersController < ApplicationController
           # Preparar datos para la recarga usando parámetros de la sesión
           @query = session[:players_query]
           @character_filter = session[:players_character_filter]
+          @team_filter = session[:players_team_filter]
           @sort_by = session[:players_sort_by]
           @page = session[:players_page]
           @players = prepare_players_data
@@ -77,6 +80,7 @@ class PlayersController < ApplicationController
           redirect_params = {
             query: @query,
             character_filter: @character_filter,
+            team_filter: @team_filter,
             sort_by: @sort_by,
             page: @page
           }.compact
@@ -141,6 +145,7 @@ class PlayersController < ApplicationController
           # Preparar datos para la recarga usando parámetros de la sesión
           @query = session[:players_query]
           @character_filter = session[:players_character_filter]
+          @team_filter = session[:players_team_filter]
           @sort_by = session[:players_sort_by]
           @page = session[:players_page]
           @players = prepare_players_data
@@ -149,6 +154,7 @@ class PlayersController < ApplicationController
           redirect_params = {
             query: @query,
             character_filter: @character_filter,
+            team_filter: @team_filter,
             sort_by: @sort_by,
             page: @page
           }.compact
@@ -183,6 +189,87 @@ class PlayersController < ApplicationController
     end
   end
 
+  def edit_teams
+    @player = Player.find(params[:id])
+    @teams = Team.order(:name)
+
+    respond_to do |format|
+      format.html { render partial: "edit_teams_modal" }
+      format.turbo_stream {
+        render turbo_stream: turbo_stream.replace("edit_teams_modal_content",
+          partial: "edit_teams_modal"
+        )
+      }
+    end
+  rescue ActiveRecord::RecordNotFound
+    respond_to do |format|
+      format.html { redirect_to players_path, alert: "Jugador no encontrado" }
+      format.turbo_stream {
+        render turbo_stream: turbo_stream.replace("edit_teams_modal_content", "")
+      }
+    end
+  end
+
+  def update_teams
+    @player = Player.find(params[:id])
+    
+    team_ids = params[:team_ids]&.reject(&:blank?) || []
+    primary_team_id = params[:primary_team_id]
+
+    if @player.assign_teams(team_ids, primary_team_id)
+      respond_to do |format|
+        format.json { render json: { success: true, message: "Equipos actualizados correctamente" } }
+        format.turbo_stream {
+          # Preparar datos para la recarga usando parámetros de la sesión
+          @query = session[:players_query]
+          @character_filter = session[:players_character_filter]
+          @team_filter = session[:players_team_filter]
+          @sort_by = session[:players_sort_by]
+          @page = session[:players_page]
+          @players = prepare_players_data
+
+          # Construir la URL correcta para la redirección
+          redirect_params = {
+            query: @query,
+            character_filter: @character_filter,
+            team_filter: @team_filter,
+            sort_by: @sort_by,
+            page: @page
+          }.compact
+          
+          redirect_url = players_path(redirect_params)
+          
+          # Usar turbo_stream.action(:visit, ...) para redirección
+          render turbo_stream: turbo_stream.action(:visit, redirect_url)
+        }
+        format.html { redirect_to players_path, notice: "Equipos actualizados correctamente" }
+      end
+    else
+      respond_to do |format|
+        format.json { render json: { success: false, error: "Error al actualizar equipos" } }
+        format.turbo_stream {
+          @teams = Team.order(:name)
+          render turbo_stream: turbo_stream.replace("edit_teams_modal_content",
+            partial: "edit_teams_modal"
+          )
+        }
+        format.html {
+          @teams = Team.order(:name)
+          render partial: "edit_teams_modal", 
+                 status: :unprocessable_entity
+        }
+      end
+    end
+  rescue ActiveRecord::RecordNotFound
+    respond_to do |format|
+      format.json { render json: { success: false, error: "Jugador no encontrado" } }
+      format.turbo_stream {
+        render turbo_stream: turbo_stream.replace("edit_teams_modal_content", "")
+      }
+      format.html { redirect_to players_path, alert: "Jugador no encontrado" }
+    end
+  end
+
   private
 
   def player_params
@@ -199,6 +286,7 @@ class PlayersController < ApplicationController
 
     # Usar parámetros de la URL o de la sesión como fallback
     character_filter = params[:character_filter].presence || session[:players_character_filter]
+    team_filter = params[:team_filter].presence || session[:players_team_filter]
     query = @query.presence || session[:players_query]
     sort_by = params[:sort_by].presence || session[:players_sort_by] || "recent_tournament"
 
@@ -217,6 +305,17 @@ class PlayersController < ApplicationController
           "character_1 = ? OR character_2 = ? OR character_3 = ?",
           character_filter, character_filter, character_filter
         )
+      end
+    end
+
+    # Aplicar filtro por equipo
+    if team_filter.present?
+      if team_filter == "none"
+        # Jugadores sin equipos asignados
+        players_query = players_query.left_joins(:player_teams).where(player_teams: { id: nil })
+      else
+        # Jugadores que pertenecen a un equipo específico
+        players_query = players_query.joins(:player_teams).where(player_teams: { team_id: team_filter })
       end
     end
 
@@ -246,7 +345,7 @@ class PlayersController < ApplicationController
     paginated_player_ids = players_query.page(page).per(per_page).pluck(:id)
 
     # Cargar los jugadores con sus asociaciones y datos calculados
-    players_with_data = Player.includes(event_seeds: { event: :tournament })
+    players_with_data = Player.includes(event_seeds: { event: :tournament }, player_teams: {}, teams: {})
                               .where(id: paginated_player_ids)
                               .map do |player|
       # Calcular datos en Ruby para evitar problemas de SQL

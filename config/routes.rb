@@ -41,6 +41,20 @@ Rails.application.routes.draw do
       get :current_characters
       get :edit_info
       patch :update_info
+      get :edit_teams
+      patch :update_teams
+    end
+  end
+
+  # Teams routes
+  resources :teams, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
+    collection do
+      get :search
+    end
+    member do
+      post :add_player
+      delete :remove_player
+      get :search_players
     end
   end
 

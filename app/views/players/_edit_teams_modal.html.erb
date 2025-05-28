@@ -1,0 +1,128 @@
+<div class="bg-slate-800 rounded-lg shadow-xl border border-slate-600 p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+  <!-- Header del modal -->
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center space-x-3">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+      <h3 class="text-xl font-semibold text-slate-100">Editar Equipos</h3>
+    </div>
+    <button onclick="closeEditTeamsModal()" class="text-slate-400 hover:text-slate-200 transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Información del jugador -->
+  <div class="bg-slate-700 rounded-lg p-4 mb-6">
+    <div class="flex items-center space-x-3 mb-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+      <h4 class="text-lg font-medium text-slate-100"><%= @player.entrant_name || "Sin tag" %></h4>
+    </div>
+    <p class="text-slate-300 text-sm"><%= @player.name %></p>
+    <p class="text-slate-400 text-xs"><%= pluralize(@player.event_seeds.count, 'evento') %> participados</p>
+  </div>
+
+  <!-- Formulario -->
+  <form id="editTeamsForm" action="<%= update_teams_player_path(@player) %>" method="patch">
+    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+    
+    <!-- Selección de equipos -->
+    <div class="mb-6">
+      <div class="flex items-center space-x-2 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+        </svg>
+        <h5 class="text-lg font-medium text-slate-200">Seleccionar Equipos</h5>
+      </div>
+      
+      <div class="space-y-3">
+        <% @teams.each do |team| %>
+          <% is_selected = @player.teams.include?(team) %>
+          <% is_primary = @player.player_teams.find_by(team: team)&.is_primary %>
+          
+          <div class="team-option bg-slate-700 rounded-lg p-4 border border-slate-600 hover:border-slate-500 transition-colors">
+            <div class="flex items-start space-x-4">
+              <!-- Checkbox para seleccionar equipo -->
+              <input type="checkbox" 
+                     name="team_ids[]" 
+                     value="<%= team.id %>" 
+                     id="team_<%= team.id %>"
+                     class="team-checkbox h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3"
+                     <%= 'checked' if is_selected %>
+                     onchange="window.handleTeamSelection()">
+              
+              <!-- Logo o sigla del equipo -->
+              <div class="flex-shrink-0">
+                <% if team.logo_image.attached? %>
+                  <%= image_tag team.logo_image, class: "w-12 h-12 rounded-lg object-cover" %>
+                <% else %>
+                  <div class="w-12 h-12 bg-slate-600 rounded-lg flex items-center justify-center">
+                    <span class="team-acronym text-slate-200 font-bold text-sm"><%= team.acronym %></span>
+                  </div>
+                <% end %>
+              </div>
+              
+              <!-- Información del equipo -->
+              <div class="flex-grow">
+                <h5 class="text-slate-100 font-medium"><%= team.name %></h5>
+                <p class="text-slate-400 text-sm"><%= team.acronym %></p>
+                <p class="text-slate-400 text-xs"><%= team.description %></p>
+                <p class="text-slate-500 text-xs"><%= pluralize(team.players.count, 'jugador', 'jugadores') %></p>
+              </div>
+              
+              <!-- Radio button para equipo principal -->
+              <div class="flex-shrink-0">
+                <label class="flex items-center">
+                  <input type="radio" 
+                         name="primary_team_id" 
+                         value="<%= team.id %>"
+                         class="primary-team-radio h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                         <%= 'checked' if is_primary %>
+                         <%= 'disabled' unless is_selected %>
+                         onchange="window.updatePrimaryIndicators()">
+                  <span class="ml-2 text-xs text-slate-400">Principal</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Resumen de selección -->
+    <div id="team-selection-summary" class="mb-6 bg-slate-700 rounded-lg p-4 <%= 'hidden' unless @player.teams.any? %>">
+      <div class="flex items-center space-x-2 mb-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="text-sm text-slate-300">Selecciona los equipos y marca uno como principal. El equipo principal aparecerá destacado en la vista de jugadores.</span>
+      </div>
+      <ul id="selected-teams-list" class="space-y-1">
+        <!-- Se llena dinámicamente con JavaScript -->
+      </ul>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="flex justify-end space-x-3">
+      <button type="button" onclick="closeEditTeamsModal()" class="px-4 py-2 bg-slate-600 text-slate-200 rounded-md hover:bg-slate-500 transition-colors">
+        Cancelar
+      </button>
+      <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+        Guardar Equipos
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+// Inicializar el estado del formulario cuando se carga el modal
+setTimeout(() => {
+  if (typeof window.handleTeamSelection === 'function') {
+    window.handleTeamSelection();
+  }
+}, 100);
+</script> 

@@ -3,6 +3,10 @@ class Player < ApplicationRecord
   has_many :events, through: :event_seeds
   has_many :tournaments, through: :events
 
+  # Relaciones con equipos
+  has_many :player_teams, dependent: :destroy
+  has_many :teams, through: :player_teams
+
   validates :name, presence: true, on: :create
   validates :entrant_name, presence: true
   validates :user_id, presence: true, uniqueness: true
@@ -195,6 +199,120 @@ class Player < ApplicationRecord
   # Marcar como actualizado recientemente
   def mark_as_recently_updated
     touch(:updated_at)
+  end
+
+  # Métodos para equipos
+  def primary_team
+    teams.joins(:player_teams).where(player_teams: { is_primary: true }).first
+  end
+
+  def secondary_teams
+    teams.joins(:player_teams).where(player_teams: { is_primary: false })
+  end
+
+  def team_display
+    primary = primary_team
+    return "Sin equipo" unless primary
+    
+    if primary.logo.present?
+      primary.logo
+    else
+      primary.acronym
+    end
+  end
+
+  def team_name_display
+    primary = primary_team
+    return "Sin equipo" unless primary
+    primary.display_name
+  end
+
+  def has_team?
+    primary_team.present?
+  end
+
+  # Asignar equipos a un jugador con uno principal
+  def assign_teams(team_ids, primary_team_id = nil)
+    # Limpiar equipos actuales siempre
+    player_teams.destroy_all
+
+    # Si no hay equipos para asignar, simplemente retornar true (equipos limpiados)
+    return true if team_ids.blank?
+
+    # Asignar nuevos equipos
+    team_ids.each do |team_id|
+      next if team_id.blank?
+      
+      is_primary = (team_id.to_s == primary_team_id.to_s)
+      player_teams.create!(
+        team_id: team_id,
+        is_primary: is_primary
+      )
+    end
+
+    # Si no se especificó un equipo principal, hacer principal al primero
+    if primary_team_id.blank? && team_ids.any?
+      first_team = player_teams.first
+      first_team&.update!(is_primary: true)
+    end
+
+    true
+  rescue => e
+    Rails.logger.error "Error asignando equipos a jugador #{id}: #{e.message}"
+    false
+  end
+
+  # Agregar un equipo específico
+  def add_team(team_id, is_primary = false)
+    return false if team_id.blank?
+
+    # Si va a ser principal, desmarcar otros como principales
+    if is_primary
+      player_teams.where(is_primary: true).update_all(is_primary: false)
+    end
+
+    # Verificar si ya existe la relación
+    existing = player_teams.find_by(team_id: team_id)
+    if existing
+      existing.update!(is_primary: is_primary)
+    else
+      player_teams.create!(team_id: team_id, is_primary: is_primary)
+    end
+
+    true
+  rescue => e
+    Rails.logger.error "Error agregando equipo #{team_id} a jugador #{id}: #{e.message}"
+    false
+  end
+
+  # Remover un equipo específico
+  def remove_team(team_id)
+    return false if team_id.blank?
+
+    removed = player_teams.where(team_id: team_id).destroy_all
+    
+    # Si se removió el equipo principal, hacer principal al primer equipo restante
+    if removed.any? { |pt| pt.is_primary? } && player_teams.any?
+      player_teams.first.update!(is_primary: true)
+    end
+
+    true
+  rescue => e
+    Rails.logger.error "Error removiendo equipo #{team_id} de jugador #{id}: #{e.message}"
+    false
+  end
+
+  # Obtener información de equipos para formularios
+  def teams_for_form
+    player_teams.includes(:team).map do |pt|
+      {
+        team_id: pt.team_id,
+        team_name: pt.team.name,
+        team_acronym: pt.team.acronym,
+        team_logo: pt.team.logo,
+        is_primary: pt.is_primary?
+      }
+    end
   end
 
   private

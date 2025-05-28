@@ -3,6 +3,7 @@ import "@hotwired/turbo-rails"
 import "./controllers"
 import "./seeds_functions"
 import "./global_functions"
+import "./teams"
 
 //console.log("Stimulus application loaded:", window.Stimulus)
 

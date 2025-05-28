@@ -75,9 +75,14 @@
           </svg>
           Estado/Región
         </label>
-        <%= f.text_field :state, 
-              class: "w-full bg-slate-700 border border-slate-600 text-slate-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
-              placeholder: "Ej: Región Metropolitana" %>
+        <%= f.select :state, 
+              options_for_select([
+                ['Seleccionar región...', '']
+              ] + region_options, player.state),
+              {},
+              {
+                class: "w-full bg-slate-700 border border-slate-600 text-slate-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              } %>
       </div>
 
       <!-- Ciudad -->

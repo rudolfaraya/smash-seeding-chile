@@ -50,7 +50,7 @@
       </div>
 
       <!-- Filtros y Ordenamiento -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <!-- Filtro por Personaje -->
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-2">
@@ -83,6 +83,38 @@
           <% end %>
         </div>
 
+        <!-- Filtro por Equipo -->
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M17 20a2 2 0 002-2V6a2 2 0 00-2-2h-3a2 2 0 00-2-2H8a2 2 0 00-2 2H3a2 2 0 00-2 2v12a2 2 0 002 2h14zM3 6h2V4h2v2h6V4h2v2h2v12H3V6z" />
+            </svg>
+            Filtrar por Equipo
+          </label>
+          <%= f.select :team_filter, 
+                options_for_select([
+                  ['Todos los jugadores', ''],
+                  ['Sin equipo asignado', 'none']
+                ] + team_options, @team_filter),
+                {},
+                {
+                  class: "w-full bg-slate-700 border border-slate-600 text-slate-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500",
+                  data: { 
+                    search_target: "filter",
+                    action: "change->search#selectChanged"
+                  }
+                } %>
+          <% if @team_filter.present? %>
+            <div class="mt-1 text-xs text-green-400">
+              <% if @team_filter == 'none' %>
+                👥 Mostrando jugadores sin equipo asignado
+              <% else %>
+                🏆 Mostrando jugadores del equipo: <%= Team.find(@team_filter).display_name rescue @team_filter %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
         <!-- Ordenamiento -->
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-2">
@@ -93,26 +125,26 @@
           </label>
           <%= f.select :sort_by, 
                 options_for_select([
-                  ['🕒 Más reciente inscripción', 'recent_tournament'],
-                  ['📅 Más antigua inscripción', 'oldest_tournament'],
-                  ['🔤 Tag A-Z', 'tag_asc'],
-                  ['🔤 Tag Z-A', 'tag_desc'],
-                  ['⬆️ Más eventos', 'events_count_desc'],
-                  ['⬇️ Menos eventos', 'events_count_asc'],
+                  ['📅 Último torneo', 'recent_tournament'],
+                  ['📅 Primer torneo', 'oldest_tournament'],
+                  ['🎯 Más eventos', 'events_count_desc'],
+                  ['🎯 Menos eventos', 'events_count_asc'],
                   ['🏆 Más torneos', 'tournaments_count_desc'],
-                  ['🎯 Menos torneos', 'tournaments_count_asc']
+                  ['🏆 Menos torneos', 'tournaments_count_asc'],
+                  ['🔤 Tag A-Z', 'tag_asc'],
+                  ['🔤 Tag Z-A', 'tag_desc']
                 ], @sort_by || 'recent_tournament'),
                 {},
                 {
-                  class: "w-full bg-slate-700 border border-slate-600 text-slate-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500",
+                  class: "w-full bg-slate-700 border border-slate-600 text-slate-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500",
                   data: { 
                     search_target: "sort",
                     action: "change->search#selectChanged"
                   }
                 } %>
           <% if @sort_by.present? && @sort_by != 'recent_tournament' %>
-            <div class="mt-1 text-xs text-green-400">
-              📊 Ordenado por: <%= f.object.class.human_attribute_name(@sort_by) rescue @sort_by.humanize %>
+            <div class="mt-1 text-xs text-purple-400">
+              📊 Ordenado por: <%= @sort_by.humanize %>
             </div>
           <% end %>
         </div>
@@ -152,7 +184,7 @@
 
       <!-- Ayuda de filtros (oculta por defecto) -->
       <div id="filtersHelp" class="hidden bg-slate-700 rounded-md p-4 mt-4 text-xs text-slate-300 border border-slate-600">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <strong class="text-slate-200 flex items-center mb-2">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -164,6 +196,19 @@
               <li>• <strong>Todos:</strong> Muestra todos los jugadores registrados</li>
               <li>• <strong>Sin personajes:</strong> Solo jugadores sin personajes asignados</li>
               <li>• <strong>Personaje específico:</strong> Jugadores que usan ese personaje como principal, secundario o terciario</li>
+            </ul>
+          </div>
+          <div>
+            <strong class="text-slate-200 flex items-center mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M17 20a2 2 0 002-2V6a2 2 0 00-2-2h-3a2 2 0 00-2-2H8a2 2 0 00-2 2H3a2 2 0 00-2 2v12a2 2 0 002 2h14zM3 6h2V4h2v2h6V4h2v2h2v12H3V6z" />
+              </svg>
+              Filtro por Equipo:
+            </strong>
+            <ul class="space-y-1 text-slate-400 ml-4">
+              <li>• <strong>Todos:</strong> Muestra todos los jugadores</li>
+              <li>• <strong>Sin equipo:</strong> Solo jugadores sin equipo asignado</li>
+              <li>• <strong>Equipo específico:</strong> Jugadores que pertenecen a ese equipo (principal o secundario)</li>
             </ul>
           </div>
           <div>
@@ -394,6 +439,13 @@
   </div>
 </div>
 
+<!-- Modal para editar equipos del jugador -->
+<div id="editTeamsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[9999] flex items-center justify-center" style="z-index: 9999;">
+  <div id="edit_teams_modal_content">
+    <!-- El contenido se cargará dinámicamente aquí -->
+  </div>
+</div>
+
 <script>
 // Funciones globales para el modal de personajes de Smash
 function openSmashCharacterModal(playerId) {
@@ -589,12 +641,41 @@ document.addEventListener('click', function(e) {
   if (e.target === modal) {
     closeSmashCharacterModal();
   }
+  
+  // Cerrar modal de información al hacer clic fuera de él
+  const infoModal = document.getElementById('editInfoModal');
+  const infoModalContent = document.getElementById('edit_info_modal_content');
+  
+  if (e.target === infoModal && infoModalContent && !infoModalContent.contains(e.target)) {
+    closeEditInfoModal();
+  }
+  
+  // Cerrar modal de equipos al hacer clic fuera de él
+  const teamsModal = document.getElementById('editTeamsModal');
+  const teamsModalContent = document.getElementById('edit_teams_modal_content');
+  
+  if (e.target === teamsModal && teamsModalContent && !teamsModalContent.contains(e.target)) {
+    closeEditTeamsModal();
+  }
 });
 
 // Cerrar modal con tecla Escape
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    closeSmashCharacterModal();
+    const modal = document.getElementById('smashCharacterModal');
+    if (modal && !modal.classList.contains('hidden')) {
+      closeSmashCharacterModal();
+    }
+    
+    const infoModal = document.getElementById('editInfoModal');
+    if (infoModal && !infoModal.classList.contains('hidden')) {
+      closeEditInfoModal();
+    }
+    
+    const teamsModal = document.getElementById('editTeamsModal');
+    if (teamsModal && !teamsModal.classList.contains('hidden')) {
+      closeEditTeamsModal();
+    }
   }
 });
 
@@ -869,26 +950,6 @@ function closeEditInfoModal() {
   }
 }
 
-// Cerrar modal de edición de información al hacer clic fuera de él
-document.addEventListener('click', function(e) {
-  const modal = document.getElementById('editInfoModal');
-  const modalContent = document.getElementById('edit_info_modal_content');
-  
-  if (e.target === modal && !modalContent.contains(e.target)) {
-    closeEditInfoModal();
-  }
-});
-
-// Cerrar modal de edición de información con tecla Escape
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    const modal = document.getElementById('editInfoModal');
-    if (modal && !modal.classList.contains('hidden')) {
-      closeEditInfoModal();
-    }
-  }
-});
-
 // Manejar envío del formulario de edición de información
 document.addEventListener('submit', function(e) {
   // Verificar si es el formulario de edición de información
@@ -958,7 +1019,235 @@ document.addEventListener('submit', function(e) {
       alert('Error al actualizar la información del jugador');
     });
   }
+  
+  // Verificar si es el formulario de edición de equipos
+  if (e.target.id === 'editTeamsForm') {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    
+    // Enviar datos via AJAX con Turbo Stream
+    fetch(form.action, {
+      method: 'PATCH',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Accept': 'text/vnd.turbo-stream.html'
+      },
+      body: formData
+    })
+    .then(response => {
+      if (response.headers.get('Content-Type')?.includes('turbo-stream')) {
+        return response.text().then(html => {
+          closeEditTeamsModal();
+          console.log("✅ Equipos del jugador actualizados con Turbo Stream");
+          
+          // Turbo procesará automáticamente la respuesta
+          Turbo.renderStreamMessage(html);
+          return { success: true };
+        });
+      } else {
+        return response.json();
+      }
+    })
+    .then(data => {
+      if (data.success) {
+        // Ya manejado arriba para turbo-stream
+        if (!data.turbo_stream_processed) {
+          closeEditTeamsModal();
+          console.log("✅ Equipos del jugador actualizados con JSON fallback");
+          
+          // Fallback: recargar turbo frame manualmente
+          const turboFrame = document.getElementById('players_results');
+          if (turboFrame) {
+            const currentSrc = turboFrame.getAttribute('src') || window.location.pathname;
+            const url = new URL(currentSrc, window.location.origin);
+            url.searchParams.set('_reload', Date.now());
+            
+            const searchParams = new URLSearchParams(window.location.search);
+            if (searchParams.get('query')) {
+              url.searchParams.set('query', searchParams.get('query'));
+            }
+            
+            turboFrame.setAttribute('src', url.toString());
+            console.log("🔄 Recargando turbo frame con URL:", url.toString());
+          } else {
+            console.log("⚠️ Turbo frame no encontrado, recargando página completa");
+            window.location.reload();
+          }
+        }
+      } else if (data.errors) {
+        console.error("❌ Errores de validación en equipos:", data.errors);
+        alert('Error al actualizar los equipos: ' + (data.errors.join ? data.errors.join(', ') : data.errors));
+      }
+    })
+    .catch(error => {
+      console.error('❌ Error actualizando equipos del jugador:', error);
+      alert('Error al actualizar los equipos del jugador');
+    });
+  }
 });
+
+// Funciones globales para el modal de edición de equipos del jugador
+window.handleTeamSelection = function() {
+  const checkboxes = document.querySelectorAll('.team-checkbox');
+  const primaryRadios = document.querySelectorAll('.primary-team-radio');
+  const summary = document.getElementById('team-selection-summary');
+  const summaryList = document.getElementById('selected-teams-list');
+  
+  let selectedCount = 0;
+  let hasSelection = false;
+  
+  // Actualizar estado de radio buttons basado en checkboxes
+  checkboxes.forEach(checkbox => {
+    const teamId = checkbox.value;
+    const radio = document.querySelector(`input[name="primary_team_id"][value="${teamId}"]`);
+    
+    if (checkbox.checked) {
+      selectedCount++;
+      hasSelection = true;
+      if (radio) {
+        radio.disabled = false;
+      }
+    } else {
+      if (radio) {
+        radio.disabled = true;
+        radio.checked = false;
+      }
+    }
+  });
+  
+  // Si solo hay un equipo seleccionado, marcarlo como principal automáticamente
+  if (selectedCount === 1) {
+    const checkedCheckbox = document.querySelector('.team-checkbox:checked');
+    if (checkedCheckbox) {
+      const radio = document.querySelector(`input[name="primary_team_id"][value="${checkedCheckbox.value}"]`);
+      if (radio && !radio.disabled) {
+        radio.checked = true;
+      }
+    }
+  }
+  
+  // Actualizar resumen
+  if (summary && summaryList) {
+    if (hasSelection) {
+      summary.classList.remove('hidden');
+      summaryList.innerHTML = '';
+      
+      checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+          const teamCard = checkbox.closest('.team-option');
+          const teamName = teamCard.querySelector('h5').textContent;
+          const teamAcronym = teamCard.querySelector('span').textContent;
+          const isPrimary = document.querySelector(`input[name="primary_team_id"][value="${checkbox.value}"]:checked`);
+          
+          const li = document.createElement('li');
+          li.className = 'flex items-center justify-between py-1';
+          li.innerHTML = `
+            <span class="text-slate-200">${teamAcronym} - ${teamName}</span>
+            ${isPrimary ? '<span class="text-xs bg-blue-600 text-white px-2 py-1 rounded">Principal</span>' : '<span class="text-xs text-slate-400">Secundario</span>'}
+          `;
+          summaryList.appendChild(li);
+        }
+      });
+    } else {
+      summary.classList.add('hidden');
+    }
+  }
+};
+
+window.updatePrimaryIndicators = function() {
+  // Actualizar indicadores visuales cuando cambia el equipo principal
+  setTimeout(() => {
+    if (typeof window.handleTeamSelection === 'function') {
+      window.handleTeamSelection();
+    }
+  }, 10);
+};
+
+// Funciones para el modal de edición de equipos del jugador
+function openEditTeamsModal(playerId) {
+  console.log("=== Abriendo modal de edición de equipos para jugador:", playerId, "===");
+  
+  const modal = document.getElementById('editTeamsModal');
+  if (!modal) {
+    console.error("❌ Modal de edición de equipos no encontrado");
+    return;
+  }
+  
+  // Mostrar el modal
+  modal.classList.remove('hidden');
+  
+  // Cargar el formulario via AJAX
+  fetch(`/players/${playerId}/edit_teams`, {
+    method: 'GET',
+    headers: {
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+      'Accept': 'text/html'
+    }
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.text();
+  })
+  .then(html => {
+    const modalContent = document.getElementById('edit_teams_modal_content');
+    if (modalContent) {
+      modalContent.innerHTML = html;
+      console.log("✅ Formulario de edición de equipos cargado");
+      
+      // Inicializar el estado del formulario
+      setTimeout(() => {
+        if (typeof window.handleTeamSelection === 'function') {
+          window.handleTeamSelection();
+        }
+      }, 100);
+    } else {
+      console.error("❌ Contenedor del modal de equipos no encontrado");
+      throw new Error("Teams modal content container not found");
+    }
+  })
+  .catch(error => {
+    console.error('❌ Error cargando formulario de edición de equipos:', error);
+    const modalContent = document.getElementById('edit_teams_modal_content');
+    if (modalContent) {
+      modalContent.innerHTML = `
+        <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-600 p-6 w-full max-w-md mx-4">
+          <div class="text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-400 mb-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <h3 class="text-lg font-medium text-slate-100 mb-2">Error</h3>
+            <p class="text-slate-400 mb-4">No se pudo cargar el formulario de equipos</p>
+            <button onclick="closeEditTeamsModal()" class="px-4 py-2 bg-slate-600 text-slate-200 rounded-md hover:bg-slate-500">
+              Cerrar
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      console.error("❌ No se puede mostrar el error: contenedor del modal de equipos no encontrado");
+      closeEditTeamsModal();
+    }
+  });
+}
+
+function closeEditTeamsModal() {
+  const modal = document.getElementById('editTeamsModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    
+    // Limpiar contenido
+    const modalContent = document.getElementById('edit_teams_modal_content');
+    if (modalContent) {
+      modalContent.innerHTML = '';
+    }
+    
+    console.log("✅ Modal de edición de equipos cerrado");
+  }
+}
 </script>
 
 <style>

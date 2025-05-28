@@ -7,6 +7,7 @@
       <tr class="bg-gradient-to-r from-slate-900 to-blue-900 border-b-2 border-red-500">
         <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider">Jugador</th>
         <th class="py-3 px-4 text-center text-xs font-semibold text-blue-300 uppercase tracking-wider player-character-column">Personaje</th>
+        <th class="py-3 px-4 text-center text-xs font-semibold text-blue-300 uppercase tracking-wider">Equipo</th>
         <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider">Información</th>
         <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider">Eventos</th>
         <th class="py-3 px-6 text-left text-xs font-semibold text-blue-300 uppercase tracking-wider">Acciones</th>
@@ -84,6 +85,43 @@
               </div>
             <% end %>
           </td>
+          
+          <!-- Nueva columna para equipo -->
+          <td class="<%= player.has_team? && (player.primary_team&.logo_image&.attached? || player.primary_team&.logo.present?) ? 'p-0' : 'py-4 px-4' %> text-center" style="<%= player.has_team? && (player.primary_team&.logo_image&.attached? || player.primary_team&.logo.present?) ? 'height: 80px; width: 100px;' : '' %>">
+            <% if player.has_team? %>
+              <% primary_team = player.primary_team || player.teams.first %>
+              <% if primary_team&.logo_image&.attached? %>
+                <%= image_tag primary_team.logo_image, 
+                      alt: primary_team.name,
+                      class: "team-logo-large",
+                      style: "width: 100px !important; height: 80px !important; object-fit: contain !important; max-width: none !important; max-height: none !important;",
+                      title: primary_team.name %>
+              <% elsif primary_team&.logo.present? %>
+                <%= image_tag primary_team.logo, 
+                      alt: primary_team.name,
+                      class: "team-logo-large",
+                      style: "width: 100px !important; height: 80px !important; object-fit: contain !important; max-width: none !important; max-height: none !important;",
+                      title: primary_team.name %>
+              <% else %>
+                <div class="flex flex-col items-center">
+                  <div class="w-12 h-12 mb-1 bg-gradient-to-r from-purple-600 to-purple-800 rounded-lg flex items-center justify-center border-2 border-purple-500">
+                    <span class="text-white font-bold text-xs"><%= primary_team&.acronym %></span>
+                  </div>
+                </div>
+              <% end %>
+            <% else %>
+              <div class="flex flex-col items-center">
+                <div class="w-12 h-12 mb-1 bg-slate-700 rounded-lg flex items-center justify-center border border-slate-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div class="text-xs text-slate-500">
+                  Sin equipo
+                </div>
+              </div>
+            <% end %>
+          </td>
           <td class="py-4 px-6">
             <div class="text-sm text-slate-300">
               <% if player.country.present? %>
@@ -110,7 +148,7 @@
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2 text-green-400" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd" />
                   </svg>
-                  <a href="<%= player.start_gg_url %>" target="_blank" rel="noopener noreferrer" class="text-xs text-green-400 hover:text-green-300 transition-colors duration-200">
+                  <a href="<%= player.start_gg_url %>" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:text-green-300 transition-colors duration-200">
                     start.gg
                   </a>
                 </div>
@@ -170,6 +208,17 @@
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                   </svg>
                   <span>Personajes</span>
+                </button>
+                
+                <!-- Botón para editar equipos -->
+                <button 
+                  onclick="openEditTeamsModal(<%= player.id %>)" 
+                  class="inline-flex items-center px-2 py-1 border border-purple-500 text-purple-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200 cursor-pointer text-xs" 
+                  title="Editar equipos del jugador">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17 20a2 2 0 002-2V6a2 2 0 00-2-2h-3a2 2 0 00-2-2H8a2 2 0 00-2 2H3a2 2 0 00-2 2v12a2 2 0 002 2h14zM3 6h2V4h2v2h6V4h2v2h2v12H3V6z" />
+                  </svg>
+                  <span>Equipos</span>
                 </button>
               <% else %>
                 <span class="inline-flex items-center px-2 py-1 border border-slate-600 text-slate-500 bg-slate-800 rounded-md cursor-not-allowed text-xs">
@@ -232,6 +281,8 @@
               </td>
               <!-- Celda vacía para mantener alineación con columna de personaje -->
               <td class="py-3 px-4 player-character-column"></td>
+              <!-- Celda vacía para mantener alineación con columna de equipo -->
+              <td class="py-3 px-4"></td>
               <td class="py-3 px-6">
                 <div class="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -259,7 +310,7 @@
         
         <% if total_events == 0 %>
           <tr id="eventRow-<%= player.id %>-empty" class="event-row hidden bg-slate-800 border-b border-slate-600" data-player-id="<%= player.id %>" style="display: none;">
-            <td class="py-6 px-6 text-center text-slate-400" colspan="4">
+            <td class="py-6 px-6 text-center text-slate-400" colspan="6">
               <div class="flex flex-col items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -430,6 +481,17 @@
               <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
             </svg>
             Editar Personajes
+          </button>
+          
+          <!-- Botón para editar equipos -->
+          <button 
+            onclick="openEditTeamsModal(<%= player.id %>)" 
+            class="w-full inline-flex items-center justify-center px-4 py-2 border border-purple-500 text-purple-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200 cursor-pointer text-sm" 
+            title="Editar equipos del jugador">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M17 20a2 2 0 002-2V6a2 2 0 00-2-2h-3a2 2 0 00-2-2H8a2 2 0 00-2 2H3a2 2 0 00-2 2v12a2 2 0 002 2h14zM3 6h2V4h2v2h6V4h2v2h2v12H3V6z" />
+            </svg>
+            Editar Equipos
           </button>
         <% else %>
           <div class="w-full inline-flex items-center justify-center px-4 py-2 border border-slate-600 text-slate-500 bg-slate-800 rounded-md cursor-not-allowed text-sm">
@@ -849,6 +911,22 @@
   .player-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Responsive: ocultar columna de personaje en móvil */
+  @media (max-width: 768px) {
+    .player-character-column {
+      display: none !important;
+    }
+  }
+
+  /* CSS específico para logos de equipos grandes */
+  .team-logo-large {
+    width: 100px !important;
+    height: 80px !important;
+    object-fit: contain !important;
+    max-width: none !important;
+    min-width: 100px !important;
   }
 </style>
 

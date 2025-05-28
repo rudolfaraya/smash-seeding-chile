@@ -177,4 +177,37 @@ module ApplicationHelper
       )
     end
   end
+
+  # Helper para mostrar caracteres especiales en la información del jugador
+  def format_player_info(text)
+    return '' if text.blank?
+    simple_format(text, {}, wrapper_tag: "div")
+  end
+
+  # Opciones para el filtro por equipos
+  def team_options
+    Team.order(:name).map { |team| [team.display_name, team.id] }
+  end
+
+  # Opciones para regiones basadas en torneos existentes
+  def region_options
+    Tournament.where.not(region: [nil, ""])
+             .distinct
+             .pluck(:region)
+             .sort
+             .map { |region| [region, region] }
+  end
+
+  # Opciones para equipos con información visual (para multi-select)
+  def teams_with_details
+    Team.order(:name).map do |team|
+      {
+        id: team.id,
+        name: team.name,
+        acronym: team.acronym,
+        logo: team.logo,
+        display_name: team.display_name
+      }
+    end
+  end
 end

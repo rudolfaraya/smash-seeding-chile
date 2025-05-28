@@ -10,7 +10,35 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_27_145707) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_27_214959) do
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
   create_table "event_seeds", force: :cascade do |t|
     t.integer "event_id", null: false
     t.integer "player_id", null: false
@@ -39,6 +67,18 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_27_145707) do
     t.index ["tournament_id"], name: "index_events_on_tournament_id"
   end
 
+  create_table "player_teams", force: :cascade do |t|
+    t.integer "player_id", null: false
+    t.integer "team_id", null: false
+    t.boolean "is_primary", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["player_id", "team_id"], name: "index_player_teams_on_player_id_and_team_id", unique: true
+    t.index ["player_id"], name: "index_player_teams_on_player_id"
+    t.index ["player_id"], name: "index_player_teams_on_player_id_primary_unique", unique: true, where: "is_primary = true"
+    t.index ["team_id"], name: "index_player_teams_on_team_id"
+  end
+
   create_table "players", force: :cascade do |t|
     t.string "entrant_name"
     t.integer "user_id"
@@ -64,6 +104,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_27_145707) do
     t.index ["character_3"], name: "index_players_on_character_3"
     t.index ["name", "entrant_name"], name: "index_players_on_names"
     t.index ["twitter_handle"], name: "index_players_on_twitter_handle"
+  end
+
+  create_table "teams", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "acronym", null: false
+    t.text "logo"
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["acronym"], name: "index_teams_on_acronym", unique: true
+    t.index ["name"], name: "index_teams_on_name", unique: true
   end
 
   create_table "tournaments", force: :cascade do |t|
@@ -109,7 +160,11 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_27_145707) do
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "event_seeds", "events"
   add_foreign_key "event_seeds", "players"
   add_foreign_key "events", "tournaments"
+  add_foreign_key "player_teams", "players"
+  add_foreign_key "player_teams", "teams"
 end
