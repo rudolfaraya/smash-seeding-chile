@@ -357,17 +357,11 @@ class PlayersController < ApplicationController
       )
     end
 
-    # Aplicar paginación primero - usar parámetros de URL o sesión
-    page = (params[:page].presence || session[:players_page] || 1).to_i
-    per_page = 50
-
-    # Obtener los IDs paginados
-    paginated_player_ids = players_query.page(page).per(per_page).pluck(:id)
-
-    # Cargar los jugadores con sus asociaciones y datos calculados
-    players_with_data = Player.includes(event_seeds: { event: :tournament }, player_teams: {}, teams: {})
-                              .where(id: paginated_player_ids)
-                              .map do |player|
+    # CORREGIDO: Cargar TODOS los jugadores filtrados con sus asociaciones y calcular datos
+    # NO aplicar paginación todavía
+    all_filtered_players = Player.includes(event_seeds: { event: :tournament }, player_teams: {}, teams: {})
+                                 .where(id: players_query.select(:id))
+                                 .map do |player|
       # Calcular datos en Ruby para evitar problemas de SQL
       event_seeds = player.event_seeds.to_a
       tournament_dates = event_seeds.map { |es| es.event&.tournament&.start_at }.compact
@@ -384,12 +378,21 @@ class PlayersController < ApplicationController
       player
     end
 
-    # Aplicar ordenamiento
-    players_with_data = apply_sorting(players_with_data, sort_by)
+    # CORREGIDO: Aplicar ordenamiento a TODOS los jugadores filtrados
+    all_sorted_players = apply_sorting(all_filtered_players, sort_by)
 
-    # Simular la paginación de Kaminari con los datos ordenados
-    total_count = players_query.count
-    Kaminari.paginate_array(players_with_data, total_count: total_count)
+    # CORREGIDO: Ahora sí aplicar paginación después del ordenamiento
+    page = (params[:page].presence || session[:players_page] || 1).to_i
+    per_page = 50
+    total_count = all_sorted_players.size
+
+    # Aplicar paginación manual
+    start_index = (page - 1) * per_page
+    end_index = start_index + per_page - 1
+    paginated_players = all_sorted_players[start_index..end_index] || []
+
+    # Simular la paginación de Kaminari con los datos ya ordenados y paginados
+    Kaminari.paginate_array(paginated_players, total_count: total_count)
             .page(page).per(per_page)
   end
 
