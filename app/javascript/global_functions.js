@@ -172,22 +172,22 @@ window.SmashSeeding.updateCharacterPreview = function(slot) {
     // Para personajes sin skins, usar solo la imagen base
     let iconPath, skinText;
     if (isCharacterWithoutSkins) {
-      // Para Mii: usar solo el nombre del personaje (brawler.png, gunner.png, swordfighter.png)
+      // Para Mii: usar solo el nombre del personaje con skin 1
       let miiName;
       switch(character) {
-        case 'mii_brawler': miiName = 'brawler'; break;
-        case 'mii_gunner': miiName = 'gunner'; break;
-        case 'mii_swordfighter': miiName = 'swordfighter'; break;
+        case 'mii_brawler': miiName = 'mii_brawler'; break;
+        case 'mii_gunner': miiName = 'mii_gunner'; break;
+        case 'mii_swordfighter': miiName = 'mii_swordfighter'; break;
         default: miiName = character;
       }
-      iconPath = `/assets/smash/character_individual_skins/${character}/${miiName}.png`;
+      iconPath = `/assets/smash/characters/${miiName}_1.png`;
       skinText = 'Personalizable';
       // Ocultar selector de skin y galería
       if (skinSelectContainer) skinSelectContainer.style.display = 'none';
       skinsGallery.classList.add('hidden');
     } else {
       const skin = skinSelect.value || 1;
-      iconPath = `/assets/smash/character_individual_skins/${character}/${skin}.png`;
+      iconPath = `/assets/smash/characters/${character}_${skin}.png`;
       skinText = `Skin ${skin}`;
       // Mostrar selector de skin y galería
       if (skinSelectContainer) skinSelectContainer.style.display = 'block';
@@ -226,8 +226,8 @@ window.SmashSeeding.updateSkinsGallery = function(slot, character) {
     
     if (!iconDiv) return;
     
-    // Actualizar icono de la skin usando la nueva estructura
-    const iconPath = `/assets/smash/character_individual_skins/${character}/${skinNum}.png`;
+    // Actualizar icono de la skin usando la estructura correcta: character_skinNumber.png
+    const iconPath = `/assets/smash/characters/${character}_${skinNum}.png`;
     iconDiv.innerHTML = `<img src="${iconPath}" alt="${window.SmashSeeding.characterNames[character]} Skin ${skinNum}" 
                          class="w-full h-full object-cover rounded"
                          onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'24\\' height=\\'24\\' viewBox=\\'0 0 24 24\\'%3E%3Crect width=\\'24\\' height=\\'24\\' fill=\\'%2364748b\\'/%3E%3Ctext x=\\'12\\' y=\\'15\\' text-anchor=\\'middle\\' fill=\\'%23f1f5f9\\' font-size=\\'10\\' font-weight=\\'bold\\'%3E${skinNum}%3C/text%3E%3C/svg%3E';">`;
