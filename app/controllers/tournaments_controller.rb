@@ -289,12 +289,9 @@ class TournamentsController < ApplicationController
     @end_date_filter = session[:tournaments_end_date]
     @sort_filter = session[:tournaments_sort] || "newest"
 
-    @tournaments = apply_filters(Tournament.all)
-    @tournaments = apply_sorting(@tournaments)
+    # Usar el servicio para obtener los torneos filtrados, igual que en index
+    @tournaments = TournamentsFilterService.new(params, session).call
     set_filter_options
-
-    # Aplicar paginación
-    @tournaments = @tournaments.page(params[:page]).per(100)
   end
 
   def record_not_found
