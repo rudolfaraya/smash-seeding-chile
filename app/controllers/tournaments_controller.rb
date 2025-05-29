@@ -5,6 +5,8 @@ class TournamentsController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
 
   def index
+    Rails.logger.info "=== Tournaments#index called with query: '#{params[:query]}', region: '#{params[:region]}', city: '#{params[:city]}', status: '#{params[:status]}', sort: '#{params[:sort]}', page: '#{params[:page]}', format: #{request.format} ==="
+
     # Si no hay parámetros de filtros, limpiar la sesión (clear all)
     if params[:query].nil? && params[:region].nil? && params[:city].nil? &&
        params[:status].nil? && params[:start_date].nil? && params[:end_date].nil? &&
@@ -12,31 +14,25 @@ class TournamentsController < ApplicationController
       clear_session_filters
     end
 
-    @query = params[:query]
-    @region_filter = params[:region]
-    @city_filter = params[:city]
-    @status_filter = params[:status]
-    @start_date_filter = params[:start_date]
-    @end_date_filter = params[:end_date]
-    @sort_filter = params[:sort] || "newest" # Por defecto: más nuevos
+    # Extraer parámetros para variables de instancia (para las vistas)
+    @query = params[:query] || session[:tournaments_query]
+    @region_filter = params[:region] || session[:tournaments_region]
+    @city_filter = params[:city] || session[:tournaments_city]
+    @status_filter = params[:status] || session[:tournaments_status]
+    @start_date_filter = params[:start_date] || session[:tournaments_start_date]
+    @end_date_filter = params[:end_date] || session[:tournaments_end_date]
+    @sort_filter = params[:sort] || session[:tournaments_sort] || "newest"
 
     # Guardar los filtros en la sesión para mantenerlos entre actualizaciones
-    session[:tournaments_query] = @query
-    session[:tournaments_region] = @region_filter
-    session[:tournaments_city] = @city_filter
-    session[:tournaments_status] = @status_filter
-    session[:tournaments_start_date] = @start_date_filter
-    session[:tournaments_end_date] = @end_date_filter
-    session[:tournaments_sort] = @sort_filter
+    save_filter_params_to_session
 
     # Configurar opciones de filtros primero
     set_filter_options
     
-    @tournaments = apply_filters(Tournament.all)
-    @tournaments = apply_sorting(@tournaments)
+    # Usar el servicio para obtener los torneos filtrados
+    @tournaments = TournamentsFilterService.new(params, session).call
 
-    # Aplicar paginación con Kaminari - 100 torneos por página
-    @tournaments = @tournaments.page(params[:page]).per(100)
+    Rails.logger.info "=== Found #{@tournaments.respond_to?(:total_count) ? @tournaments.total_count : @tournaments.size} tournaments with current filters ==="
 
     respond_to do |format|
       format.html do
@@ -217,80 +213,14 @@ class TournamentsController < ApplicationController
     session[:tournaments_sort] = nil
   end
 
-  def apply_filters(tournaments_scope)
-    # Filtrar por nombre si se proporciona un término de búsqueda
-    if @query.present?
-      tournaments_scope = tournaments_scope.where("LOWER(tournaments.name) LIKE LOWER(?)", "%#{@query}%")
-    end
-
-    # Filtrar por región
-    if @region_filter.present? && @region_filter != ""
-      tournaments_scope = tournaments_scope.by_region(@region_filter)
-    end
-
-    # Filtrar por ciudad
-    if @city_filter.present? && @city_filter != ""
-      tournaments_scope = tournaments_scope.by_city(@city_filter)
-    end
-
-    # Filtrar por estado (pasados/futuros)
-    if @status_filter.present? && @status_filter != ""
-      case @status_filter
-      when "upcoming"
-        tournaments_scope = tournaments_scope.where("start_at > ?", Time.current)
-      when "past"
-        tournaments_scope = tournaments_scope.where("start_at <= ?", Time.current)
-      end
-    end
-
-    # Filtrar por rango de fechas
-    if @start_date_filter.present?
-      begin
-        start_date = Date.parse(@start_date_filter)
-        tournaments_scope = tournaments_scope.where("start_at >= ?", start_date.beginning_of_day)
-      rescue Date::Error
-        # Ignorar fecha inválida
-      end
-    end
-
-    if @end_date_filter.present?
-      begin
-        end_date = Date.parse(@end_date_filter)
-        tournaments_scope = tournaments_scope.where("start_at <= ?", end_date.end_of_day)
-      rescue Date::Error
-        # Ignorar fecha inválida
-      end
-    end
-
-    # Precargar asociaciones y conteos para evitar N+1 queries en la vista
-    tournaments_scope
-      .includes(events: [ :event_seeds ]) # Para acceder a los objetos event y event_seed si es necesario
-      .left_joins(events: :event_seeds) # Para permitir conteos agregados
-      .select("tournaments.*, COUNT(DISTINCT events.id) AS events_count_data, COUNT(DISTINCT event_seeds.id) AS total_event_seeds_count_data")
-      .group("tournaments.id")
-  end
-
-  def apply_sorting(tournaments_scope)
-    case @sort_filter
-    when "oldest"
-      tournaments_scope.order(start_at: :asc)
-    when "newest"
-      tournaments_scope.order(start_at: :desc)
-    when "most_attendees"
-      # Para ordenamiento por asistentes, usar el scope especial con conteo de Smash
-      tournaments_scope = tournaments_scope.with_smash_attendees_count if tournaments_scope.respond_to?(:with_smash_attendees_count)
-      tournaments_scope.order(Arel.sql("COALESCE(smash_attendees_count_data, attendees_count, 0) DESC, start_at DESC"))
-    when "least_attendees"
-      # Para ordenamiento por asistentes, usar el scope especial con conteo de Smash
-      tournaments_scope = tournaments_scope.with_smash_attendees_count if tournaments_scope.respond_to?(:with_smash_attendees_count)
-      tournaments_scope.order(Arel.sql("COALESCE(smash_attendees_count_data, attendees_count, 0) ASC, start_at DESC"))
-    when "alphabetical_az"
-      tournaments_scope.order(Arel.sql("LOWER(tournaments.name) ASC"))
-    when "alphabetical_za"
-      tournaments_scope.order(Arel.sql("LOWER(tournaments.name) DESC"))
-    else
-      tournaments_scope.order(start_at: :desc) # Por defecto: más nuevos
-    end
+  def save_filter_params_to_session
+    session[:tournaments_query] = @query
+    session[:tournaments_region] = @region_filter
+    session[:tournaments_city] = @city_filter
+    session[:tournaments_status] = @status_filter
+    session[:tournaments_start_date] = @start_date_filter
+    session[:tournaments_end_date] = @end_date_filter
+    session[:tournaments_sort] = @sort_filter
   end
 
   def set_filter_options

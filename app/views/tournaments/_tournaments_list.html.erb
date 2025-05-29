@@ -68,14 +68,14 @@
                   <!-- Segunda línea: Cantidad de eventos -->
                   <div class="flex items-center">
                     <span class="text-xs text-slate-400">
-                      <%= tournament.calculated_events_count %> <%= tournament.calculated_events_count == 1 ? 'evento' : 'eventos' %>
+                      <%= tournament.calculated_events_count_optimized %> <%= tournament.calculated_events_count_optimized == 1 ? 'evento' : 'eventos' %>
                     </span>
                   </div>
                 </div>
               </td>
               <td class="py-3 px-6 text-center">
                 <div class="flex justify-center space-x-3">
-                  <% if tournament.calculated_events_count > 0 %>
+                  <% if tournament.calculated_events_count_optimized > 0 %>
                     <button id="toggle-events-<%= tournament.id %>" 
                             data-state="closed"
                             data-tournament-id="<%= tournament.id %>"
@@ -191,7 +191,7 @@
                 <%= tournament.online? ? "🌐 Online" : "📍 Presencial" %>
               </span>
               <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300">
-                <%= tournament.calculated_events_count %> <%= tournament.calculated_events_count == 1 ? 'evento' : 'eventos' %>
+                <%= tournament.calculated_events_count_optimized %> <%= tournament.calculated_events_count_optimized == 1 ? 'evento' : 'eventos' %>
               </span>
             </div>
             
@@ -205,18 +205,18 @@
                   </svg>
                   <span class="text-sm font-medium text-blue-400">
                     <%= best_count %> <%= best_count == 1 ? 'asistente' : 'asistentes' %>
-                    <% if tournament.calculated_smash_attendees_count > 0 && tournament.attendees_count.present? && tournament.calculated_smash_attendees_count != tournament.attendees_count %>
+                    <% if tournament.calculated_smash_attendees_count_optimized > 0 && tournament.attendees_count.present? && tournament.calculated_smash_attendees_count_optimized != tournament.attendees_count %>
                       <span class="text-xs text-green-400 ml-1" title="Conteo corregido: solo participantes de Smash">*</span>
                     <% end %>
                   </span>
                 </div>
-              <% elsif tournament.calculated_total_event_seeds_count > 0 %>
+              <% elsif tournament.calculated_total_event_seeds_count_optimized > 0 %>
                 <div class="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span class="text-sm font-medium text-slate-500">
-                    <%= pluralize(tournament.calculated_total_event_seeds_count, 'seed') %>
+                    <%= pluralize(tournament.calculated_total_event_seeds_count_optimized, 'seed') %>
                   </span>
                 </div>
               <% end %>
@@ -241,7 +241,7 @@
         
         <div class="flex justify-between items-center">
           <div class="flex space-x-2">
-            <% if tournament.calculated_events_count > 0 %>
+            <% if tournament.calculated_events_count_optimized > 0 %>
               <button id="toggle-events-mobile-<%= tournament.id %>" 
                       data-state="closed"
                       data-action="click->tournaments#toggleEventsMobile"
@@ -257,7 +257,7 @@
           </div>
         </div>
         
-        <% if tournament.calculated_events_count > 0 %>
+        <% if tournament.calculated_events_count_optimized > 0 %>
           <div id="mobile-events-<%= tournament.id %>" class="hidden mt-4 border-t border-slate-600 pt-4">
             <% tournament.events.sort_by(&:name).each do |event| %>
               <div class="flex justify-between items-center py-2 border-b border-slate-700 last:border-b-0">

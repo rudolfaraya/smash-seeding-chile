@@ -46,7 +46,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_28_192628) do
     t.string "character_stock_icon"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["event_id", "player_id"], name: "index_event_seeds_on_event_player"
     t.index ["event_id"], name: "index_event_seeds_on_event_id"
+    t.index ["player_id", "event_id", "seed_num"], name: "index_event_seeds_player_event_seed"
     t.index ["player_id", "event_id"], name: "index_event_seeds_on_player_and_event"
     t.index ["player_id"], name: "index_event_seeds_on_player_id"
   end
@@ -65,6 +67,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_28_192628) do
     t.integer "team_max_players"
     t.integer "attendees_count"
     t.index ["tournament_id", "id"], name: "index_events_on_tournament_and_id"
+    t.index ["tournament_id", "videogame_id", "team_max_players"], name: "index_events_on_tournament_videogame_team_max", where: "videogame_id = 1386"
+    t.index ["tournament_id", "videogame_id"], name: "index_events_on_tournament_videogame"
     t.index ["tournament_id"], name: "index_events_on_tournament_id"
   end
 
@@ -77,6 +81,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_28_192628) do
     t.index ["player_id", "team_id"], name: "index_player_teams_on_player_id_and_team_id", unique: true
     t.index ["player_id"], name: "index_player_teams_on_player_id"
     t.index ["player_id"], name: "index_player_teams_on_player_id_primary_unique", unique: true, where: "is_primary = true"
+    t.index ["team_id", "player_id"], name: "index_player_teams_on_team_player"
     t.index ["team_id"], name: "index_player_teams_on_team_id"
   end
 
@@ -101,9 +106,13 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_28_192628) do
     t.string "character_3"
     t.integer "skin_3", default: 1
     t.integer "start_gg_id"
+    t.index "LOWER(entrant_name)", name: "index_players_on_entrant_name_lower"
+    t.index "LOWER(name)", name: "index_players_on_name_lower"
+    t.index "LOWER(twitter_handle)", name: "index_players_on_twitter_handle_lower"
     t.index ["character_1"], name: "index_players_on_character_1"
     t.index ["character_2"], name: "index_players_on_character_2"
     t.index ["character_3"], name: "index_players_on_character_3"
+    t.index ["country"], name: "index_players_on_country"
     t.index ["name", "entrant_name"], name: "index_players_on_names"
     t.index ["start_gg_id"], name: "index_players_on_start_gg_id", unique: true
     t.index ["twitter_handle"], name: "index_players_on_twitter_handle"
@@ -132,8 +141,14 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_28_192628) do
     t.string "region"
     t.string "start_gg_url"
     t.integer "attendees_count"
+    t.index "LOWER(name)", name: "index_tournaments_on_name_lower"
+    t.index ["attendees_count", "start_at"], name: "index_tournaments_on_attendees_start_at"
     t.index ["city"], name: "index_tournaments_on_city"
     t.index ["region"], name: "index_tournaments_on_region"
+    t.index ["slug"], name: "index_tournaments_on_slug"
+    t.index ["start_at", "city"], name: "index_tournaments_on_start_at_and_city"
+    t.index ["start_at", "id"], name: "index_tournaments_on_start_at_and_id"
+    t.index ["start_at", "region"], name: "index_tournaments_on_start_at_and_region"
     t.index ["start_at"], name: "index_tournaments_on_start_at"
   end
 

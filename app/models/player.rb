@@ -228,12 +228,18 @@ class Player < ApplicationRecord
     teams.joins(:player_teams).where(player_teams: { is_primary: true }).first
   end
 
+  # Versión optimizada que usa includes para evitar N+1
+  def primary_team_optimized
+    return @primary_team_cached if defined?(@primary_team_cached)
+    @primary_team_cached = player_teams.includes(:team).find { |pt| pt.is_primary }&.team
+  end
+
   def secondary_teams
     teams.joins(:player_teams).where(player_teams: { is_primary: false })
   end
 
   def team_display
-    primary = primary_team
+    primary = primary_team_optimized
     return "Sin equipo" unless primary
     
     if primary.logo.present?
@@ -244,13 +250,13 @@ class Player < ApplicationRecord
   end
 
   def team_name_display
-    primary = primary_team
+    primary = primary_team_optimized
     return "Sin equipo" unless primary
     primary.display_name
   end
 
   def has_team?
-    primary_team.present?
+    primary_team_optimized.present?
   end
 
   # Asignar equipos a un jugador con uno principal
@@ -336,6 +342,58 @@ class Player < ApplicationRecord
       }
     end
   end
+
+  # Métodos optimizados para estadísticas
+  def events_count
+    return @events_count_cached if defined?(@events_count_cached)
+    @events_count_cached = event_seeds.size
+  end
+
+  def tournaments_count
+    return @tournaments_count_cached if defined?(@tournaments_count_cached)
+    @tournaments_count_cached = events.includes(:tournament).map(&:tournament).uniq.size
+  end
+
+  def recent_tournament
+    return @recent_tournament_cached if defined?(@recent_tournament_cached)
+    @recent_tournament_cached = events.includes(:tournament).map(&:tournament).max_by(&:start_at)
+  end
+
+  def recent_tournament_name
+    recent_tournament&.name
+  end
+
+  # Método para pre-cargar estadísticas optimizado
+  def self.with_preloaded_stats
+    includes(
+      event_seeds: { event: :tournament },
+      player_teams: :team
+    )
+  end
+
+  # Scope para filtros optimizados
+  scope :by_character, ->(character) {
+    where("character_1 = ? OR character_2 = ? OR character_3 = ?", character, character, character) if character.present?
+  }
+
+  scope :by_team, ->(team_id) {
+    joins(:player_teams).where(player_teams: { team_id: team_id }) if team_id.present?
+  }
+
+  scope :by_country, ->(country) {
+    where(country: country) if country.present?
+  }
+
+  scope :with_event_seeds, -> {
+    joins(:event_seeds).distinct
+  }
+
+  scope :search_optimized, ->(query) {
+    where(
+      "LOWER(players.name) LIKE LOWER(?) OR LOWER(players.entrant_name) LIKE LOWER(?) OR LOWER(players.twitter_handle) LIKE LOWER(?)",
+      "%#{query}%", "%#{query}%", "%#{query}%"
+    ) if query.present?
+  }
 
   private
 

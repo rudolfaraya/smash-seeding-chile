@@ -92,7 +92,7 @@
           <td class="text-center" style="height: 100px; padding: 0;">
             <div class="w-full h-full flex items-center justify-center">
               <% if player.has_team? %>
-                <% primary_team = player.primary_team || player.teams.first %>
+                <% primary_team = player.primary_team_optimized || player.teams.first %>
                 <% if primary_team&.logo_image&.attached? %>
                   <%= image_tag primary_team.logo_image, 
                         alt: primary_team.name,

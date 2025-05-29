@@ -128,9 +128,43 @@ class Tournament < ApplicationRecord
               .count(:player_id)
   end
 
+  # Métodos optimizados para estadísticas
+  def calculated_smash_attendees_count_optimized
+    return @smash_attendees_cached if defined?(@smash_attendees_cached)
+    @smash_attendees_cached = calculated_smash_attendees_count
+  end
+
+  def calculated_events_count_optimized
+    return @events_count_cached if defined?(@events_count_cached)
+    @events_count_cached = calculated_events_count
+  end
+
+  def calculated_total_event_seeds_count_optimized
+    return @event_seeds_count_cached if defined?(@event_seeds_count_cached)
+    @event_seeds_count_cached = calculated_total_event_seeds_count
+  end
+
+  # Método para verificar si un evento tiene seeds sin causar N+1
+  def has_seeds_optimized?
+    return @has_seeds_cached if defined?(@has_seeds_cached)
+    @has_seeds_cached = events.any? { |event| event.event_seeds.any? }
+  end
+
+  # Método para precargar estadísticas optimizado
+  def self.with_preloaded_stats
+    includes(events: :event_seeds)
+      .joins("LEFT JOIN events AS smash_events ON smash_events.tournament_id = tournaments.id AND smash_events.videogame_id = #{Event::SMASH_ULTIMATE_VIDEOGAME_ID} AND (smash_events.team_max_players IS NULL OR smash_events.team_max_players <= 1)")
+      .joins("LEFT JOIN event_seeds AS smash_seeds ON smash_seeds.event_id = smash_events.id")
+      .select("tournaments.*, 
+              COUNT(DISTINCT events.id) AS events_count_data,
+              COUNT(DISTINCT event_seeds.id) AS total_event_seeds_count_data,
+              COUNT(DISTINCT smash_seeds.player_id) AS smash_attendees_count_data")
+      .group("tournaments.id")
+  end
+
   # Método para determinar qué conteo de asistentes usar (prioriza el calculado sobre el de la API)
   def best_attendees_count
-    smash_count = calculated_smash_attendees_count
+    smash_count = calculated_smash_attendees_count_optimized
     
     # Si tenemos participantes de Smash, usar ese conteo
     if smash_count > 0
