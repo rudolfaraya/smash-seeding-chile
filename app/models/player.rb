@@ -9,8 +9,13 @@ class Player < ApplicationRecord
 
   validates :name, presence: true, on: :create
   validates :entrant_name, presence: true
-  validates :user_id, presence: true, uniqueness: true
-  validates :discriminator, presence: true, on: :create
+  
+  # Un jugador debe tener o user_id (con cuenta) o start_gg_id (sin cuenta)
+  validates :user_id, uniqueness: true, allow_nil: true
+  validates :start_gg_id, uniqueness: true, allow_nil: true
+  validate :must_have_user_id_or_start_gg_id
+  
+  validates :discriminator, presence: true, on: :create, if: :user_id?
 
   # Validaciones para personajes de Smash
   validates :skin_1, inclusion: { in: 1..8 }, allow_nil: true
@@ -199,6 +204,23 @@ class Player < ApplicationRecord
   # Marcar como actualizado recientemente
   def mark_as_recently_updated
     touch(:updated_at)
+  end
+
+  # Validación personalizada para requerir al menos uno de los identificadores
+  def must_have_user_id_or_start_gg_id
+    if user_id.nil? && start_gg_id.nil?
+      errors.add(:base, "Debe tener o user_id (con cuenta) o start_gg_id (sin cuenta)")
+    end
+  end
+
+  # Determinar si el jugador tiene cuenta de start.gg
+  def has_start_gg_account?
+    user_id.present?
+  end
+
+  # Obtener el identificador principal para búsquedas
+  def primary_identifier
+    user_id || start_gg_id
   end
 
   # Métodos para equipos

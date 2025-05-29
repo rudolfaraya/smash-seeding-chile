@@ -23,4 +23,28 @@ module PlayersHelper
       ["#{team.display_name} (#{team.players_count})", team.id]
     end
   end
+
+  def commune_options_for_chile
+    # Cargar el archivo JSON con las comunas de Chile
+    file_path = Rails.root.join('lib', 'assets', 'comunas_regiones_chile.json')
+    
+    begin
+      data = JSON.parse(File.read(file_path))
+      communes = []
+      
+      # Extraer todas las comunas de todas las regiones
+      data['regiones'].each do |region|
+        region['communes'].each do |commune|
+          communes << commune['name']
+        end
+      end
+      
+      # Ordenar alfabéticamente y convertir a formato para select
+      communes.sort.map { |commune| [commune, commune] }
+    rescue => e
+      Rails.logger.error "Error cargando comunas de Chile: #{e.message}"
+      # Fallback en caso de error
+      []
+    end
+  end
 end 

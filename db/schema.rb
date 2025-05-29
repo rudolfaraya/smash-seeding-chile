@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_27_214959) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_28_192628) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -63,6 +63,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_27_214959) do
     t.string "videogame_name"
     t.integer "team_min_players"
     t.integer "team_max_players"
+    t.integer "attendees_count"
     t.index ["tournament_id", "id"], name: "index_events_on_tournament_and_id"
     t.index ["tournament_id"], name: "index_events_on_tournament_id"
   end
@@ -99,10 +100,12 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_27_214959) do
     t.integer "skin_2", default: 1
     t.string "character_3"
     t.integer "skin_3", default: 1
+    t.integer "start_gg_id"
     t.index ["character_1"], name: "index_players_on_character_1"
     t.index ["character_2"], name: "index_players_on_character_2"
     t.index ["character_3"], name: "index_players_on_character_3"
     t.index ["name", "entrant_name"], name: "index_players_on_names"
+    t.index ["start_gg_id"], name: "index_players_on_start_gg_id", unique: true
     t.index ["twitter_handle"], name: "index_players_on_twitter_handle"
   end
 

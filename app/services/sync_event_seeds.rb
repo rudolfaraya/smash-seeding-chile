@@ -161,9 +161,10 @@ class SyncEventSeeds
 
     all_seeds = []
     page = 1
+    attendees_count = 0
 
     loop do
-      Rails.logger.info "📡 Página #{page} - Obteniendo seeds DIRECTAMENTE por ID de evento: #{@event.id}"
+      Rails.logger.info "📡 Página #{page} - Obteniendo TODOS los entrants del evento: #{@event.id}"
 
       variables = {
         eventId: @event.id,
@@ -171,7 +172,7 @@ class SyncEventSeeds
         page: page
       }
 
-      response = @client.query(StartGgQueries::EVENT_SEEDING_BY_ID_QUERY, variables, "EventSeedingById")
+      response = @client.query(StartGgQueries::EVENT_ALL_ENTRANTS_QUERY, variables, "EventAllEntrants")
 
       # Validar que la respuesta tenga la estructura esperada
       unless response&.dig("data", "event")
@@ -180,7 +181,10 @@ class SyncEventSeeds
       end
 
       event_data = response["data"]["event"]
-      Rails.logger.info "✅ EVENTO ENCONTRADO DIRECTAMENTE: #{event_data['name']} (ID: #{event_data['id']})"
+      Rails.logger.info "✅ EVENTO ENCONTRADO: #{event_data['name']} (ID: #{event_data['id']})"
+      
+      # Obtener el número total de entrants del evento
+      attendees_count = event_data["numEntrants"] if attendees_count == 0
 
       entrants = event_data.dig("entrants", "nodes") || []
       Rails.logger.info "👥 Entrants encontrados en página #{page}: #{entrants.length}"
@@ -195,26 +199,51 @@ class SyncEventSeeds
         next unless entrant["initialSeedNum"] && entrant["participants"]&.any?
 
         participant = entrant["participants"].first
-        next unless participant&.dig("player", "user")
+        next unless participant&.dig("player")
 
-        user_data = participant["player"]["user"]
+        player_data = participant["player"]
+        user_data = player_data["user"] # Puede ser nil
 
-        seed_data = {
-          seed_num: entrant["initialSeedNum"],
-          player_name: entrant["name"],
-          user_id: user_data["id"],
-          player_id: participant["player"]["id"],
-          user_slug: user_data["slug"],
-          name: user_data["name"],
-          discriminator: user_data["discriminator"],
-          bio: user_data["bio"],
-          birthday: user_data["birthday"],
-          gender_pronoun: user_data["genderPronoun"],
-          city: user_data.dig("location", "city"),
-          state: user_data.dig("location", "state"),
-          country: user_data.dig("location", "country"),
-          twitter: user_data.dig("authorizations")&.first&.dig("externalUsername")
-        }
+        if user_data
+          # Entrant con cuenta de start.gg
+          seed_data = {
+            seed_num: entrant["initialSeedNum"],
+            player_name: entrant["name"],
+            user_id: user_data["id"],
+            player_id: player_data["id"],
+            user_slug: user_data["slug"],
+            name: user_data["name"],
+            discriminator: user_data["discriminator"],
+            bio: user_data["bio"],
+            birthday: user_data["birthday"],
+            gender_pronoun: user_data["genderPronoun"],
+            city: user_data.dig("location", "city"),
+            state: user_data.dig("location", "state"),
+            country: user_data.dig("location", "country"),
+            twitter: user_data.dig("authorizations")&.first&.dig("externalUsername"),
+            has_user_account: true
+          }
+        else
+          # Entrant SIN cuenta de start.gg - usar solo datos del entrant
+          seed_data = {
+            seed_num: entrant["initialSeedNum"],
+            player_name: entrant["name"],
+            user_id: nil,
+            player_id: player_data["id"],
+            user_slug: nil,
+            name: entrant["name"], # Usar el nombre del entrant
+            discriminator: nil,
+            bio: nil,
+            birthday: nil,
+            gender_pronoun: nil,
+            city: nil,
+            state: nil,
+            country: nil,
+            twitter: nil,
+            has_user_account: false
+          }
+          Rails.logger.info "👤 Entrant sin cuenta: #{entrant['name']} (Seed: #{entrant['initialSeedNum']})"
+        end
 
         all_seeds << seed_data
       end
@@ -231,11 +260,43 @@ class SyncEventSeeds
       page += 1
     end
 
-    Rails.logger.info "📊 Total seeds obtenidos DIRECTAMENTE del evento #{@event.id}: #{all_seeds.length}"
+    # Actualizar el attendees_count del evento
+    if attendees_count > 0 && @event.attendees_count != attendees_count
+      @event.update_column(:attendees_count, attendees_count)
+      Rails.logger.info "📊 Actualizado attendees_count del evento: #{attendees_count}"
+    end
+
+    Rails.logger.info "📊 Total seeds obtenidos del evento #{@event.id}: #{all_seeds.length}"
+    Rails.logger.info "📊 Con cuenta: #{all_seeds.count { |s| s[:has_user_account] }}, Sin cuenta: #{all_seeds.count { |s| !s[:has_user_account] }}"
     all_seeds
   end
 
   def find_or_create_player(seed_data)
+    # Para jugadores sin cuenta, buscar por player_id de start.gg
+    if seed_data[:user_id].nil?
+      # Buscar por start_gg_id (que corresponde al player_id)
+      player = Player.find_by(start_gg_id: seed_data[:player_id])
+      
+      if player
+        # Actualizar el entrant_name si es necesario
+        if @update_players && player.entrant_name != seed_data[:player_name]
+          player.update!(entrant_name: seed_data[:player_name])
+        end
+        return player
+      end
+      
+      # Crear nuevo jugador sin cuenta
+      new_player = Player.new(
+        start_gg_id: seed_data[:player_id],
+        entrant_name: seed_data[:player_name],
+        name: seed_data[:name].present? ? seed_data[:name] : seed_data[:player_name], # Usar entrant_name como fallback
+        user_id: nil # Sin cuenta
+      )
+      new_player.save!
+      Rails.logger.info "✨ Creado jugador sin cuenta: #{seed_data[:player_name]} (start_gg_id: #{seed_data[:player_id]})"
+      return new_player
+    end
+
     # Buscar jugador existente por user_id (no start_gg_id)
     player = Player.find_by(user_id: seed_data[:user_id])
 
@@ -243,7 +304,7 @@ class SyncEventSeeds
       # Actualizar datos del jugador si es necesario
       if @update_players
         player.update!(
-          name: seed_data[:name],
+          name: seed_data[:name].present? ? seed_data[:name] : seed_data[:player_name], # Usar entrant_name como fallback
           discriminator: seed_data[:discriminator],
           bio: seed_data[:bio],
           birthday: seed_data[:birthday],
@@ -259,11 +320,12 @@ class SyncEventSeeds
       return player
     end
 
-    # Crear nuevo jugador
+    # Crear nuevo jugador con cuenta
     new_player = Player.new(
       user_id: seed_data[:user_id],
+      start_gg_id: seed_data[:player_id],
       entrant_name: seed_data[:player_name],
-      name: seed_data[:name],
+      name: seed_data[:name].present? ? seed_data[:name] : seed_data[:player_name], # Usar entrant_name como fallback
       discriminator: seed_data[:discriminator],
       bio: seed_data[:bio],
       birthday: seed_data[:birthday],

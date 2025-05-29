@@ -48,6 +48,29 @@ class Event < ApplicationRecord
     start_gg_event_id.present? && start_gg_event_id != 0
   end
 
+  # Obtener el número real de participantes registrados en start.gg
+  def attendees_count_display
+    attendees_count || "No disponible"
+  end
+
+  # Verificar si hay discrepancia entre seeds y attendees
+  def has_attendees_discrepancy?
+    return false unless attendees_count.present?
+    (attendees_count - calculated_event_seeds_count).abs > 0
+  end
+
+  # Obtener la diferencia entre attendees y seeds
+  def attendees_seeds_difference
+    return 0 unless attendees_count.present?
+    attendees_count - calculated_event_seeds_count
+  end
+
+  # Porcentaje de completitud de seeds vs attendees
+  def seeds_completeness_percentage
+    return 100 unless attendees_count.present? && attendees_count > 0
+    ((calculated_event_seeds_count.to_f / attendees_count) * 100).round(1)
+  end
+
   # Métodos para identificar el tipo de evento
   def smash_ultimate?
     videogame_id == SMASH_ULTIMATE_VIDEOGAME_ID

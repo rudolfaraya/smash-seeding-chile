@@ -266,6 +266,48 @@ module StartGgQueries
     }
   GRAPHQL
 
+  # Consulta mejorada que obtiene TODOS los entrants, incluyendo los que no tienen user
+  EVENT_ALL_ENTRANTS_QUERY = <<~GRAPHQL
+    query EventAllEntrants($eventId: ID!, $perPage: Int, $page: Int) {
+      event(id: $eventId) {
+        id
+        name
+        numEntrants
+        entrants(query: { perPage: $perPage, page: $page }) {
+          nodes {
+            id
+            name
+            initialSeedNum
+            participants {
+              player {
+                id
+                user {
+                  id
+                  slug
+                  name
+                  discriminator
+                  bio
+                  birthday
+                  genderPronoun
+                  location {
+                    city
+                    state
+                    country
+                  }
+                  authorizations(types: [TWITTER]) { externalUsername }
+                }
+              }
+            }
+          }
+          pageInfo {
+            total
+            totalPages
+          }
+        }
+      }
+    }
+  GRAPHQL
+
   def self.fetch_tournaments(client, per_page = 25)
     tournaments = []
     page = 1
