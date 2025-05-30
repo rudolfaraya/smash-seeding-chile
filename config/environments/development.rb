@@ -43,8 +43,13 @@ Rails.application.configure do
 
   config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
   
-  # Configuración de Letter Opener para desarrollo (abre emails en el navegador)
-  config.action_mailer.delivery_method = :letter_opener
+  # Configuración de Mailcatcher para desarrollo (interfaz web en :1080)
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+    :address => "localhost",
+    :port => 1025,
+    :domain => 'localhost.localdomain'
+  }
   config.action_mailer.perform_deliveries = true
 
   # Print deprecation notices to the Rails logger.
