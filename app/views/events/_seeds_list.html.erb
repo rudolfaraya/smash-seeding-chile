@@ -1,4 +1,39 @@
 <% if seeds.any? %>
+  <style>
+    .factor-badge-compact {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-align: center;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      min-width: 35px;
+      display: inline-block;
+    }
+
+    .factor-positive-compact {
+      color: #047857;
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      border-color: #6ee7b7;
+      box-shadow: 0 1px 2px rgba(16, 185, 129, 0.2);
+    }
+
+    .factor-negative-compact {
+      color: #b91c1c;
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      border-color: #f87171;
+      box-shadow: 0 1px 2px rgba(220, 38, 38, 0.2);
+    }
+
+    .factor-neutral-compact {
+      color: #1d4ed8;
+      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      border-color: #93c5fd;
+      box-shadow: 0 1px 2px rgba(59, 130, 246, 0.2);
+    }
+  </style>
   <div class="bg-slate-800 rounded-xl shadow-md overflow-hidden border border-slate-600" id="seed-content-<%= event.id %>">
     <div class="px-6 py-2 bg-gradient-to-r from-slate-900 to-blue-900 border-b border-red-500">
       <div class="flex justify-between items-center">
@@ -86,9 +121,32 @@
         <% seeds.each_with_index do |event_seed, index| %>
           <tr class="<%= index % 2 == 0 ? 'bg-slate-800' : 'bg-slate-700' %> hover:bg-slate-600 transition-colors duration-150 ease-in-out">
             <td class="px-3 py-2 whitespace-nowrap text-[10px] font-medium">
-              <span class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-red-900 text-red-200 text-[9px] border border-red-500" style="text-shadow: 0 0 3px #f87171;">
-                <%= event_seed.seed_num %>
-              </span>
+              <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-red-900 text-red-200 text-[9px] border border-red-500" style="text-shadow: 0 0 3px #f87171;">
+                  <%= event_seed.seed_num %>
+                </span>
+                <% if event_seed.placement.present? %>
+                  <% icon_data = event_seed.performance_icon_data %>
+                  <% factor = event_seed.round_performance_factor %>
+                  <% if factor %>
+                    <% badge_class = case factor <=> 0 %>
+                    <% when 1 %>
+                      <% "factor-badge-compact factor-positive-compact" %>
+                    <% when -1 %>
+                      <% "factor-badge-compact factor-negative-compact" %>
+                    <% else %>
+                      <% "factor-badge-compact factor-neutral-compact" %>
+                    <% end %>
+                    <span class="<%= badge_class %>" title="<%= icon_data[:title] %>">
+                      <%= icon_data[:icon] %>
+                    </span>
+                  <% else %>
+                    <span class="factor-badge-compact" style="background: #374151; color: #9ca3af; border-color: #4b5563;" title="Sin datos de placement">
+                      —
+                    </span>
+                  <% end %>
+                <% end %>
+              </div>
             </td>
             
             <td class="px-3 py-2">

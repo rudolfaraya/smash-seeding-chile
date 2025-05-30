@@ -233,7 +233,7 @@ class SyncSmashData
 
     begin
       events_data = fetch_events(tournament.slug)
-      
+
       # Filtrar eventos para obtener solo Smash Ultimate Singles
       filter_service = EventFilterService.new
       valid_events_data = filter_service.filter_events_during_sync(events_data)
@@ -241,14 +241,14 @@ class SyncSmashData
       valid_events_data.each do |event_data|
         Event.find_or_create_by(tournament: tournament, slug: event_data["slug"]) do |event|
           event.name = event_data["name"]
-          event.id = event_data["id"]
-          
+          event.start_gg_event_id = event_data["id"]
+
           # Almacenar información del videojuego
           if event_data["videogame"]
             event.videogame_id = event_data["videogame"]["id"]
             event.videogame_name = event_data["videogame"]["name"]
           end
-          
+
           # Almacenar información del tamaño del equipo
           if event_data["teamRosterSize"]
             event.team_min_players = event_data["teamRosterSize"]["minPlayers"]
@@ -259,13 +259,16 @@ class SyncSmashData
 
       count_after = tournament.events.reload.count
       new_events = count_after - count_before
-      
+
       if valid_events_data.size != events_data.size
         filtered_count = events_data.size - valid_events_data.size
         Rails.logger.info "  ✅ Se crearon #{new_events} eventos válidos para #{tournament.name} (#{filtered_count} eventos filtrados)"
       else
         Rails.logger.info "  ✅ Se crearon #{new_events} eventos para #{tournament.name}"
       end
+
+      # 🆕 SINCRONIZAR PLACEMENTS AUTOMÁTICAMENTE si los eventos tienen start_gg_event_id
+      sync_placements_for_tournament_events(tournament)
 
       new_events
     rescue StandardError => e
@@ -291,6 +294,44 @@ class SyncSmashData
     else
       Rails.logger.error "Error al obtener eventos para torneo #{slug}: #{e.message}"
       raise
+    end
+  end
+
+  # Sincronizar placements para todos los eventos de un torneo que tengan start_gg_event_id
+  def sync_placements_for_tournament_events(tournament)
+    events_with_id = tournament.events.where.not(start_gg_event_id: nil)
+
+    return if events_with_id.empty?
+
+    Rails.logger.info "  🏆 Sincronizando placements para #{events_with_id.count} eventos..."
+
+    placement_count = 0
+    events_with_id.each do |event|
+      begin
+        # Solo sincronizar si no se han sincronizado antes
+        if event.placements_last_synced_at.nil?
+          event.fetch_and_save_placements(force: false)
+          event_placements = event.event_seeds.where.not(placement: nil).count
+
+          if event_placements > 0
+            placement_count += event_placements
+            Rails.logger.info "    ✅ #{event.name}: #{event_placements} placements"
+          else
+            Rails.logger.info "    ⚠️  #{event.name}: Sin placements disponibles"
+          end
+        else
+          Rails.logger.info "    ⏭️  #{event.name}: Ya sincronizado"
+        end
+
+        # Rate limiting
+        sleep(1)
+      rescue => e
+        Rails.logger.error "    ❌ Error en #{event.name}: #{e.message}"
+      end
+    end
+
+    if placement_count > 0
+      Rails.logger.info "  🎯 Total placements sincronizados: #{placement_count}"
     end
   end
 

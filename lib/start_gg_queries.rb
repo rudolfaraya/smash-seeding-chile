@@ -308,6 +308,51 @@ module StartGgQueries
     }
   GRAPHQL
 
+  # Consulta para obtener standings/placements finales de un evento
+  EVENT_STANDINGS_QUERY = <<~GRAPHQL
+    query EventStandings($eventId: ID!, $perPage: Int, $page: Int) {
+      event(id: $eventId) {
+        id
+        name
+        standings(query: { perPage: $perPage, page: $page }) {
+          nodes {
+            id
+            placement
+            entrant {
+              id
+              name
+              initialSeedNum
+              participants {
+                player {
+                  id
+                  user {
+                    id
+                    slug
+                    name
+                    discriminator
+                    bio
+                    birthday
+                    genderPronoun
+                    location {
+                      city
+                      state
+                      country
+                    }
+                    authorizations(types: [TWITTER]) { externalUsername }
+                  }
+                }
+              }
+            }
+          }
+          pageInfo {
+            total
+            totalPages
+          }
+        }
+      }
+    }
+  GRAPHQL
+
   def self.fetch_tournaments(client, per_page = 25)
     tournaments = []
     page = 1
@@ -537,6 +582,64 @@ module StartGgQueries
     rescue StandardError => e
       Rails.logger.error "Error inesperado obteniendo tag del usuario #{user_id}: #{e.message}"
       nil
+    end
+  end
+
+  # Método para obtener standings/placements de un evento
+  def self.fetch_event_standings(client, event_id)
+    Rails.logger.info "🏆 Obteniendo standings del evento ID: #{event_id}"
+    standings = []
+    page = 1
+    total_pages = nil
+
+    begin
+      loop do
+        variables = { eventId: event_id, perPage: 100, page: page }
+        response = client.query(EVENT_STANDINGS_QUERY, variables, "EventStandings")
+
+        unless response&.dig("data", "event")
+          Rails.logger.warn "⚠️ No se encontró evento #{event_id} o no tiene standings"
+          break
+        end
+
+        event_data = response["data"]["event"]
+        standings_data = event_data.dig("standings", "nodes") || []
+
+        if standings_data.empty?
+          Rails.logger.info "ℹ️ No hay más standings en página #{page}"
+          break
+        end
+
+        standings.concat(standings_data)
+
+        page_info = event_data.dig("standings", "pageInfo")
+        total_pages ||= page_info&.dig("totalPages") || 1
+
+        Rails.logger.info "📄 Página #{page}/#{total_pages}: #{standings_data.length} standings obtenidos"
+
+        break if page >= total_pages
+        page += 1
+
+        # Rate limiting
+        sleep(0.75)
+      end
+
+      Rails.logger.info "✅ Total standings obtenidos para evento #{event_id}: #{standings.length}"
+      standings
+
+    rescue Faraday::ClientError => e
+      if e.response[:status] == 429
+        Rails.logger.warn "Rate limit excedido para standings del evento #{event_id}. Esperando 60 segundos..."
+        sleep(60)
+        # Reintentar una vez
+        retry
+      else
+        Rails.logger.error "Error obteniendo standings del evento #{event_id}: #{e.message}"
+        []
+      end
+    rescue StandardError => e
+      Rails.logger.error "Error inesperado obteniendo standings del evento #{event_id}: #{e.message}"
+      []
     end
   end
 end

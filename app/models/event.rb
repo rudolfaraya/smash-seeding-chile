@@ -14,7 +14,7 @@ class Event < ApplicationRecord
 
   # Scopes para filtrar eventos
   scope :smash_ultimate, -> { where(videogame_id: SMASH_ULTIMATE_VIDEOGAME_ID) }
-  scope :singles_only, -> { where('team_max_players IS NULL OR team_max_players <= 1') }
+  scope :singles_only, -> { where("team_max_players IS NULL OR team_max_players <= 1") }
   scope :valid_smash_singles, -> { smash_ultimate.singles_only }
 
   # Callback para generar la URL de start.gg del evento
@@ -160,41 +160,23 @@ class Event < ApplicationRecord
         end
         Rails.logger.info "Seed guardado: #{entrant["name"]} (Seed: #{es.seed_num})"
       end
+
+      Rails.logger.info "✅ Seeds sincronizados para #{name}: #{seeds_data.size} entrants procesados"
+
+      # Si es sincronización forzada, también sincronizar placements
+      if force && start_gg_event_id.present?
+        Rails.logger.info "🏆 Sincronizando placements para sincronización forzada..."
+        fetch_and_save_placements(force: true)
+      end
+
     rescue Faraday::ClientError => e
-      if e.response[:status] == 429
-        Rails.logger.warn "Rate limit excedido para evento #{slug} en torneo #{tournament.slug}. Esperando 60 segundos..."
+      retries += 1
+      if e.response[:status] == 429 && retries <= max_retries
+        Rails.logger.warn "Rate limit excedido para evento #{name}. Reintento #{retries}/#{max_retries} en #{retry_delay} segundos..."
         sleep(retry_delay)
         retry
-      elsif e.response[:status] == 503
-        if retries < max_retries
-          retries += 1
-          Rails.logger.warn "Servicio no disponible (503) para evento #{slug}. Reintento #{retries}/#{max_retries} después de #{retry_delay} segundos..."
-          sleep(retry_delay)
-          retry
-        else
-          Rails.logger.error "Servicio no disponible (503) después de #{max_retries} reintentos para evento #{slug} en torneo #{tournament.slug}"
-          raise "Error 503 persistente: Los servicios de Start.gg no están disponibles."
-        end
-      elsif [ 404, 500 ].include?(e.response[:status])
-        Rails.logger.error "Error HTTP #{e.response[:status]} al obtener seeds para evento #{slug} en torneo #{tournament.slug}: #{e.response[:body]}"
-        raise "Error HTTP al obtener seeds: #{e.response[:status]} - #{e.response[:body]}"
       else
-        Rails.logger.error "Error al obtener seeds para evento #{slug} en torneo #{tournament.slug}: #{e.message}"
-        raise
-      end
-    rescue JSON::ParserError => e
-      if e.message.match(/unexpected character: "<!DOCTYPE html/)
-        if retries < max_retries
-          retries += 1
-          Rails.logger.warn "Respuesta HTML inesperada para evento #{slug}. Reintento #{retries}/#{max_retries} después de #{retry_delay} segundos..."
-          sleep(retry_delay)
-          retry
-        else
-          Rails.logger.error "Respuesta HTML persistente después de #{max_retries} reintentos para evento #{slug} en torneo #{tournament.slug}"
-          raise "Error persistente: La API de Start.gg devolvió HTML en lugar de JSON."
-        end
-      else
-        Rails.logger.error "Error al parsear JSON para evento #{slug}: #{e.message}"
+        Rails.logger.error "Error sincronizando evento #{name}: #{e.message}"
         raise
       end
     rescue StandardError => e
@@ -202,6 +184,94 @@ class Event < ApplicationRecord
       raise
     end
     sleep 0.75 # Retraso para respetar los límites de rate limiting (80 solicitudes/minuto)
+  end
+
+  # Método para sincronizar placements (resultados finales) desde start.gg
+  def fetch_and_save_placements(force: false, max_retries: 3, retry_delay: 60)
+    return unless start_gg_event_id.present?
+
+    # Si no es forzado, verificar si ya hay placements
+    unless force
+      return if event_seeds.where.not(placement: nil).exists?
+    end
+
+    Rails.logger.info "🏆 Sincronizando placements para el evento: #{name} (ID: #{start_gg_event_id})"
+    retries = 0
+
+    begin
+      client = StartGgClient.new
+      standings = StartGgQueries.fetch_event_standings(client, start_gg_event_id)
+
+      if standings.empty?
+        Rails.logger.warn "⚠️ No se encontraron standings para el evento #{name}"
+        return
+      end
+
+      updated_count = 0
+      created_count = 0
+
+      standings.each do |standing|
+        entrant = standing["entrant"]
+        next unless entrant && entrant["participants"].present?
+
+        player_data = entrant["participants"].first["player"]
+        user = player_data["user"] || {}
+        placement = standing["placement"]
+
+        next unless placement.present?
+
+        # Buscar al jugador
+        player = if user["id"].present?
+          Player.find_by(user_id: user["id"])
+        else
+          # Fallback: buscar por nombre del entrant
+          Player.find_by(entrant_name: entrant["name"])
+        end
+
+        if player
+          # Buscar el event_seed correspondiente
+          event_seed = event_seeds.find_by(player: player)
+
+          if event_seed
+            # Actualizar placement si es diferente
+            if event_seed.placement != placement
+              event_seed.update!(placement: placement)
+              updated_count += 1
+              Rails.logger.info "📊 Actualizado placement: #{player.entrant_name} - Posición #{placement}"
+            end
+          else
+            # Crear event_seed con placement si no existe
+            # Esto puede pasar si el jugador participó pero no se sincronizó en seeds
+            event_seed = event_seeds.create!(
+              player: player,
+              seed_num: entrant["initialSeedNum"],
+              placement: placement
+            )
+            created_count += 1
+            Rails.logger.info "➕ Creado event_seed con placement: #{player.entrant_name} - Seed #{entrant["initialSeedNum"]} - Posición #{placement}"
+          end
+        else
+          Rails.logger.warn "⚠️ No se encontró jugador para el entrant: #{entrant["name"]} (User ID: #{user["id"]})"
+        end
+      end
+
+      Rails.logger.info "✅ Sincronización de placements completada para #{name}: #{updated_count} actualizados, #{created_count} creados"
+      update(placements_last_synced_at: Time.current)
+
+    rescue Faraday::ClientError => e
+      retries += 1
+      if e.response[:status] == 429 && retries <= max_retries
+        Rails.logger.warn "Rate limit excedido para placements del evento #{name}. Reintento #{retries}/#{max_retries} en #{retry_delay} segundos..."
+        sleep(retry_delay)
+        retry
+      else
+        Rails.logger.error "Error sincronizando placements para evento #{name}: #{e.message}"
+        raise
+      end
+    rescue StandardError => e
+      Rails.logger.error "Error procesando placements para evento #{name}: #{e.message}"
+      raise
+    end
   end
 
   private

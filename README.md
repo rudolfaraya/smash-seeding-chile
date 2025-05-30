@@ -315,6 +315,41 @@ bin/rails db:backup
 bin/rails system:check_integrity
 ```
 
+## 🎮 Personajes
+- `rake characters:download_all_assets` - Descargar todos los assets de personajes
+- `rake characters:sync_icons` - Sincronizar iconos de personajes
+- `rake characters:download_missing` - Descargar assets faltantes
+
+#### 🏆 Placements
+- `rake placements:sync_event[event_id]` - Sincronizar placements de un evento específico
+- `rake placements:sync_tournament[tournament_id]` - Sincronizar placements de todos los eventos de un torneo
+- `rake placements:sync_historical` - Sincronizar placements históricos (últimos 6 meses)
+- `rake placements:sync_historical_advanced` - Mostrar opciones avanzadas de sincronización
+- `rake placements:analyze_performance` - Analizar rendimiento vs seeds (top/worst performers)
+- `rake placements:analyze_round_performance` - **NUEVO**: Análisis de factores por rondas avanzadas
+
+#### 🎯 Factores de Rendimiento por Rondas
+El sistema ahora calcula el **factor de rendimiento basado en rondas avanzadas** en brackets de doble eliminación:
+
+**Visualización**:
+- 🔥 +N = Avanzó N rondas más de lo esperado (verde)
+- 🎯 0 = Cumplió exactamente sus expectativas (azul)  
+- ❄️ -N = Salió N rondas antes de lo esperado (rojo)
+
+**Ejemplo**: Si un jugador seed 17 obtiene 9° lugar, su factor es +2 (avanzó 2 rondas más).
+
+Los íconos aparecen automáticamente en las vistas de seeds cuando hay datos de placement disponibles.
+
+#### 🔧 Actualización de start_gg_event_id
+- `rake events:show_start_gg_id_stats` - Mostrar estadísticas de eventos con/sin start_gg_event_id
+- `rake 'events:update_missing_start_gg_ids[dry-run]'` - Simular actualización de IDs faltantes
+- `rake 'events:update_missing_start_gg_ids[false]'` - Ejecutar actualización de IDs faltantes
+- `rake 'events:update_missing_start_gg_ids[false,2.0]'` - Ejecutar con delay personalizado
+- `ruby scripts/update_missing_start_gg_event_ids.rb --dry-run` - Script directo (simulación)
+- `ruby scripts/update_missing_start_gg_event_ids.rb --delay 2.0` - Script con delay personalizado
+
+**Importante**: Los eventos necesitan `start_gg_event_id` para sincronizar placements. Este script corrige eventos creados antes del fix del bug de sincronización.
+
 ## 🗂️ Estructura del Proyecto
 
 ```
@@ -363,7 +398,8 @@ smash-seeding-chile/
 │   ├── analyze_attendees_discrepancies.rb # Análisis asistentes
 │   ├── test_attendees_fix.rb           # Pruebas correcciones
 │   ├── test_auth_restrictions.rb       # Pruebas auth
-│   └── test_startgg_bug.sh            # Pruebas bugs API
+│   ├── test_startgg_bug.sh            # Pruebas bugs API
+│   └── sync_historical_placements.rb    # Sincronizar placements históricos
 ├── config/
 │   ├── routes.rb            # Rutas de la aplicación
 │   ├── database.yml         # Configuración BD
@@ -942,7 +978,8 @@ scripts/
 ├── analyze_attendees_discrepancies.rb # Análisis asistentes
 ├── test_attendees_fix.rb            # Pruebas de correcciones
 ├── test_auth_restrictions.rb        # Pruebas de autenticación
-└── test_startgg_bug.sh              # Pruebas de bugs Start.gg
+├── test_startgg_bug.sh              # Pruebas de bugs API
+└── sync_historical_placements.rb    # Sincronizar placements históricos
 ```
 
 ## 📊 Scripts de Análisis y Gestión de Jugadores
@@ -1290,3 +1327,17 @@ ruby scripts/simple_combinations_export.rb
 - Todos los scripts cargan automáticamente el entorno de Rails
 - Se pueden ejecutar directamente desde línea de comandos
 - También funcionan desde Rails console usando `load 'scripts/nombre_script.rb'`
+
+16. **`sync_historical_placements.rb`** - Sincronizar placements históricos
+    ```bash
+    ruby scripts/sync_historical_placements.rb
+    ruby scripts/sync_historical_placements.rb --force
+    ruby scripts/sync_historical_placements.rb --dry-run
+    ruby scripts/sync_historical_placements.rb --delay 2.0
+    ```
+    - Sincroniza resultados finales (placements) de eventos desde start.gg
+    - `--force`: Actualiza placements existentes
+    - `--dry-run`: Simula sin hacer cambios
+    - `--delay`: Tiempo entre requests (default: 1.0s)
+    - Solo procesa eventos de los últimos 6 meses
+    - Proporciona análisis de rendimiento vs expectativas

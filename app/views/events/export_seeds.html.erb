@@ -27,8 +27,9 @@
       border-radius: 16px;
       box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
       padding: 30px;
-      max-width: 1000px;
+      max-width: 1400px;
       width: 100%;
+      overflow-x: auto;
     }
     
     .header {
@@ -116,6 +117,57 @@
       font-size: 0.8rem;
       box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
       flex-shrink: 0;
+    }
+
+    .placement-number {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white;
+      font-weight: 900;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 8px;
+      font-size: 0.7rem;
+      box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+      flex-shrink: 0;
+    }
+
+    .factor-badge {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      margin-right: 8px;
+      flex-shrink: 0;
+      min-width: 45px;
+      text-align: center;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .factor-positive {
+      color: #047857;
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      border-color: #6ee7b7;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    }
+
+    .factor-negative {
+      color: #b91c1c;
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      border-color: #f87171;
+      box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+    }
+
+    .factor-neutral {
+      color: #1d4ed8;
+      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      border-color: #93c5fd;
+      box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
     }
     
     .character-icon {
@@ -282,6 +334,22 @@
       letter-spacing: 0.5px;
     }
     
+    .data-section {
+      display: flex;
+      align-items: center;
+      margin-right: 12px;
+    }
+    
+    .data-label {
+      font-size: 0.6rem;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+      text-align: center;
+    }
+    
     /* Responsive */
     @media (max-width: 768px) {
       .seeds-grid {
@@ -339,6 +407,14 @@
     <div class="header">
       <h1 class="tournament-name"><%= @tournament.name %></h1>
       <h2 class="event-name"><%= @event.name %></h2>
+      <div class="subtitle" style="margin-top: 12px; padding: 8px 16px; background: #f1f5f9; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <strong style="color: #1e293b;">Leyenda:</strong> 
+        <span style="color: #dc2626; font-weight: 600;">●</span> Seed asignado • 
+        <span style="color: #f59e0b; font-weight: 600;">●</span> Placement final • 
+        <span style="color: #047857; font-weight: 600;">↗</span> Mejor que esperado • 
+        <span style="color: #b91c1c; font-weight: 600;">↘</span> Peor que esperado • 
+        <span style="color: #1d4ed8; font-weight: 600;">●</span> Cumplió expectativas
+      </div>
     </div>
 
     <div class="seeds-grid">
@@ -346,7 +422,45 @@
         <div class="seeds-column">
           <% column_seeds.each do |seed| %>
             <div class="seed-row">
-              <div class="seed-number"><%= seed.seed_num %></div>
+              <!-- SEED -->
+              <div class="data-section">
+                <div>
+                  <div class="data-label">Seed</div>
+                  <div class="seed-number"><%= seed.seed_num %></div>
+                </div>
+              </div>
+
+              <!-- PLACEMENT (si existe) -->
+              <% if seed.placement.present? %>
+                <div class="data-section">
+                  <div>
+                    <div class="data-label">Puesto</div>
+                    <div class="placement-number"><%= seed.placement %></div>
+                  </div>
+                </div>
+              <% end %>
+
+              <!-- FACTOR (si existe) -->
+              <% if seed.placement.present? %>
+                <% icon_data = seed.performance_icon_data %>
+                <% factor = seed.round_performance_factor %>
+                <% if factor.present? %>
+                  <div class="data-section">
+                    <div>
+                      <div class="data-label">Factor</div>
+                      <% if factor > 0 %>
+                        <span class="factor-badge factor-positive"><%= icon_data[:icon] %></span>
+                      <% elsif factor < 0 %>
+                        <span class="factor-badge factor-negative"><%= icon_data[:icon] %></span>
+                      <% else %>
+                        <span class="factor-badge factor-neutral"><%= icon_data[:icon] %></span>
+                      <% end %>
+                    </div>
+                  </div>
+                <% end %>
+              <% end %>
+
+              <!-- PERSONAJE -->
               <div class="character-icon">
                 <% if seed.player&.character_1.present? %>
                   <%= image_tag "smash/characters/#{seed.player.character_1}_#{seed.player.skin_1 || 1}.png", 
@@ -358,6 +472,8 @@
                   ❓
                 <% end %>
               </div>
+
+              <!-- EQUIPOS -->
               <% if seed.player&.character_1.present? && seed.player&.teams&.any? %>
                 <div class="team-logos">
                   <% seed.player.teams.limit(3).each do |team| %>
@@ -371,6 +487,8 @@
                   <% end %>
                 </div>
               <% end %>
+
+              <!-- INFO DEL JUGADOR -->
               <div class="player-info<%= ' no-teams' unless (seed.player&.character_1.present? && seed.player&.teams&.any?) %>">
                 <div class="player-name">
                   <%= seed.player&.entrant_name&.truncate(25) || seed.player&.name&.truncate(25) || "Jugador N/A" %>

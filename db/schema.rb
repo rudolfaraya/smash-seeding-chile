@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_29_205019) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_30_184200) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -46,8 +46,11 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_29_205019) do
     t.string "character_stock_icon"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "placement"
+    t.index ["event_id", "placement"], name: "index_event_seeds_on_event_id_and_placement"
     t.index ["event_id", "player_id"], name: "index_event_seeds_on_event_player"
     t.index ["event_id"], name: "index_event_seeds_on_event_id"
+    t.index ["placement"], name: "index_event_seeds_on_placement"
     t.index ["player_id", "event_id", "seed_num"], name: "index_event_seeds_player_event_seed"
     t.index ["player_id", "event_id"], name: "index_event_seeds_on_player_and_event"
     t.index ["player_id"], name: "index_event_seeds_on_player_id"
@@ -66,6 +69,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_29_205019) do
     t.integer "team_min_players"
     t.integer "team_max_players"
     t.integer "attendees_count"
+    t.datetime "placements_last_synced_at"
     t.index ["tournament_id", "id"], name: "index_events_on_tournament_and_id"
     t.index ["tournament_id", "videogame_id", "team_max_players"], name: "index_events_on_tournament_videogame_team_max", where: "videogame_id = 1386"
     t.index ["tournament_id", "videogame_id"], name: "index_events_on_tournament_videogame"
