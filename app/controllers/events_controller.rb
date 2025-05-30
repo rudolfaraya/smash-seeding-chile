@@ -2,8 +2,8 @@ class EventsController < ApplicationController
   # Requerir autenticación para sync_seeds
   before_action :authenticate_user!, only: [:sync_seeds]
   
-  before_action :set_tournament, only: [ :index, :show, :seeds, :sync_seeds ]
-  before_action :set_event, only: [ :show, :seeds, :sync_seeds ]
+  before_action :set_tournament, only: [ :index, :show, :seeds, :sync_seeds, :export_seeds, :export_seeds_html ]
+  before_action :set_event, only: [ :show, :seeds, :sync_seeds, :export_seeds, :export_seeds_html ]
 
   def index
     @events = policy_scope(@tournament.events)
@@ -117,6 +117,42 @@ class EventsController < ApplicationController
         }
       end
     end
+  end
+
+  def export_seeds
+    @seeds = @event.event_seeds.includes(player: [:teams]).order(seed_num: :asc)
+    
+    # Verificar que hay seeds para exportar
+    if @seeds.empty?
+      redirect_to seeds_tournament_event_path(@tournament, @event), 
+                  alert: "No hay seeds disponibles para exportar. Sincroniza primero el evento."
+      return
+    end
+
+    # Renderizar la vista de exportación
+    render :export_seeds, layout: false
+  end
+
+  def export_seeds_html
+    @seeds = @event.event_seeds.includes(player: [:teams]).order(seed_num: :asc)
+    
+    # Verificar que hay seeds para exportar
+    if @seeds.empty?
+      redirect_to seeds_tournament_event_path(@tournament, @event), 
+                  alert: "No hay seeds disponibles para exportar. Sincroniza primero el evento."
+      return
+    end
+
+    # Generar el HTML standalone
+    html_content = render_to_string('events/export_seeds_standalone', layout: false)
+    
+    # Configurar headers para descarga
+    filename = "#{@tournament.name.parameterize}-#{@event.name.parameterize}-seeds.html"
+    
+    send_data html_content,
+              type: 'text/html',
+              disposition: 'attachment',
+              filename: filename
   end
 
   private

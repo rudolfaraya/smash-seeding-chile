@@ -28,6 +28,15 @@ class EventPolicy < ApplicationPolicy
     admin?
   end
 
+  # Métodos para exportación de seeds
+  def export_seeds?
+    true # Todos pueden exportar seeds (datos públicos)
+  end
+
+  def export_seeds_html?
+    true # Todos pueden exportar seeds como HTML (datos públicos)
+  end
+
   class Scope < Scope
     def resolve
       scope.all # Todos pueden ver todos los eventos

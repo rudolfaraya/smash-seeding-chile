@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seeds - <%= @event.name %> | <%= @tournament.name %></title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .export-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+      padding: 30px;
+      max-width: 1000px;
+      width: 100%;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      position: relative;
+    }
+    
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 6px;
+      background: linear-gradient(45deg, #ff6b35, #f9ca24);
+      border-radius: 3px;
+    }
+    
+    .tournament-name {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #1e293b;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    
+    .event-name {
+      font-size: 1.4rem;
+      color: #64748b;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    
+    .subtitle {
+      font-size: 1rem;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+    
+    .seeds-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 20px;
+    }
+    
+    .seeds-column {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 20px;
+      border: 2px solid #e2e8f0;
+    }
+    
+    .seed-row {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      min-height: 48px;
+    }
+    
+    .seed-number {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      color: white;
+      font-weight: 900;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      font-size: 0.8rem;
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+      flex-shrink: 0;
+    }
+    
+    .character-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      margin-right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f1f5f9;
+      border: 2px solid #e2e8f0;
+      flex-shrink: 0;
+    }
+    
+    .team-logos {
+      display: flex;
+      align-items: center;
+      margin-right: 12px;
+      width: 70px;
+      flex-shrink: 0;
+    }
+    
+    .team-logo {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      object-fit: cover;
+      border: 1px solid #e2e8f0;
+      margin-right: 3px;
+      filter: contrast(1.5) brightness(0.8) saturate(1.1);
+    }
+    
+    .team-logo:last-child {
+      margin-right: 0;
+    }
+    
+    .team-placeholder {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      background: #374151;
+      border: 1px solid #6b7280;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #f9fafb;
+      font-weight: 600;
+      margin-right: 3px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    
+    .team-placeholder:last-child {
+      margin-right: 0;
+    }
+    
+    .player-info {
+      flex: 1;
+      min-width: 0;
+      margin-left: 8px;
+    }
+    
+    .player-info.no-teams {
+      margin-left: 82px; /* Compensar el espacio de equipos (70px width + 12px margin) */
+    }
+    
+    .player-name {
+      font-weight: 700;
+      color: #1e293b;
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .entrant-name {
+      color: #64748b;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 2px solid #e2e8f0;
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+    
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #dc2626;
+      display: block;
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .seeds-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      
+      .tournament-name {
+        font-size: 1.8rem;
+      }
+      
+      .stats-row {
+        gap: 20px;
+      }
+    }
+    
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      
+      .export-container {
+        box-shadow: none;
+        border: 1px solid #e2e8f0;
+        border-radius: 0;
+        padding: 20px;
+      }
+      
+      .header::before {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="export-container">
+    <div class="header">
+      <h1 class="tournament-name"><%= @tournament.name %></h1>
+      <h2 class="event-name"><%= @event.name %></h2>
+    </div>
+
+    <div class="seeds-grid">
+      <% @seeds.each_slice((@seeds.count / 2.0).ceil).with_index do |column_seeds, column_index| %>
+        <div class="seeds-column">
+          <% column_seeds.each do |seed| %>
+            <div class="seed-row">
+              <div class="seed-number"><%= seed.seed_num %></div>
+              <div class="character-icon">
+                <% if seed.player&.character_1.present? %>
+                  <%= image_tag "smash/characters/#{seed.player.character_1}_#{seed.player.skin_1 || 1}.png", 
+                      alt: seed.player.character_display_name(seed.player.character_1),
+                      style: "width: 28px; height: 28px; border-radius: 50%; object-fit: cover;",
+                      onerror: "this.style.display='none'; this.nextElementSibling.style.display='flex';" %>
+                  <div style="display:none; width: 28px; height: 28px; border-radius: 50%; background: #f1f5f9; border: 2px solid #e2e8f0; align-items: center; justify-content: center; font-size: 0.7rem; color: #64748b;">❓</div>
+                <% else %>
+                  ❓
+                <% end %>
+              </div>
+              <% if seed.player&.character_1.present? && seed.player&.teams&.any? %>
+                <div class="team-logos">
+                  <% seed.player.teams.limit(3).each do |team| %>
+                    <% if team.logo_image&.attached? %>
+                      <%= image_tag team.logo_image, alt: team.name, class: "team-logo" %>
+                    <% elsif team.logo.present? %>
+                      <%= image_tag team.logo, alt: team.name, class: "team-logo" %>
+                    <% else %>
+                      <div class="team-placeholder"><%= team.acronym&.first || "T" %></div>
+                    <% end %>
+                  <% end %>
+                </div>
+              <% end %>
+              <div class="player-info<%= ' no-teams' unless (seed.player&.character_1.present? && seed.player&.teams&.any?) %>">
+                <div class="player-name">
+                  <%= seed.player&.entrant_name&.truncate(25) || seed.player&.name&.truncate(25) || "Jugador N/A" %>
+                </div>
+                <% if seed.player&.name.present? && seed.player.name != seed.player.entrant_name %>
+                  <div class="entrant-name">
+                    <%= seed.player.name.truncate(30) %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="footer">
+      <p>Generado el <%= Date.current.strftime("%d de %B de %Y") %> • Smash Seeding Chile</p>
+      <% if @event.seeds_last_synced_at.present? %>
+        <p>Datos sincronizados: <%= format_datetime_cl(@event.seeds_last_synced_at) %></p>
+      <% end %>
+    </div>
+  </div>
+</body>
+</html> 

@@ -22,6 +22,8 @@ Rails.application.routes.draw do
         get :seeds, to: "events#seeds", as: :seeds # Añadimos nombre explícito para la ruta de seeds
         get :sync_seeds, to: "events#sync_seeds" # Permitir GET para sync_seeds
         post :sync_seeds, to: "events#sync_seeds" # Ruta para sincronizar seeds y players
+        get :export_seeds, to: "events#export_seeds" # Ruta para vista de exportación
+        get :export_seeds_html, to: "events#export_seeds_html" # Ruta para descarga HTML
       end
     end
   end
