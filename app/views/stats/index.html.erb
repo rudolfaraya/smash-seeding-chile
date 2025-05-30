@@ -101,6 +101,87 @@
       </div>
     </div>
 
+    <!-- Gráficos de personajes -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      
+      <!-- Personajes más usados (general) -->
+      <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+        <h3 class="text-xl font-semibold text-white mb-4">🎮 Todos los Personajes Más Usados</h3>
+        <p class="text-sm text-slate-400 mb-4">Incluye personajes principales, secundarios y pocket</p>
+        <div class="space-y-3 max-h-96 overflow-y-auto">
+          <% @most_used_characters_overall.each_with_index do |char_data, index| %>
+            <div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700/70 transition-colors">
+              <div class="flex items-center space-x-3">
+                <span class="text-lg font-bold text-slate-400 w-6 text-center"><%= index + 1 %></span>
+                <%= smash_character_icon(char_data[:character], 1, 
+                      class: 'smash-character-icon flex-shrink-0', 
+                      width: 40, 
+                      height: 40) %>
+                <div>
+                  <div class="text-white font-medium"><%= char_data[:name] %></div>
+                  <div class="text-xs text-slate-400">Total de usos</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold text-blue-400"><%= char_data[:count] %></div>
+                <div class="text-xs text-slate-400">jugadores</div>
+              </div>
+            </div>
+          <% end %>
+          
+          <% if @most_used_characters_overall.empty? %>
+            <div class="text-center py-8">
+              <div class="text-slate-400 mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.08-2.33l-.147.147a2 2 0 01-2.828-2.828l.147-.147C1.581 8.47.7 6.34.7 4c0-1.657 1.343-3 3-3s3 1.343 3 3c0 .199-.02.392-.057.578A7.49 7.49 0 0112 3c2.846 0 5.392 1.159 7.24 3.027A2.99 2.99 0 0122 4c1.657 0 3 1.343 3 3a7.963 7.963 0 01-2.33 6.08l.147.147a2 2 0 01-2.828 2.828l-.147-.147z" />
+                </svg>
+              </div>
+              <div class="text-slate-300">No hay datos de personajes disponibles</div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Personajes principales más usados -->
+      <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+        <h3 class="text-xl font-semibold text-white mb-4">👑 Todos los Personajes Principales</h3>
+        <p class="text-sm text-slate-400 mb-4">Solo personajes primarios seleccionados</p>
+        <div class="space-y-3 max-h-96 overflow-y-auto">
+          <% @most_used_main_characters.each_with_index do |char_data, index| %>
+            <div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700/70 transition-colors">
+              <div class="flex items-center space-x-3">
+                <span class="text-lg font-bold text-slate-400 w-6 text-center"><%= index + 1 %></span>
+                <%= smash_character_icon(char_data[:character], 1, 
+                      class: 'smash-character-icon flex-shrink-0', 
+                      width: 40, 
+                      height: 40) %>
+                <div>
+                  <div class="text-white font-medium"><%= char_data[:name] %></div>
+                  <div class="text-xs text-slate-400">Como personaje principal</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold text-red-400"><%= char_data[:count] %></div>
+                <div class="text-xs text-slate-400">mains</div>
+              </div>
+            </div>
+          <% end %>
+
+          <% if @most_used_main_characters.empty? %>
+            <div class="text-center py-8">
+              <div class="text-slate-400 mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.08-2.33l-.147.147a2 2 0 01-2.828-2.828l.147-.147C1.581 8.47.7 6.34.7 4c0-1.657 1.343-3 3-3s3 1.343 3 3c0 .199-.02.392-.057.578A7.49 7.49 0 0112 3c2.846 0 5.392 1.159 7.24 3.027A2.99 2.99 0 0122 4c1.657 0 3 1.343 3 3a7.963 7.963 0 01-2.33 6.08l.147.147a2 2 0 01-2.828 2.828l-.147-.147z" />
+                </svg>
+              </div>
+              <div class="text-slate-300">No hay datos de personajes principales disponibles</div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+    </div>
+
     <!-- Estadísticas adicionales -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
       
