@@ -1,5 +1,10 @@
 class TeamsController < ApplicationController
+  before_action :authenticate_user!, only: [:new, :create, :edit, :update, :destroy, :add_player, :remove_player, :search_players]
+  before_action :set_team, only: [:show, :edit, :update, :destroy, :add_player, :remove_player, :search_players]
+
   def index
+    @teams = policy_scope(Team)
+    
     @query = params[:query]
     @sort_by = params[:sort_by] || "name_asc"
     @page = params[:page]
@@ -32,45 +37,7 @@ class TeamsController < ApplicationController
   end
 
   def show
-    @team = Team.find(params[:id])
-    
-    # Obtener jugadores del equipo con información adicional
-    team_players = @team.players_with_primary_info.includes(:event_seeds, :events)
-    
-    # Calcular estadísticas adicionales para cada jugador
-    @players = team_players.map do |player|
-      # Agregar conteos de eventos y torneos
-      events_count = player.event_seeds.count
-      tournaments_count = player.event_seeds.joins(:event).distinct.count('events.tournament_id')
-      
-      # Crear un hash con la información del jugador
-      # El atributo is_primary viene del select de SQL
-      {
-        id: player.id,
-        entrant_name: player.entrant_name,
-        name: player.name,
-        is_primary: player.is_primary,
-        events_count: events_count,
-        tournaments_count: tournaments_count
-      }
-    end
-    
-    respond_to do |format|
-      format.html
-      format.json do
-        render json: {
-          success: true,
-          team: {
-            id: @team.id,
-            name: @team.name,
-            acronym: @team.acronym,
-            description: @team.description,
-            players_count: @team.players_count
-          },
-          players: @players
-        }
-      end
-    end
+    # No necesita autorización especial, todos pueden ver
   end
 
   def search
@@ -79,6 +46,7 @@ class TeamsController < ApplicationController
 
   def new
     @team = Team.new
+    authorize @team
     
     respond_to do |format|
       format.html { render :new }
@@ -88,6 +56,7 @@ class TeamsController < ApplicationController
 
   def create
     @team = Team.new(team_params)
+    authorize @team
     
     if @team.save
       respond_to do |format|
@@ -120,7 +89,7 @@ class TeamsController < ApplicationController
   end
 
   def edit
-    @team = Team.find(params[:id])
+    authorize @team
     
     respond_to do |format|
       format.html { render :edit }
@@ -129,7 +98,7 @@ class TeamsController < ApplicationController
   end
 
   def update
-    @team = Team.find(params[:id])
+    authorize @team
     
     # Manejar eliminación del logo si se solicita
     if params[:team][:remove_logo] == 'true'
@@ -169,7 +138,8 @@ class TeamsController < ApplicationController
   end
 
   def destroy
-    @team = Team.find(params[:id])
+    authorize @team
+    
     team_name = @team.name
     players_count = @team.players_count
     
@@ -218,7 +188,8 @@ class TeamsController < ApplicationController
   end
 
   def add_player
-    @team = Team.find(params[:id])
+    authorize @team
+    
     player_id = params[:player_id]
     is_primary = params[:is_primary] == 'true'
 
@@ -242,7 +213,8 @@ class TeamsController < ApplicationController
   end
 
   def remove_player
-    @team = Team.find(params[:id])
+    authorize @team
+    
     player_id = params[:player_id]
 
     if @team.remove_player(player_id)
@@ -265,32 +237,27 @@ class TeamsController < ApplicationController
   end
 
   def search_players
-    @team = Team.find(params[:id])
+    authorize @team
+    
     search_term = params[:search]
-    
-    players = @team.available_players(search_term)
-    
-    players_data = players.map do |player|
-      {
-        id: player.id,
-        entrant_name: player.entrant_name || "Sin tag",
-        name: player.name || "Sin nombre",
-        display_name: "#{player.entrant_name || 'Sin tag'} (#{player.name || 'Sin nombre'})"
-      }
-    end
-    
-    render json: { 
-      success: true, 
-      players: players_data 
-    }
-  rescue ActiveRecord::RecordNotFound
-    render json: { 
-      success: false, 
-      error: "Equipo no encontrado" 
+    @available_players = @team.available_players(search_term)
+
+    render json: {
+      players: @available_players.map do |player|
+        {
+          id: player.id,
+          entrant_name: player.entrant_name,
+          name: player.name
+        }
+      end
     }
   end
 
   private
+
+  def set_team
+    @team = Team.find(params[:id])
+  end
 
   def prepare_teams_data
     # Comenzar con la consulta base

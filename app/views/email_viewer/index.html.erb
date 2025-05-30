@@ -1,0 +1,70 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="bg-white rounded-lg shadow-md">
+      <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-t-lg">
+        <h1 class="text-3xl font-bold flex items-center">
+          📧 Emails Capturados
+          <span class="ml-3 text-lg font-normal opacity-75">Letter Opener</span>
+        </h1>
+        <p class="mt-2 opacity-90">Todos los emails enviados en desarrollo se guardan aquí</p>
+      </div>
+
+      <div class="p-6">
+        <% if @emails.any? %>
+          <div class="grid gap-4">
+            <% @emails.each_with_index do |email, index| %>
+              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1">
+                    <h3 class="font-semibold text-gray-900">Email #<%= index + 1 %></h3>
+                    <p class="text-sm text-gray-600 mt-1">
+                      <time datetime="<%= email[:created_at] %>">
+                        <%= email[:created_at].strftime('%d %b %Y, %H:%M:%S') %>
+                      </time>
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1 font-mono">
+                      ID: <%= email[:id] %>
+                    </p>
+                  </div>
+                  
+                  <div class="flex space-x-3">
+                    <%= link_to email_viewer_show_path(email[:id], type: 'rich'), 
+                                target: '_blank',
+                                class: "inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors" do %>
+                      🎨 Ver HTML
+                    <% end %>
+                    
+                    <%= link_to email_viewer_show_path(email[:id], type: 'plain'), 
+                                target: '_blank',
+                                class: "inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors" do %>
+                      📄 Ver Texto
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+          
+          <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h3 class="font-semibold text-blue-900 mb-2">💡 Consejo</h3>
+            <p class="text-blue-800 text-sm">
+              Los emails se abren en nuevas pestañas. En WSL2, letter_opener no puede abrir automáticamente el navegador, 
+              pero los emails se guardan correctamente y puedes verlos aquí.
+            </p>
+          </div>
+        <% else %>
+          <div class="text-center py-12">
+            <div class="text-6xl mb-4">📭</div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">No hay emails aún</h3>
+            <p class="text-gray-600 mb-6">Envía algunos emails para verlos aquí</p>
+            
+            <%= link_to email_test_send_test_path, 
+                        class: "inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors" do %>
+              🚀 Enviar Email de Prueba
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

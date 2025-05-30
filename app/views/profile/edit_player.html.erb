@@ -1,0 +1,316 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-8">
+  <div class="container mx-auto px-4 max-w-4xl">
+    
+    <!-- Breadcrumb -->
+    <div class="mb-6">
+      <%= link_to profile_player_path, 
+            class: "inline-flex items-center text-sm text-slate-400 hover:text-slate-200 transition-colors" do %>
+        ← Volver a Mi Jugador
+      <% end %>
+    </div>
+
+    <!-- Header -->
+    <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6 mb-8">
+      <div class="flex items-center">
+        <div class="h-16 w-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
+          ✏️
+        </div>
+        <div class="ml-4">
+          <h1 class="text-2xl font-bold text-slate-100">Editar Información del Jugador</h1>
+          <p class="text-slate-400 mt-1">Actualiza tu información competitiva y personal</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario de Edición -->
+    <%= form_with model: @player, url: '/profile/player', method: :patch, local: true, class: "space-y-8", data: { controller: "character-preview" } do |form| %>
+      
+      <!-- Información Básica -->
+      <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6">
+        <h2 class="text-xl font-semibold text-slate-100 mb-6 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+          </svg>
+          Información Básica
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Bio -->
+          <div class="md:col-span-2">
+            <%= form.label :bio, "Biografía", class: "block text-sm font-medium text-slate-300 mb-2" %>
+            <%= form.text_area :bio, 
+                  rows: 4,
+                  placeholder: "Cuéntanos sobre ti como jugador...",
+                  class: "w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
+          
+          <!-- Pronombres -->
+          <div>
+            <%= form.label :gender_pronoun, "Pronombres", class: "block text-sm font-medium text-slate-300 mb-2" %>
+            <%= form.select :gender_pronoun, 
+                  options_for_select([
+                    ['Seleccionar...', ''],
+                    ['He/Him', 'He/Him'],
+                    ['She/Her', 'She/Her'],
+                    ['They/Them', 'They/Them'],
+                    ['He/They', 'He/They'],
+                    ['She/They', 'She/They'],
+                    ['Prefiero no decir', 'Prefiero no decir']
+                  ], @player.gender_pronoun),
+                  {},
+                  class: "w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ubicación -->
+      <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6">
+        <h2 class="text-xl font-semibold text-slate-100 mb-6 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+          </svg>
+          Ubicación
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <%= form.label :city, "Ciudad", class: "block text-sm font-medium text-slate-300 mb-2" %>
+            <%= form.text_field :city, 
+                  placeholder: "Santiago",
+                  class: "w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
+          
+          <div>
+            <%= form.label :state, "Región/Estado", class: "block text-sm font-medium text-slate-300 mb-2" %>
+            <%= form.text_field :state, 
+                  placeholder: "Región Metropolitana",
+                  class: "w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
+          
+          <div>
+            <%= form.label :country, "País", class: "block text-sm font-medium text-slate-300 mb-2" %>
+            <%= form.text_field :country, 
+                  placeholder: "Chile",
+                  class: "w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Personajes de Smash -->
+      <div class="bg-slate-700 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-slate-100 mb-4 flex items-center">
+          🔥 Personajes de Smash
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Personaje Principal (Main) -->
+          <div class="p-4 bg-slate-600 rounded-lg">
+            <h4 class="text-base font-medium text-slate-200 mb-4 flex items-center justify-center">
+              <span class="bg-red-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold mr-2">1</span>
+              Principal (Main)
+            </h4>
+            
+            <!-- Vista previa del personaje seleccionado -->
+            <div id="character_1_preview" class="mb-4 p-3 bg-slate-500 rounded-lg <%= @player.character_1.present? ? '' : 'hidden' %>">
+              <div class="flex flex-col items-center space-y-2">
+                <div id="character_1_icon" class="flex-shrink-0">
+                  <% if @player.character_1.present? %>
+                    <%= smash_character_icon(@player.character_1, @player.skin_1, width: 64, height: 64) %>
+                  <% end %>
+                </div>
+                <div class="text-center">
+                  <p id="character_1_name" class="text-slate-200 font-medium text-sm">
+                    <%= @player.character_1.present? ? (Player::SMASH_CHARACTERS[@player.character_1] || @player.character_1.humanize) : '' %>
+                  </p>
+                  <p id="character_1_skin_text" class="text-slate-400 text-xs">
+                    <%= @player.skin_1.present? ? "Skin #{@player.skin_1}" : '' %>
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="space-y-3">
+              <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Personaje</label>
+                <%= form.select :character_1, 
+                      options_for_select([[' — Seleccionar personaje — ', '']] + smash_character_options, @player.character_1),
+                      {},
+                      { 
+                        class: "character-select w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-md text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                        data: { 
+                          character_number: "1",
+                          action: "change->character-preview#updateCharacter"
+                        }
+                      } %>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Skin/Color</label>
+                <%= form.select :skin_1,
+                      options_for_select((1..8).map { |i| ["Skin #{i}", i] }, @player.skin_1),
+                      { include_blank: ' — Seleccionar skin — ' },
+                      { 
+                        class: "skin-select w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-md text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                        data: { 
+                          character_number: "1",
+                          action: "change->character-preview#updateSkin"
+                        }
+                      } %>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Personaje Secundario -->
+          <div class="p-4 bg-slate-600 rounded-lg">
+            <h4 class="text-base font-medium text-slate-200 mb-4 flex items-center justify-center">
+              <span class="bg-blue-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold mr-2">2</span>
+              Secundario
+            </h4>
+            
+            <!-- Vista previa del personaje seleccionado -->
+            <div id="character_2_preview" class="mb-4 p-3 bg-slate-500 rounded-lg <%= @player.character_2.present? ? '' : 'hidden' %>">
+              <div class="flex flex-col items-center space-y-2">
+                <div id="character_2_icon" class="flex-shrink-0">
+                  <% if @player.character_2.present? %>
+                    <%= smash_character_icon(@player.character_2, @player.skin_2, width: 64, height: 64) %>
+                  <% end %>
+                </div>
+                <div class="text-center">
+                  <p id="character_2_name" class="text-slate-200 font-medium text-sm">
+                    <%= @player.character_2.present? ? (Player::SMASH_CHARACTERS[@player.character_2] || @player.character_2.humanize) : '' %>
+                  </p>
+                  <p id="character_2_skin_text" class="text-slate-400 text-xs">
+                    <%= @player.skin_2.present? ? "Skin #{@player.skin_2}" : '' %>
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="space-y-3">
+              <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Personaje</label>
+                <%= form.select :character_2, 
+                      options_for_select([[' — Seleccionar personaje — ', '']] + smash_character_options, @player.character_2),
+                      {},
+                      { 
+                        class: "character-select w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-md text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                        data: { 
+                          character_number: "2",
+                          action: "change->character-preview#updateCharacter"
+                        }
+                      } %>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Skin/Color</label>
+                <%= form.select :skin_2,
+                      options_for_select((1..8).map { |i| ["Skin #{i}", i] }, @player.skin_2),
+                      { include_blank: ' — Seleccionar skin — ' },
+                      { 
+                        class: "skin-select w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-md text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                        data: { 
+                          character_number: "2",
+                          action: "change->character-preview#updateSkin"
+                        }
+                      } %>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Personaje Pocket -->
+          <div class="p-4 bg-slate-600 rounded-lg">
+            <h4 class="text-base font-medium text-slate-200 mb-4 flex items-center justify-center">
+              <span class="bg-green-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold mr-2">3</span>
+              Pocket
+            </h4>
+            
+            <!-- Vista previa del personaje seleccionado -->
+            <div id="character_3_preview" class="mb-4 p-3 bg-slate-500 rounded-lg <%= @player.character_3.present? ? '' : 'hidden' %>">
+              <div class="flex flex-col items-center space-y-2">
+                <div id="character_3_icon" class="flex-shrink-0">
+                  <% if @player.character_3.present? %>
+                    <%= smash_character_icon(@player.character_3, @player.skin_3, width: 64, height: 64) %>
+                  <% end %>
+                </div>
+                <div class="text-center">
+                  <p id="character_3_name" class="text-slate-200 font-medium text-sm">
+                    <%= @player.character_3.present? ? (Player::SMASH_CHARACTERS[@player.character_3] || @player.character_3.humanize) : '' %>
+                  </p>
+                  <p id="character_3_skin_text" class="text-slate-400 text-xs">
+                    <%= @player.skin_3.present? ? "Skin #{@player.skin_3}" : '' %>
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="space-y-3">
+              <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Personaje</label>
+                <%= form.select :character_3, 
+                      options_for_select([[' — Seleccionar personaje — ', '']] + smash_character_options, @player.character_3),
+                      {},
+                      { 
+                        class: "character-select w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-md text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                        data: { 
+                          character_number: "3",
+                          action: "change->character-preview#updateCharacter"
+                        }
+                      } %>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Skin/Color</label>
+                <%= form.select :skin_3,
+                      options_for_select((1..8).map { |i| ["Skin #{i}", i] }, @player.skin_3),
+                      { include_blank: ' — Seleccionar skin — ' },
+                      { 
+                        class: "skin-select w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-md text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                        data: { 
+                          character_number: "3",
+                          action: "change->character-preview#updateSkin"
+                        }
+                      } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Enlaces Sociales -->
+      <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6">
+        <h2 class="text-xl font-semibold text-slate-100 mb-6 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd" />
+          </svg>
+          Enlaces Sociales
+        </h2>
+        
+        <div>
+          <%= form.label :twitter_handle, "Twitter Handle", class: "block text-sm font-medium text-slate-300 mb-2" %>
+          <div class="flex">
+            <span class="inline-flex items-center px-3 py-2 rounded-l-md border border-r-0 border-slate-600 bg-slate-700 text-slate-400 text-sm">
+              @
+            </span>
+            <%= form.text_field :twitter_handle, 
+                  placeholder: "tu_usuario",
+                  class: "flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-r-md text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
+          <p class="mt-1 text-xs text-slate-400">Solo el nombre de usuario, sin @</p>
+        </div>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="flex gap-4 justify-end">
+        <%= link_to profile_player_path, 
+              class: "px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-lg font-medium transition-colors duration-200" do %>
+          Cancelar
+        <% end %>
+        
+        <%= form.submit "Guardar Cambios", 
+              class: "px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200 shadow-lg" %>
+      </div>
+
+    <% end %>
+
+  </div>
+</div> 

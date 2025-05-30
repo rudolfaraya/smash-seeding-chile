@@ -1,0 +1,219 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Back Button -->
+    <div class="mb-6">
+      <%= link_to admin_user_player_requests_path, 
+                  class: "inline-flex items-center text-sm text-gray-600 hover:text-gray-900" do %>
+        ← Volver al Panel de Administración
+      <% end %>
+    </div>
+
+    <!-- Header with Status -->
+    <div class="bg-white rounded-lg shadow-md mb-8">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+            📋 Solicitud de Vinculación
+            <span class="ml-3 text-lg font-normal text-gray-600">#<%= @request.id %></span>
+          </h1>
+          
+          <% if @request.pending? %>
+            <span class="px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800">
+              ⏳ Pendiente
+            </span>
+          <% elsif @request.approved? %>
+            <span class="px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800">
+              ✅ Aprobada
+            </span>
+          <% else %>
+            <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800">
+              ❌ Rechazada
+            </span>
+          <% end %>
+        </div>
+        
+        <p class="text-gray-600 mt-2">
+          Solicitud creada el <%= @request.requested_at.strftime('%d de %B de %Y a las %H:%M') %>
+        </p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Información del Usuario -->
+      <div class="bg-white rounded-lg shadow-md">
+        <div class="p-6 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+            👤 Información del Usuario
+          </h2>
+        </div>
+        
+        <div class="p-6 space-y-4">
+          <div class="flex items-center space-x-4">
+            <div class="h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center">
+              <span class="text-xl font-bold text-gray-700">
+                <%= @request.user.display_name.first.upcase %>
+              </span>
+            </div>
+            <div>
+              <h3 class="text-lg font-medium text-gray-900"><%= @request.user.display_name %></h3>
+              <p class="text-gray-600"><%= @request.user.email %></p>
+            </div>
+          </div>
+          
+          <div class="space-y-3">
+            <div>
+              <span class="text-sm font-medium text-gray-500">Fecha de registro:</span>
+              <p class="text-gray-900"><%= @request.user.created_at.strftime('%d %b %Y, %H:%M') %></p>
+            </div>
+            
+            <div>
+              <span class="text-sm font-medium text-gray-500">Rol:</span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <%= @request.user.role.capitalize %>
+              </span>
+            </div>
+            
+            <% if @request.user.startgg_username.present? %>
+              <div>
+                <span class="text-sm font-medium text-gray-500">Start.gg Username:</span>
+                <p class="text-gray-900"><%= @request.user.startgg_username %></p>
+              </div>
+            <% end %>
+            
+            <div>
+              <span class="text-sm font-medium text-gray-500">Player actual vinculado:</span>
+              <% if @request.user.player.present? %>
+                <p class="text-gray-900"><%= @request.user.player.entrant_name || @request.user.player.name %></p>
+              <% else %>
+                <p class="text-gray-500 italic">Ninguno</p>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información del Jugador Solicitado -->
+      <div class="bg-white rounded-lg shadow-md">
+        <div class="p-6 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+            🎮 Jugador Solicitado
+          </h2>
+        </div>
+        
+        <div class="p-6 space-y-4">
+          <div>
+            <h3 class="text-lg font-medium text-gray-900"><%= @request.player_display_name %></h3>
+            <p class="text-gray-600">ID: <%= @request.player.id %></p>
+          </div>
+          
+          <div class="space-y-3">
+            <% if @request.player.entrant_name.present? %>
+              <div>
+                <span class="text-sm font-medium text-gray-500">Nombre de competidor:</span>
+                <p class="text-gray-900"><%= @request.player.entrant_name %></p>
+              </div>
+            <% end %>
+            
+            <% if @request.player.name.present? %>
+              <div>
+                <span class="text-sm font-medium text-gray-500">Nombre:</span>
+                <p class="text-gray-900"><%= @request.player.name %></p>
+              </div>
+            <% end %>
+            
+            <div>
+              <span class="text-sm font-medium text-gray-500">Estado de vinculación:</span>
+              <% if @request.player.user.present? %>
+                <p class="text-red-600 font-medium">⚠️ Ya vinculado a otro usuario</p>
+                <p class="text-sm text-gray-600">Usuario actual: <%= @request.player.user.display_name %></p>
+              <% else %>
+                <p class="text-green-600 font-medium">✅ Disponible para vincular</p>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje de la Solicitud -->
+    <div class="bg-white rounded-lg shadow-md mt-8">
+      <div class="p-6 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900">💬 Mensaje del Usuario</h2>
+      </div>
+      
+      <div class="p-6">
+        <div class="bg-gray-50 rounded-lg p-4">
+          <p class="text-gray-900 whitespace-pre-wrap"><%= @request.message %></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Respuesta Admin (si existe) -->
+    <% if @request.admin_response.present? %>
+      <div class="bg-white rounded-lg shadow-md mt-8">
+        <div class="p-6 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-900">🛡️ Respuesta del Administrador</h2>
+          <p class="text-sm text-gray-600 mt-1">
+            Respondido el <%= @request.responded_at&.strftime('%d %b %Y, %H:%M') %>
+          </p>
+        </div>
+        
+        <div class="p-6">
+          <div class="bg-blue-50 rounded-lg p-4">
+            <p class="text-gray-900 whitespace-pre-wrap"><%= @request.admin_response %></p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Acciones -->
+    <% if @request.pending? %>
+      <div class="bg-white rounded-lg shadow-md mt-8">
+        <div class="p-6 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-900">⚖️ Acciones de Administrador</h2>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Aprobar -->
+            <div class="border border-green-200 rounded-lg p-4">
+              <h3 class="text-lg font-medium text-green-800 mb-4">✅ Aprobar Solicitud</h3>
+              <%= form_with url: approve_admin_user_player_request_path(@request), method: :patch, local: true, class: "space-y-4" do |form| %>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Mensaje de respuesta (opcional)
+                  </label>
+                  <%= form.text_area :admin_response, 
+                                     rows: 3, 
+                                     placeholder: "Solicitud aprobada. Tu perfil ha sido vinculado exitosamente.",
+                                     class: "w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" %>
+                </div>
+                <%= form.submit "Aprobar Solicitud", 
+                               class: "w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors" %>
+              <% end %>
+            </div>
+            
+            <!-- Rechazar -->
+            <div class="border border-red-200 rounded-lg p-4">
+              <h3 class="text-lg font-medium text-red-800 mb-4">❌ Rechazar Solicitud</h3>
+              <%= form_with url: reject_admin_user_player_request_path(@request), method: :patch, local: true, class: "space-y-4" do |form| %>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Motivo del rechazo <span class="text-red-500">*</span>
+                  </label>
+                  <%= form.text_area :admin_response, 
+                                     rows: 3, 
+                                     placeholder: "Por favor, especifica el motivo del rechazo...",
+                                     required: true,
+                                     class: "w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" %>
+                </div>
+                <%= form.submit "Rechazar Solicitud", 
+                               class: "w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors" %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div> 

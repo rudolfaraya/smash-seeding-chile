@@ -1,0 +1,363 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-8">
+  <div class="container mx-auto px-4 max-w-6xl">
+    
+    <!-- Breadcrumb -->
+    <div class="mb-6">
+      <%= link_to profile_path, 
+            class: "inline-flex items-center text-sm text-slate-400 hover:text-slate-200 transition-colors" do %>
+        ← Volver al Perfil
+      <% end %>
+    </div>
+
+    <!-- Header del Jugador -->
+    <div class="relative">
+      <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 overflow-hidden">
+        <!-- Header con imagen del personaje y equipo -->
+        <div class="flex items-stretch h-24 relative">
+          <!-- Imagen del personaje principal (lado izquierdo) -->
+          <div class="w-40 h-24 bg-slate-700 relative overflow-hidden">
+            <% if @player.character_1.present? %>
+              <%= player_main_character_avatar(@player, 
+                    class: "large-character-avatar",
+                    style: "width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: center 20% !important; max-width: none !important; max-height: none !important;") %>
+            <% else %>
+              <div class="w-full h-full flex items-center justify-center bg-slate-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            <% end %>
+          </div>
+          
+          <!-- Información del jugador (centro) -->
+          <div class="flex-1 p-6 flex items-center">
+            <div>
+              <div class="flex items-center mb-2">
+                <div class="h-12 w-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg mr-4">
+                  <%= @player.entrant_name.first.upcase %>
+                </div>
+                <div>
+                  <h1 class="text-xl font-bold text-slate-100 leading-tight">
+                    <%= @player.entrant_name %>
+                  </h1>
+                  <% if @player.name.present? %>
+                    <p class="text-slate-400 text-sm"><%= @player.name %></p>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Logo del equipo (lado derecho) -->
+          <div class="w-24 h-24 bg-slate-700 flex items-center justify-center">
+            <% if @player.has_team? %>
+              <% team = @player.primary_team_optimized || @player.teams.first %>
+              <% if team.logo_image&.attached? %>
+                <%= image_tag team.logo_image, 
+                      alt: team.name,
+                      class: "object-contain",
+                      style: "width: 80px !important; height: 80px !important; object-fit: contain !important; max-width: none !important; max-height: none !important;",
+                      title: team.name %>
+              <% elsif team.logo.present? %>
+                <%= image_tag team.logo, 
+                      alt: team.name,
+                      class: "object-contain",
+                      style: "width: 80px !important; height: 80px !important; object-fit: contain !important; max-width: none !important; max-height: none !important;",
+                      title: team.name %>
+              <% else %>
+                <div class="w-16 h-16 bg-gradient-to-r from-purple-600 to-purple-800 rounded-lg flex items-center justify-center border-2 border-purple-500">
+                  <span class="text-white font-bold text-sm"><%= team.acronym %></span>
+                </div>
+              <% end %>
+            <% else %>
+              <div class="w-16 h-16 bg-slate-600 rounded-lg flex items-center justify-center border-2 border-slate-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.196-2.121M9 6a3 3 0 106 0 3 3 0 00-6 0zm9 0a3 3 0 11-6 0 3 3 0 016 0zm-7 14a4 4 0 018 0v2H2v-2a4 4 0 018 0z" />
+                </svg>
+              </div>
+            <% end %>
+          </div>
+          
+          <!-- Botón de editar dentro del header, esquina superior izquierda del área central -->
+          <div class="absolute top-2 left-48">
+            <%= link_to edit_profile_player_path, 
+                  class: "inline-flex items-center px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md transition-colors duration-200 shadow-lg" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+              </svg>
+              Editar
+            <% end %>
+          </div>
+        </div>
+        
+        <!-- Estadísticas rápidas -->
+        <div class="px-6 py-4 bg-slate-700/50 border-t border-slate-600">
+          <div class="grid grid-cols-4 gap-4 text-center">
+            <div>
+              <div class="text-xl font-bold text-slate-100"><%= @stats[:total_tournaments] %></div>
+              <div class="text-xs text-slate-400">Torneos</div>
+            </div>
+            <div>
+              <div class="text-xl font-bold text-slate-100"><%= @stats[:total_events] %></div>
+              <div class="text-xs text-slate-400">Eventos</div>
+            </div>
+            <div>
+              <div class="text-xl font-bold text-slate-100"><%= @stats[:events_last_6_months] %></div>
+              <div class="text-xs text-slate-400">Últimos 6m</div>
+            </div>
+            <div>
+              <div class="text-xl font-bold text-slate-100">
+                <% if @player.character_1.present? %>
+                  <%= @player.character_1.split('_').map(&:capitalize).join(' ') %>
+                <% else %>
+                  <span class="text-slate-400">-</span>
+                <% end %>
+              </div>
+              <div class="text-xs text-slate-400">Main</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid de Estadísticas y Detalles -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+      
+      <!-- Estadísticas Principales -->
+      <div class="lg:col-span-1">
+        <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6">
+          <h2 class="text-xl font-semibold text-slate-100 mb-6 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+            </svg>
+            Estadísticas
+          </h2>
+          
+          <div class="space-y-4">
+            <div class="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
+              <div>
+                <p class="text-slate-400 text-sm">Total Torneos</p>
+                <p class="text-slate-100 text-xl font-bold"><%= @stats[:total_tournaments] %></p>
+              </div>
+              <div class="h-8 w-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                🏆
+              </div>
+            </div>
+            
+            <div class="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
+              <div>
+                <p class="text-slate-400 text-sm">Total Eventos</p>
+                <p class="text-slate-100 text-xl font-bold"><%= @stats[:total_events] %></p>
+              </div>
+              <div class="h-8 w-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                🎮
+              </div>
+            </div>
+            
+            <div class="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
+              <div>
+                <p class="text-slate-400 text-sm">Actividad Reciente</p>
+                <p class="text-slate-100 text-xl font-bold"><%= @stats[:events_last_6_months] %></p>
+                <p class="text-slate-500 text-xs">Últimos 6 meses</p>
+              </div>
+              <div class="h-8 w-8 bg-green-500 rounded-lg flex items-center justify-center">
+                📊
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información Personal -->
+        <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6 mt-6">
+          <h3 class="text-lg font-semibold text-slate-100 mb-4">Información Personal</h3>
+          
+          <div class="space-y-3">
+            <% if @player.city.present? || @player.state.present? || @player.country.present? %>
+              <div class="flex items-center">
+                <svg class="h-4 w-4 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0zm-7 14a4 4 0 018 0v2H2v-2a4 4 0 018 0z" />
+                </svg>
+                <span class="text-slate-300">
+                  <%= [@player.city, @player.state, @player.country].compact.join(', ') %>
+                </span>
+              </div>
+            <% end %>
+            
+            <% if @player.character_1.present? %>
+              <div class="flex items-center space-x-3 mb-2">
+                <%= smash_character_icon(@player.character_1, @player.skin_1, 
+                      class: 'smash-character-icon flex-shrink-0', 
+                      width: 48, 
+                      height: 48) %>
+                <div>
+                  <div class="flex items-center">
+                    <span class="text-slate-400 mr-2">Main:</span>
+                    <span class="text-slate-200 font-medium"><%= Player::SMASH_CHARACTERS[@player.character_1] || @player.character_1.humanize %></span>
+                    <% if @player.skin_1.present? %>
+                      <span class="ml-1 text-xs text-slate-500">(Skin <%= @player.skin_1 %>)</span>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+            
+            <% if @player.character_2.present? %>
+              <div class="flex items-center space-x-3 mb-2">
+                <%= smash_character_icon(@player.character_2, @player.skin_2, 
+                      class: 'smash-character-icon flex-shrink-0', 
+                      width: 48, 
+                      height: 48) %>
+                <div>
+                  <div class="flex items-center">
+                    <span class="text-slate-400 mr-2">Secondary:</span>
+                    <span class="text-slate-200 font-medium"><%= Player::SMASH_CHARACTERS[@player.character_2] || @player.character_2.humanize %></span>
+                    <% if @player.skin_2.present? %>
+                      <span class="ml-1 text-xs text-slate-500">(Skin <%= @player.skin_2 %>)</span>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+            
+            <% if @player.character_3.present? %>
+              <div class="flex items-center space-x-3 mb-2">
+                <%= smash_character_icon(@player.character_3, @player.skin_3, 
+                      class: 'smash-character-icon flex-shrink-0', 
+                      width: 48, 
+                      height: 48) %>
+                <div>
+                  <div class="flex items-center">
+                    <span class="text-slate-400 mr-2">Pocket:</span>
+                    <span class="text-slate-200 font-medium"><%= Player::SMASH_CHARACTERS[@player.character_3] || @player.character_3.humanize %></span>
+                    <% if @player.skin_3.present? %>
+                      <span class="ml-1 text-xs text-slate-500">(Skin <%= @player.skin_3 %>)</span>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+            
+            <% if @player.gender_pronoun.present? %>
+              <div class="flex items-center">
+                <span class="text-slate-400 mr-2">Pronombres:</span>
+                <span class="text-slate-300"><%= @player.gender_pronoun %></span>
+              </div>
+            <% end %>
+          </div>
+          
+          <!-- Enlaces sociales -->
+          <% if @player.twitter_handle.present? %>
+            <div class="mt-4 pt-4 border-t border-slate-600">
+              <h4 class="text-sm font-medium text-slate-400 mb-2">Enlaces</h4>
+              <div class="flex gap-2">
+                <%= link_to "https://twitter.com/#{@player.twitter_handle}", target: "_blank", 
+                      class: "p-2 bg-blue-600 hover:bg-blue-700 rounded text-white transition-colors" do %>
+                  🐦 @<%= @player.twitter_handle %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Eventos Recientes -->
+      <div class="lg:col-span-2">
+        <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6">
+          <h2 class="text-xl font-semibold text-slate-100 mb-6 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+            </svg>
+            Eventos Recientes
+            <span class="ml-2 text-sm text-slate-400">(<%= @recent_events.count %>)</span>
+          </h2>
+          
+          <% if @recent_events.any? %>
+            <div class="space-y-3">
+              <% @recent_events.each do |event| %>
+                <% tournament = event.tournament %>
+                <% event_seed = event.event_seeds.find { |es| es.player_id == @player.id } %>
+                <% is_future = tournament.start_at > Time.current %>
+                <div class="bg-slate-700 rounded-lg p-4 border border-slate-600 hover:border-slate-500 transition-colors">
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <div class="flex items-center mb-2">
+                        <span class="mr-2 text-lg">
+                          <%= is_future ? "📅" : "✅" %>
+                        </span>
+                        <div>
+                          <h4 class="text-slate-200 font-medium">
+                            <%= link_to event.name, tournament_path(tournament), 
+                                  class: "hover:text-blue-400 transition-colors" %>
+                          </h4>
+                          <p class="text-slate-400 text-sm"><%= tournament.name %></p>
+                        </div>
+                      </div>
+                      <div class="flex items-center text-xs text-slate-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                        </svg>
+                        <%= tournament.start_at.strftime('%d %b %Y') %>
+                      </div>
+                    </div>
+                    
+                    <!-- Seed del jugador -->
+                    <div class="ml-4 flex flex-col items-end">
+                      <% if event_seed&.seed_num %>
+                        <div class="flex items-center justify-center h-8 w-8 rounded-full bg-red-900 text-red-200 text-sm font-bold border border-red-500 mb-1" style="text-shadow: 0 0 3px #f87171;">
+                          #<%= event_seed.seed_num %>
+                        </div>
+                        <span class="text-xs text-slate-400">Seed</span>
+                      <% else %>
+                        <div class="flex items-center justify-center h-8 w-8 rounded-full bg-slate-600 text-slate-400 text-xs border border-slate-500 mb-1">
+                          ?
+                        </div>
+                        <span class="text-xs text-slate-500">Sin seed</span>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center py-12">
+              <div class="text-6xl mb-4">🎮</div>
+              <h3 class="text-lg font-medium text-slate-300 mb-2">Sin eventos registrados</h3>
+              <p class="text-slate-500">No se han encontrado eventos para este jugador.</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial de Torneos -->
+    <% if @stats[:first_tournament] || @stats[:last_tournament] %>
+      <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6">
+        <h2 class="text-xl font-semibold text-slate-100 mb-6">📅 Historial Competitivo</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <% if @stats[:first_tournament] %>
+            <div class="p-4 bg-slate-700 rounded-lg">
+              <h3 class="font-medium text-slate-200 mb-2">🥇 Primer Torneo</h3>
+              <p class="text-slate-100"><%= @stats[:first_tournament].name %></p>
+              <p class="text-sm text-slate-400 mt-1">
+                <%= @stats[:first_tournament].start_at&.strftime('%d %b %Y') %>
+              </p>
+            </div>
+          <% end %>
+          
+          <% if @stats[:last_tournament] %>
+            <div class="p-4 bg-slate-700 rounded-lg">
+              <h3 class="font-medium text-slate-200 mb-2">🕐 Último Torneo</h3>
+              <p class="text-slate-100"><%= @stats[:last_tournament].name %></p>
+              <p class="text-sm text-slate-400 mt-1">
+                <%= @stats[:last_tournament].start_at&.strftime('%d %b %Y') %>
+              </p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+  </div>
+</div> 

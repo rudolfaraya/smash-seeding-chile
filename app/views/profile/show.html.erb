@@ -1,0 +1,276 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-8">
+  <div class="container mx-auto px-4 max-w-4xl">
+    
+    <!-- Notificación de vinculación exitosa -->
+    <% if @user.has_linked_player? && @user.last_player_request&.approved? && @user.last_player_request&.responded_at && @user.last_player_request.responded_at > 1.hour.ago %>
+      <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <svg class="h-8 w-8 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-lg font-medium text-green-800">
+              🎉 ¡Vinculación exitosa!
+            </h3>
+            <p class="text-green-700 mt-1">
+              Tu perfil ha sido vinculado exitosamente al jugador <strong><%= @player&.entrant_name || @player&.name %></strong>. 
+              Ahora puedes editar tu información de jugador y participar en torneos.
+            </p>
+            <% if @user.last_player_request&.admin_response.present? %>
+              <div class="mt-2 p-2 bg-green-100 rounded text-sm text-green-800">
+                <strong>Mensaje del administrador:</strong> <%= @user.last_player_request.admin_response %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Encabezado del perfil -->
+    <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6 mb-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="h-16 w-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
+            <%= @user.display_name.first.upcase %>
+          </div>
+          <div class="ml-4">
+            <h1 class="text-2xl font-bold text-slate-100"><%= @user.display_name %></h1>
+            <p class="text-slate-400"><%= @user.email %></p>
+            <div class="flex items-center mt-1">
+              <span class="text-xs px-2 py-1 rounded-full <%= @user.admin? ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800' %>">
+                <%= @user.admin? ? 'Administrador' : 'Usuario' %>
+              </span>
+              <% if @user.from_startgg? %>
+                <span class="ml-2 text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">
+                  start.gg: <%= @user.startgg_username %>
+                </span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex gap-2">
+          <%= link_to edit_profile_path, 
+                class: "inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+            </svg>
+            Editar Perfil
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado del jugador vinculado -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <!-- Panel del jugador -->
+      <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6">
+        <h2 class="text-lg font-semibold text-slate-100 mb-4 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+          </svg>
+          Mi Jugador
+        </h2>
+
+        <% if @player %>
+          <div class="space-y-3">
+            <!-- Indicador de vinculación exitosa -->
+            <div class="flex items-center justify-between p-3 bg-green-900/20 border border-green-600 rounded-lg">
+              <div class="flex items-center">
+                <svg class="h-5 w-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                </svg>
+                <div>
+                  <p class="font-medium text-green-100 text-sm">✅ Vinculación Activa</p>
+                  <p class="text-green-300 text-xs">Perfil conectado exitosamente</p>
+                </div>
+              </div>
+              <span class="text-xs px-2 py-1 rounded-full bg-green-500 text-white font-medium">
+                CONECTADO
+              </span>
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-slate-100"><%= @player.entrant_name || @player.name %></p>
+                <p class="text-sm text-slate-400">Tu jugador vinculado</p>
+              </div>
+              <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                ID: <%= @player.id %>
+              </span>
+            </div>
+            
+            <div class="border-t border-slate-600 pt-3">
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p class="text-slate-400">Torneos</p>
+                  <p class="text-slate-100 font-medium"><%= @player.events.joins(:tournament).distinct.count %></p>
+                </div>
+                <div>
+                  <p class="text-slate-400">Eventos</p>
+                  <p class="text-slate-100 font-medium"><%= @player.events.count %></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+              <%= link_to profile_player_path, 
+                    class: "flex-1 inline-flex justify-center items-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors duration-200" do %>
+                Ver Detalles
+              <% end %>
+              <%= link_to edit_profile_player_path, 
+                    class: "flex-1 inline-flex justify-center items-center px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white text-sm font-medium rounded-md transition-colors duration-200" do %>
+                Editar
+              <% end %>
+            </div>
+          </div>
+        <% elsif @player_request %>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-slate-100">Solicitud de vinculación</p>
+                <p class="text-sm text-slate-400">
+                  <%= @player_request.player.entrant_name || @player_request.player.name %>
+                </p>
+              </div>
+              <span class="text-xs px-2 py-1 rounded-full <%= case @player_request.status
+                when 'pending' then 'bg-yellow-100 text-yellow-800'
+                when 'approved' then 'bg-green-100 text-green-800'
+                when 'rejected' then 'bg-red-100 text-red-800'
+              end %>">
+                <%= case @player_request.status
+                  when 'pending' then 'Pendiente'
+                  when 'approved' then 'Aprobada'
+                  when 'rejected' then 'Rechazada'
+                end %>
+              </span>
+            </div>
+
+            <% if @player_request.pending? %>
+              <p class="text-sm text-slate-400">
+                Tu solicitud está siendo revisada por un administrador.
+              </p>
+            <% elsif @player_request.rejected? %>
+              <div class="bg-red-900/20 border border-red-800 rounded-md p-3">
+                <p class="text-sm text-red-200 mb-1">Solicitud rechazada</p>
+                <% if @player_request.admin_response.present? %>
+                  <p class="text-xs text-red-300"><%= @player_request.admin_response %></p>
+                <% end %>
+              </div>
+            <% end %>
+
+            <div class="flex gap-2 pt-2">
+              <%= link_to user_player_requests_path, 
+                    class: "flex-1 inline-flex justify-center items-center px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white text-sm font-medium rounded-md transition-colors duration-200" do %>
+                Gestionar Solicitudes
+              <% end %>
+            </div>
+          </div>
+        <% else %>
+          <div class="text-center py-8">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-slate-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <p class="text-slate-400 mb-4">No tienes un jugador vinculado</p>
+            <%= link_to user_player_requests_path, 
+                  class: "inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors duration-200" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+              </svg>
+              Vincular Jugador
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Panel de actividad -->
+      <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6">
+        <h2 class="text-lg font-semibold text-slate-100 mb-4 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Actividad
+        </h2>
+
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Cuenta creada</span>
+            <span class="text-slate-100"><%= @user.created_at.strftime("%d/%m/%Y") %></span>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Último acceso</span>
+            <span class="text-slate-100">
+              <% if @user.last_sign_in_at %>
+                <%= time_ago_in_words(@user.last_sign_in_at) %> atrás
+              <% else %>
+                Nunca
+              <% end %>
+            </span>
+          </div>
+
+          <% if @user.admin? %>
+            <div class="border-t border-slate-600 pt-3">
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p class="text-slate-400">Sol. Pendientes</p>
+                  <p class="text-slate-100 font-medium"><%= UserPlayerRequest.pending.count %></p>
+                </div>
+                <div>
+                  <p class="text-slate-400">Sol. Hoy</p>
+                  <p class="text-slate-100 font-medium">
+                    <%= UserPlayerRequest.where('created_at >= ?', 1.day.ago).count %>
+                  </p>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enlaces rápidos -->
+    <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6">
+      <h2 class="text-lg font-semibold text-slate-100 mb-4">Enlaces Rápidos</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <%= link_to edit_user_registration_path, 
+              class: "flex items-center p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors duration-200" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400 mr-3" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <p class="font-medium text-slate-100">Configuración</p>
+            <p class="text-sm text-slate-400">Cambiar contraseña y configuración</p>
+          </div>
+        <% end %>
+
+        <% if @user.admin? %>
+          <%= link_to admin_user_player_requests_path, 
+                class: "flex items-center p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors duration-200" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-400 mr-3" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+            </svg>
+            <div>
+              <p class="font-medium text-slate-100">Gestionar Solicitudes</p>
+              <p class="text-sm text-slate-400">Revisar solicitudes de vinculación</p>
+            </div>
+          <% end %>
+        <% end %>
+
+        <%= link_to tournaments_path, 
+              class: "flex items-center p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors duration-200" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400 mr-3" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <p class="font-medium text-slate-100">Explorar Torneos</p>
+            <p class="text-sm text-slate-400">Ver torneos y eventos recientes</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div> 

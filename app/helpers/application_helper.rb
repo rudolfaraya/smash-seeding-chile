@@ -219,7 +219,7 @@ module ApplicationHelper
 
   # Helper para verificar si el usuario puede acceder a Mission Control Jobs
   def can_access_jobs?
-    user_signed_in?
+    user_signed_in? && current_user.admin?
   end
 
   # Helper para obtener la ruta de Mission Control Jobs de forma segura
@@ -227,5 +227,30 @@ module ApplicationHelper
     return new_user_session_path unless can_access_jobs?
     
     "/jobs"
+  end
+
+  # Helpers para Pundit
+  def can_edit_player?(player)
+    user_signed_in? && policy(player).update?
+  end
+  
+  def can_sync_tournaments?
+    user_signed_in? && policy(Tournament).sync?
+  end
+  
+  def can_sync_events?(event)
+    user_signed_in? && policy(event).sync_seeds?
+  end
+  
+  def can_manage_teams?
+    user_signed_in? && current_user.admin?
+  end
+  
+  def show_admin_controls?
+    user_signed_in? && current_user.admin?
+  end
+  
+  def show_player_edit_controls?(player)
+    user_signed_in? && (current_user.admin? || current_user.player == player)
   end
 end

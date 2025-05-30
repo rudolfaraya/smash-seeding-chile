@@ -1,0 +1,217 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-8">
+  <div class="container mx-auto px-4 max-w-4xl">
+    <!-- Encabezado -->
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-slate-100 mb-2">Vinculación de Jugador</h1>
+      <p class="text-slate-400">Gestiona tu solicitud para vincular tu cuenta con un jugador en la base de datos.</p>
+    </div>
+
+    <!-- Estado actual -->
+    <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6 mb-6">
+      <h2 class="text-lg font-semibold text-slate-100 mb-4 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+        </svg>
+        Estado Actual
+      </h2>
+
+      <% if current_user.has_linked_player? %>
+        <div class="flex items-center justify-between p-4 bg-green-900/20 border border-green-800 rounded-lg">
+          <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h3 class="text-lg font-medium text-green-100">
+                Jugador Vinculado: <%= current_user.player.entrant_name || current_user.player.name %>
+              </h3>
+              <p class="text-green-200">Tu cuenta está correctamente vinculada.</p>
+            </div>
+          </div>
+          <%= link_to profile_player_path, 
+                class: "inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200" do %>
+            Ver Mi Jugador
+          <% end %>
+        </div>
+      <% elsif @pending_request %>
+        <div class="p-4 bg-yellow-900/20 border border-yellow-800 rounded-lg">
+          <div class="flex items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-400 mr-3 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="flex-1">
+              <h3 class="text-lg font-medium text-yellow-100 mb-2">Solicitud Pendiente</h3>
+              <div class="space-y-2">
+                <p class="text-yellow-200">
+                  <strong>Jugador:</strong> <%= @pending_request.player_display_name %>
+                </p>
+                <p class="text-yellow-200">
+                  <strong>Solicitado:</strong> <%= @pending_request.requested_at.strftime("%d/%m/%Y a las %H:%M") %>
+                </p>
+                <p class="text-yellow-200">
+                  <strong>Mensaje:</strong> <%= @pending_request.message %>
+                </p>
+              </div>
+              
+              <div class="flex gap-2 mt-4">
+                <%= button_to cancel_user_player_request_path(@pending_request), 
+                      method: :delete,
+                      data: { 
+                        confirm: '¿Estás seguro de que quieres cancelar esta solicitud?',
+                        turbo: false 
+                      },
+                      class: "inline-flex items-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors duration-200" do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                  Cancelar Solicitud
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% else %>
+        <div class="text-center py-8">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-slate-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          <h3 class="text-xl font-medium text-slate-100 mb-2">No tienes un jugador vinculado</h3>
+          <p class="text-slate-400 mb-6">
+            Para poder editar información de jugador, necesitas vincular tu cuenta con un jugador existente en nuestra base de datos.
+          </p>
+          
+          <%= link_to new_user_player_request_path, 
+                class: "inline-flex items-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-lg font-medium rounded-lg transition-colors duration-200 shadow-lg" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            Solicitar Vinculación
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Historial de solicitudes -->
+    <% if @requests.any? %>
+      <div class="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6">
+        <h2 class="text-lg font-semibold text-slate-100 mb-4 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+          </svg>
+          Historial de Solicitudes
+        </h2>
+
+        <div class="space-y-4">
+          <% @requests.each do |request| %>
+            <div class="border border-slate-600 rounded-lg p-4">
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center mb-2">
+                    <h3 class="font-medium text-slate-100 mr-3">
+                      <%= request.player_display_name %>
+                    </h3>
+                    <span class="text-xs px-2 py-1 rounded-full <%= case request.status
+                      when 'pending' then 'bg-yellow-100 text-yellow-800'
+                      when 'approved' then 'bg-green-100 text-green-800'
+                      when 'rejected' then 'bg-red-100 text-red-800'
+                    end %>">
+                      <%= case request.status
+                        when 'pending' then 'Pendiente'
+                        when 'approved' then 'Aprobada'
+                        when 'rejected' then 'Rechazada'
+                      end %>
+                    </span>
+                  </div>
+                  
+                  <p class="text-sm text-slate-400 mb-2">
+                    <strong>Solicitado:</strong> <%= request.requested_at.strftime("%d/%m/%Y a las %H:%M") %>
+                    <% if request.responded_at %>
+                      | <strong>Respondido:</strong> <%= request.responded_at.strftime("%d/%m/%Y a las %H:%M") %>
+                    <% end %>
+                  </p>
+                  
+                  <p class="text-sm text-slate-300">
+                    <strong>Mensaje:</strong> <%= request.message %>
+                  </p>
+                  
+                  <% if request.admin_response.present? %>
+                    <div class="mt-3 p-3 bg-slate-700 rounded-md">
+                      <p class="text-sm text-slate-300">
+                        <strong>Respuesta del administrador:</strong><br>
+                        <%= request.admin_response %>
+                      </p>
+                    </div>
+                  <% end %>
+                </div>
+
+                <% if request.can_be_modified? %>
+                  <div class="ml-4">
+                    <%= button_to cancel_user_player_request_path(request), 
+                          method: :delete,
+                          data: { 
+                            confirm: '¿Estás seguro de que quieres cancelar esta solicitud?',
+                            turbo: false 
+                          },
+                          class: "inline-flex items-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors duration-200" do %>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Información sobre el proceso -->
+    <div class="mt-6 bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-6">
+      <h2 class="text-lg font-semibold text-slate-100 mb-4 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+        </svg>
+        ¿Cómo funciona la vinculación?
+      </h2>
+
+      <div class="space-y-4 text-slate-300">
+        <div class="flex items-start">
+          <div class="flex-shrink-0 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white text-sm font-semibold mr-3">
+            1
+          </div>
+          <div>
+            <h3 class="font-medium text-slate-100">Solicita vinculación</h3>
+            <p class="text-sm text-slate-400">Busca y selecciona tu perfil de jugador en nuestra base de datos.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start">
+          <div class="flex-shrink-0 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white text-sm font-semibold mr-3">
+            2
+          </div>
+          <div>
+            <h3 class="font-medium text-slate-100">Revisión administrativa</h3>
+            <p class="text-sm text-slate-400">Un administrador revisará tu solicitud para verificar que corresponde a tu identidad.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start">
+          <div class="flex-shrink-0 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white text-sm font-semibold mr-3">
+            3
+          </div>
+          <div>
+            <h3 class="font-medium text-slate-100">Aprobación</h3>
+            <p class="text-sm text-slate-400">Una vez aprobada, podrás editar la información de tu jugador y gestionar tus datos.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 bg-blue-900/20 border border-blue-800 rounded-lg">
+        <p class="text-sm text-blue-200">
+          <strong>Nota:</strong> Solo puedes tener una solicitud activa a la vez. Si tu solicitud es rechazada, podrás enviar una nueva.
+        </p>
+      </div>
+    </div>
+  </div>
+</div> 

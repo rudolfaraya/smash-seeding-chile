@@ -6,7 +6,7 @@ class EventsController < ApplicationController
   before_action :set_event, only: [ :show, :seeds, :sync_seeds ]
 
   def index
-    @events = @tournament.events
+    @events = policy_scope(@tournament.events)
   end
 
   def show
@@ -32,6 +32,10 @@ class EventsController < ApplicationController
   end
 
   def sync_seeds
+    authorize @event
+    
+    Rails.logger.info "=== Sincronización de seeds del evento #{@event.id} iniciada ==="
+
     # Verificar si el evento fue sincronizado recientemente (últimas 24 horas)
     if @event.respond_to?(:seeds_last_synced_at) &&
        @event.seeds_last_synced_at.present? &&

@@ -38,4 +38,44 @@ default_users.each do |user_attrs|
   end
 end
 
-puts "🎉 Seeds completados exitosamente!"
+puts "🌱 Creando usuarios administradores..."
+
+# Usuario admin principal
+admin_user = User.find_or_create_by(email: "admin@smashseeding.cl") do |user|
+  user.password = "password123"
+  user.password_confirmation = "password123"
+  user.role = :admin
+  user.confirmed_at = Time.current
+end
+
+if admin_user.persisted?
+  puts "✅ Usuario admin creado: #{admin_user.email}"
+else
+  puts "❌ Error creando usuario admin: #{admin_user.errors.full_messages.join(', ')}"
+end
+
+# Usuario admin secundario (para tu cuenta de start.gg cuando la conectes)
+# Este usuario se puede usar cuando conectes tu cuenta real de start.gg
+secondary_admin = User.find_or_create_by(email: "rodo@smashseeding.cl") do |user|
+  user.password = "password123"
+  user.password_confirmation = "password123"
+  user.role = :admin
+  user.confirmed_at = Time.current
+end
+
+if secondary_admin.persisted?
+  puts "✅ Usuario admin secundario creado: #{secondary_admin.email}"
+else
+  puts "❌ Error creando usuario admin secundario: #{secondary_admin.errors.full_messages.join(', ')}"
+end
+
+puts "🌱 Seeds completados exitosamente!"
+puts ""
+puts "📋 Usuarios creados:"
+puts "   Admin principal: admin@smashseeding.cl / password123"
+puts "   Admin secundario: rodo@smashseeding.cl / password123"
+puts ""
+puts "🔐 Puedes usar estos usuarios para:"
+puts "   - Probar funcionalidades de admin"
+puts "   - Ejecutar sincronizaciones"
+puts "   - Gestionar equipos y jugadores"

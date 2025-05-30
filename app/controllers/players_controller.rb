@@ -1,9 +1,12 @@
 class PlayersController < ApplicationController
-  # Requerir autenticación para update_smash_characters y update_info
-  before_action :authenticate_user!, only: [:update_smash_characters, :update_info]
+  # Requerir autenticación para acciones que requieren autorización
+  before_action :authenticate_user!, only: [:update_smash_characters, :update_info, :edit_info, :edit_teams, :update_teams]
   before_action :set_filter_params, only: [:index]
+  before_action :set_player, only: [:update_smash_characters, :current_characters, :edit_info, :update_info, :edit_teams, :update_teams]
 
   def index
+    @players = policy_scope(Player)
+    
     Rails.logger.info "=== Players#index called with query: '#{@query}', character_filter: '#{@character_filter}', team_filter: '#{@team_filter}', country_filter: '#{@country_filter}', sort_by: '#{@sort_by}', page: '#{@page}', format: #{request.format} ==="
 
     # Guardar todos los parámetros de filtro en la sesión
@@ -35,7 +38,10 @@ class PlayersController < ApplicationController
   end
 
   def update_smash_characters
-    @player = Player.find(params[:id])
+    authorize @player
+    
+    Rails.logger.info "Intentando actualizar personajes para el jugador #{@player.id} (#{@player.entrant_name})"
+    Rails.logger.info "Parámetros recibidos: #{params[:player]}"
 
     # Parámetros permitidos para personajes de Smash
     character_params = params.permit(:character_1, :skin_1, :character_2, :skin_2, :character_3, :skin_3)
@@ -87,23 +93,23 @@ class PlayersController < ApplicationController
   end
 
   def current_characters
-    @player = Player.find(params[:id])
-
-    render json: {
+    authorize @player
+    
+    character_data = {
       success: true,
       character_1: @player.character_1,
-      skin_1: @player.skin_1,
+      skin_1: @player.skin_1 || 1,
       character_2: @player.character_2,
-      skin_2: @player.skin_2,
+      skin_2: @player.skin_2 || 1,
       character_3: @player.character_3,
-      skin_3: @player.skin_3
+      skin_3: @player.skin_3 || 1
     }
-  rescue ActiveRecord::RecordNotFound
-    render json: { success: false, error: "Jugador no encontrado" }
+    
+    render json: character_data
   end
 
   def edit_info
-    @player = Player.find(params[:id])
+    authorize @player
 
     respond_to do |format|
       format.html { render partial: "edit_info_modal", locals: { player: @player } }
@@ -124,7 +130,10 @@ class PlayersController < ApplicationController
   end
 
   def update_info
-    @player = Player.find(params[:id])
+    authorize @player
+    
+    Rails.logger.info "Intentando actualizar información para el jugador #{@player.id} (#{@player.entrant_name})"
+    Rails.logger.info "Parámetros recibidos: #{player_params}"
 
     if @player.update(player_info_params)
       # CACHÉ: Invalidar caché después de actualizar información
@@ -175,8 +184,8 @@ class PlayersController < ApplicationController
   end
 
   def edit_teams
-    @player = Player.find(params[:id])
-    @teams = Team.order(:name)
+    authorize @player
+    @teams = Team.all.order(:name)
 
     respond_to do |format|
       format.html { render partial: "edit_teams_modal" }
@@ -196,8 +205,10 @@ class PlayersController < ApplicationController
   end
 
   def update_teams
-    @player = Player.find(params[:id])
+    authorize @player
     
+    Rails.logger.info "Intentando actualizar equipos para el jugador #{@player.id} (#{@player.entrant_name})"
+
     team_ids = params[:team_ids]&.reject(&:blank?) || []
     primary_team_id = params[:primary_team_id]
 
@@ -253,6 +264,10 @@ class PlayersController < ApplicationController
   end
 
   private
+
+  def set_player
+    @player = Player.find(params[:id])
+  end
 
   def player_params
     params.require(:player).permit(:character_1, :skin_1, :character_2, :skin_2, :character_3, :skin_3)

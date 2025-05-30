@@ -6,6 +6,10 @@ class Player < ApplicationRecord
   # Relaciones con equipos
   has_many :player_teams, dependent: :destroy
   has_many :teams, through: :player_teams
+  
+  # Relación con usuario
+  has_one :user, dependent: :nullify
+  has_many :user_player_requests, dependent: :destroy
 
   validates :name, presence: true, on: :create
   validates :entrant_name, presence: true

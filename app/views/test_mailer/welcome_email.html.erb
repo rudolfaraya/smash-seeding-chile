@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      body { font-family: Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; }
+      .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+      .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+      .content { padding: 30px; }
+      .footer { background: #f8fafc; padding: 20px; text-align: center; color: #64748b; border-radius: 0 0 8px 8px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🎮 <%= @greeting %></h1>
+      </div>
+      <div class="content">
+        <p><%= @message %></p>
+        <p>Si puedes ver este email, significa que <strong>Letter Opener</strong> está funcionando correctamente!</p>
+        <p>Los emails se abren automáticamente en tu navegador cuando Rails los envía.</p>
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
+        <p><em>Este email se generó automáticamente para probar la funcionalidad de letter_opener.</em></p>
+      </div>
+      <div class="footer">
+        <p>Smash Seeding Chile - Desarrollo</p>
+      </div>
+    </div>
+  </body>
+</html>

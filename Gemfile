@@ -60,8 +60,8 @@ group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
   
-  # Mailcatcher para capturar emails en desarrollo
-  gem "mailcatcher"
+  # Letter opener para visualizar emails en desarrollo (abre en el navegador)
+  gem "letter_opener", "~> 1.10"
 end
 
 group :test do
@@ -103,5 +103,13 @@ gem "solid_queue", "~> 1.1"
 gem "mission_control-jobs", "~> 1.0"
 
 gem "devise", "~> 4.9" # Autenticación de usuarios
+
+# Autorización
+gem "pundit", "~> 2.3"
+
+# OAuth con start.gg
+gem "omniauth", "~> 2.1"
+gem "omniauth-oauth2", "~> 1.8"
+gem "omniauth-rails_csrf_protection", "~> 1.0"
 
 gem "groupdate", "~> 6.4" # Para agrupación de datos por fechas

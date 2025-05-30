@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_28_192628) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_29_205019) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -152,6 +152,20 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_28_192628) do
     t.index ["start_at"], name: "index_tournaments_on_start_at"
   end
 
+  create_table "user_player_requests", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "player_id", null: false
+    t.integer "status", default: 0
+    t.text "message"
+    t.text "admin_response"
+    t.datetime "requested_at"
+    t.datetime "responded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["player_id"], name: "index_user_player_requests_on_player_id"
+    t.index ["user_id"], name: "index_user_player_requests_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -172,9 +186,16 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_28_192628) do
     t.datetime "locked_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "startgg_id"
+    t.string "startgg_username"
+    t.integer "role", default: 0
+    t.integer "player_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["player_id"], name: "index_users_on_player_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["role"], name: "index_users_on_role"
+    t.index ["startgg_id"], name: "index_users_on_startgg_id", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
@@ -185,4 +206,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_28_192628) do
   add_foreign_key "events", "tournaments"
   add_foreign_key "player_teams", "players"
   add_foreign_key "player_teams", "teams"
+  add_foreign_key "user_player_requests", "players"
+  add_foreign_key "user_player_requests", "users"
+  add_foreign_key "users", "players"
 end

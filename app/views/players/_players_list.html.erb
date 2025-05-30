@@ -34,23 +34,46 @@
               best_seed = 0
             end
             
-            # Color alternado para players
-            player_bg_color = index % 2 == 0 ? 'bg-slate-800' : 'bg-slate-900'
-            player_hover_color = index % 2 == 0 ? 'hover:bg-slate-700' : 'hover:bg-slate-800'
+            # Verificar si es el jugador vinculado del usuario actual
+            is_linked_player = user_signed_in? && current_user.player == player
+            can_edit_player = user_signed_in? && (current_user.admin? || is_linked_player)
+            
+            # Color de fondo especial para el jugador vinculado
+            if is_linked_player
+              player_bg_color = 'bg-gradient-to-r from-green-900/50 to-emerald-800/50 border-2 border-green-500/50'
+              player_hover_color = 'hover:from-green-800/60 hover:to-emerald-700/60'
+            else
+              player_bg_color = index % 2 == 0 ? 'bg-slate-800' : 'bg-slate-900'
+              player_hover_color = index % 2 == 0 ? 'hover:bg-slate-700' : 'hover:bg-slate-800'
+            end
           %>
-        <tr class="<%= player_bg_color %> <%= player_hover_color %> transition-colors duration-150 ease-in-out player-row border-b border-slate-700" data-player-id="<%= player.id %>" style="height: 100px;">
+        <tr class="<%= player_bg_color %> <%= player_hover_color %> transition-colors duration-150 ease-in-out player-row border-b border-slate-700" data-player-id="<%= player.id %>" style="height: 100px;" <%= 'title="✅ Este es tu jugador vinculado"'.html_safe if is_linked_player %>>
           <td class="py-4 px-4">
             <div class="flex items-center">
               <div class="flex-shrink-0 h-10 w-10">
-                <div class="h-10 w-10 rounded-full bg-gradient-to-r from-red-600 to-red-800 flex items-center justify-center border-2 border-red-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-100" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                  </svg>
+                <div class="h-10 w-10 rounded-full <%= is_linked_player ? 'bg-gradient-to-r from-green-600 to-emerald-800 border-2 border-green-400' : 'bg-gradient-to-r from-red-600 to-red-800 border-2 border-red-500' %> flex items-center justify-center">
+                  <% if is_linked_player %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-100" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                  <% else %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-100" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                  <% end %>
                 </div>
               </div>
               <div class="ml-4">
-                <div class="text-sm font-medium text-slate-100">
+                <div class="text-sm font-medium text-slate-100 flex items-center">
                   <%= player.entrant_name.present? ? player.entrant_name : 'Sin tag' %>
+                  <% if is_linked_player %>
+                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <svg class="w-2 h-2 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                        <circle cx="4" cy="4" r="3"/>
+                      </svg>
+                      Tu jugador
+                    </span>
+                  <% end %>
                 </div>
                 <div class="text-sm text-slate-400">
                   <%= player.name.present? ? player.name : 'Sin nombre' %>
@@ -191,7 +214,7 @@
           </td>
           <td class="py-4 px-6">
             <div class="flex space-x-3">
-              <% if user_signed_in? %>
+              <% if can_edit_player %>
                 <!-- Botón para editar información del jugador -->
                 <button 
                   onclick="openEditInfoModal(<%= player.id %>)" 
@@ -224,6 +247,13 @@
                   </svg>
                   <span>Equipos</span>
                 </button>
+              <% elsif user_signed_in? %>
+                <span class="inline-flex items-center px-2 py-1 border border-slate-600 text-slate-500 bg-slate-800 rounded-md cursor-not-allowed text-xs" title="Solo puedes editar tu propio jugador">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                  </svg>
+                  <span>Solo lectura</span>
+                </span>
               <% else %>
                 <span class="inline-flex items-center px-2 py-1 border border-slate-600 text-slate-500 bg-slate-800 rounded-md cursor-not-allowed text-xs">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -350,22 +380,47 @@
         avg_seed = 0
         best_seed = 0
       end
+      
+      # Verificar si es el jugador vinculado del usuario actual (para móvil)
+      is_linked_player = user_signed_in? && current_user.player == player
+      can_edit_player = user_signed_in? && (current_user.admin? || is_linked_player)
+      
+      # Color de fondo especial para el jugador vinculado (móvil)
+      card_classes = if is_linked_player
+        'bg-gradient-to-br from-green-900/50 to-emerald-800/50 border-2 border-green-500/50 shadow-lg shadow-green-500/25'
+      else
+        'bg-slate-800 border border-slate-600 shadow-lg'
+      end
     %>
     
-    <div class="bg-slate-800 rounded-lg border border-slate-600 shadow-lg player-card" data-player-id="<%= player.id %>">
+    <div class="<%= card_classes %> rounded-lg player-card" data-player-id="<%= player.id %>" <%= 'title="✅ Este es tu jugador vinculado"'.html_safe if is_linked_player %>>
       <!-- Header del card -->
       <div class="p-4 border-b border-slate-700">
         <div class="flex items-start space-x-3">
           <div class="flex-shrink-0">
-            <div class="h-12 w-12 rounded-full bg-gradient-to-r from-red-600 to-red-800 flex items-center justify-center border-2 border-red-500">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-100" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-              </svg>
+            <div class="h-12 w-12 rounded-full <%= is_linked_player ? 'bg-gradient-to-r from-green-600 to-emerald-800 border-2 border-green-400' : 'bg-gradient-to-r from-red-600 to-red-800 border-2 border-red-500' %> flex items-center justify-center">
+              <% if is_linked_player %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-100" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              <% else %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-100" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                </svg>
+              <% end %>
             </div>
           </div>
           <div class="flex-1 min-w-0">
-            <h3 class="text-lg font-semibold text-slate-100 truncate">
+            <h3 class="text-lg font-semibold text-slate-100 truncate flex items-center">
               <%= player.entrant_name.present? ? player.entrant_name : 'Sin tag' %>
+              <% if is_linked_player %>
+                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <svg class="w-2 h-2 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                    <circle cx="4" cy="4" r="3"/>
+                  </svg>
+                  Tu jugador
+                </span>
+              <% end %>
             </h3>
             <p class="text-sm text-slate-400 truncate">
               <%= player.name.present? ? player.name : 'Sin nombre' %>
@@ -464,7 +519,7 @@
       
       <!-- Acciones -->
       <div class="p-4 border-t border-slate-700 flex flex-col space-y-2">
-        <% if user_signed_in? %>
+        <% if can_edit_player %>
           <!-- Botón para editar información del jugador -->
           <button 
             onclick="openEditInfoModal(<%= player.id %>)" 
@@ -497,73 +552,77 @@
             </svg>
             Editar Equipos
           </button>
+        <% elsif user_signed_in? %>
+          <div class="w-full inline-flex items-center justify-center px-4 py-2 border border-slate-600 text-slate-500 bg-slate-800 rounded-md cursor-not-allowed text-sm" title="Solo puedes editar tu propio jugador">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 616 0z" clip-rule="evenodd" />
+            </svg>
+            Solo lectura
+          </div>
         <% else %>
           <div class="w-full inline-flex items-center justify-center px-4 py-2 border border-slate-600 text-slate-500 bg-slate-800 rounded-md cursor-not-allowed text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+              <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 616 0z" clip-rule="evenodd" />
             </svg>
-            Requiere login para editar
+            Requiere Login
           </div>
         <% end %>
         
-        <!-- Botón para ver eventos -->
+        <!-- Botón para ver eventos (siempre disponible) -->
         <% if total_events > 0 %>
           <button 
             id="toggle-events-mobile-<%= player.id %>" 
             onclick="togglePlayerEventsMobile(<%= player.id %>)" 
-            class="w-full toggle-button-mobile inline-flex items-center justify-center px-4 py-2 border border-blue-500 text-blue-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer text-sm" 
+            class="w-full toggle-button inline-flex items-center justify-center px-4 py-2 border border-blue-500 text-blue-400 bg-slate-800 rounded-md shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer text-sm" 
             data-state="closed">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
               <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
             </svg>
-            <span>Ver Eventos (<%= total_events %>)</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2 toggle-icon-mobile" viewBox="0 0 20 20" fill="currentColor">
+            Ver Eventos (<%= total_events %>)
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2 toggle-icon" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
           </button>
-          
-          <!-- Lista colapsable de eventos (móvil) -->
-          <div id="events-mobile-<%= player.id %>" class="hidden mt-2 space-y-2">
-            <% event_seeds.sort_by { |es| es.event.tournament.start_at }.reverse.each_with_index do |event_seed, event_index| %>
-              <% 
-                event = event_seed.event
-                tournament = event.tournament
-                is_future = tournament.start_at > Time.current
-                event_emoji = is_future ? "📅" : "✅"
-              %>
-              <div class="bg-slate-700 rounded-lg p-3 border border-slate-600">
-                <div class="flex items-start justify-between">
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center mb-1">
-                      <span class="mr-2" style="filter: drop-shadow(0 0 2px #f87171);"><%= event_emoji %></span>
-                      <h5 class="text-sm font-medium text-slate-200 truncate"><%= event.name %></h5>
-                    </div>
-                    <p class="text-xs text-slate-400 truncate mb-2"><%= tournament.name %></p>
-                    <div class="flex items-center text-xs text-slate-400">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                      </svg>
-                      <%= format_datetime_cl(tournament.start_at) %>
-                    </div>
-                  </div>
-                  <div class="flex items-center justify-center h-8 w-8 rounded-full bg-red-900 text-red-200 text-xs border border-red-500 ml-2 flex-shrink-0" style="text-shadow: 0 0 3px #f87171;">
-                    #<%= event_seed.seed_num %>
-                  </div>
-                </div>
-              </div>
-            <% end %>
-          </div>
         <% else %>
           <div class="w-full inline-flex items-center justify-center px-4 py-2 text-slate-500 bg-slate-900 rounded-md cursor-not-allowed text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
               <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
             </svg>
-            Sin eventos
+            Sin eventos para mostrar
           </div>
         <% end %>
       </div>
+      
+      <!-- Eventos ocultos para móvil -->
+      <% if total_events > 0 %>
+        <div id="eventsMobile-<%= player.id %>" class="events-mobile hidden border-t border-slate-700">
+          <div class="p-4 space-y-2">
+            <h4 class="text-sm font-medium text-slate-200 mb-3">Eventos Recientes</h4>
+            <% event_seeds.sort_by { |es| es.event.tournament.start_at }.reverse.first(5).each do |event_seed| %>
+              <% 
+                event = event_seed.event
+                tournament = event.tournament
+                is_future = tournament.start_at > Time.current
+                event_emoji = is_future ? "📅" : "✅"
+              %>
+              <div class="flex items-center justify-between p-2 bg-slate-700 rounded-md">
+                <div class="flex items-center">
+                  <span class="mr-2" style="filter: drop-shadow(0 0 2px #f87171);"><%= event_emoji %></span>
+                  <div>
+                    <p class="text-sm font-medium text-slate-200"><%= event.name %></p>
+                    <p class="text-xs text-slate-400"><%= tournament.name %> • <%= format_datetime_cl(tournament.start_at) %></p>
+                  </div>
+                </div>
+                <div class="flex items-center justify-center h-6 w-8 rounded-full bg-red-900 text-red-200 text-xs border border-red-500" style="text-shadow: 0 0 3px #f87171;">
+                  #<%= event_seed.seed_num %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
     </div>
   <% end %>
 </div>

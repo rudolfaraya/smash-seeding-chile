@@ -1,10 +1,13 @@
 class TournamentsController < ApplicationController
   # Requerir autenticación para acciones de sincronización
   before_action :authenticate_user!, only: [:sync, :sync_new_tournaments, :sync_events, :sync_latest_tournaments]
+  before_action :set_tournament, only: [:show, :sync_events]
 
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
 
   def index
+    @tournaments = policy_scope(Tournament)
+    
     Rails.logger.info "=== Tournaments#index called with query: '#{params[:query]}', region: '#{params[:region]}', city: '#{params[:city]}', status: '#{params[:status]}', sort: '#{params[:sort]}', page: '#{params[:page]}', format: #{request.format} ==="
 
     # Si no hay parámetros de filtros, limpiar la sesión (clear all)
@@ -47,11 +50,14 @@ class TournamentsController < ApplicationController
   end
 
   def show
-    @tournament = Tournament.find(params[:id])
-    @events = @tournament.events.includes(:event_seeds)
+    # No necesita autorización especial, todos pueden ver
   end
 
   def sync
+    authorize Tournament
+    
+    Rails.logger.info "=== Sincronización manual de TODOS los torneos iniciada ==="
+
     begin
       # Encolar job de sincronización general de torneos
       job = SyncTournamentsJob.perform_later
@@ -89,6 +95,10 @@ class TournamentsController < ApplicationController
   end
 
   def sync_new_tournaments
+    authorize Tournament
+    
+    Rails.logger.info "=== Sincronización de NUEVOS torneos iniciada ==="
+
     begin
       # Encolar job de sincronización de nuevos torneos
       job = SyncNewTournamentsJob.perform_later
@@ -126,7 +136,9 @@ class TournamentsController < ApplicationController
   end
 
   def sync_events
-    @tournament = Tournament.find(params[:id])
+    authorize @tournament
+    
+    Rails.logger.info "=== Sincronización de eventos del torneo #{@tournament.id} iniciada ==="
 
     begin
       # Encolar job de sincronización de eventos para este torneo específico
@@ -165,6 +177,10 @@ class TournamentsController < ApplicationController
   end
 
   def sync_latest_tournaments
+    authorize Tournament
+    
+    Rails.logger.info "=== Sincronización de ÚLTIMOS torneos iniciada ==="
+
     begin
       # Encolar job de actualización de los últimos 20 torneos
       job = SyncLatestTournamentsJob.perform_later({ limit: 20, force: true })
@@ -292,6 +308,10 @@ class TournamentsController < ApplicationController
     # Usar el servicio para obtener los torneos filtrados, igual que en index
     @tournaments = TournamentsFilterService.new(params, session).call
     set_filter_options
+  end
+
+  def set_tournament
+    @tournament = Tournament.find(params[:id])
   end
 
   def record_not_found

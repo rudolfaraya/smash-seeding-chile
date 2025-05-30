@@ -71,21 +71,95 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
                 </svg>
-                <%= current_user.email.split('@').first %>
+                <%= current_user.display_name %>
+                
+                <!-- Indicadores de estado -->
+                <% if current_user.has_linked_player? %>
+                  <span class="ml-1 h-2 w-2 bg-green-400 rounded-full" title="Jugador vinculado"></span>
+                <% elsif current_user.has_pending_player_request? %>
+                  <span class="ml-1 h-2 w-2 bg-yellow-400 rounded-full animate-pulse" title="Solicitud pendiente"></span>
+                <% end %>
+                
                 <svg class="ml-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>
               </button>
               
-              <div class="hidden absolute right-0 mt-2 w-48 bg-slate-800 rounded-md shadow-lg py-1 z-50 border border-slate-700"
+              <div class="hidden absolute right-0 mt-2 w-56 bg-slate-800 rounded-md shadow-lg py-1 z-50 border border-slate-700"
                    data-dropdown-target="menu">
+                <!-- Perfil -->
+                <%= link_to profile_path, 
+                      class: "flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors duration-200" do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
+                  </svg>
+                  Mi Perfil
+                <% end %>
+
+                <% if current_user.has_linked_player? %>
+                  <!-- Mi Jugador -->
+                  <%= link_to profile_player_path, 
+                        class: "flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors duration-200" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-3 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                    <div class="flex-1">
+                      <div class="flex items-center">
+                        Mi Jugador
+                        <span class="ml-2 h-1.5 w-1.5 bg-green-400 rounded-full"></span>
+                      </div>
+                      <div class="text-xs text-slate-400">
+                        <%= current_user.player&.entrant_name || current_user.player&.name %>
+                      </div>
+                    </div>
+                  <% end %>
+                <% else %>
+                  <!-- Solicitudes de vinculación -->
+                  <%= link_to user_player_requests_path, 
+                        class: "flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors duration-200" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" clip-rule="evenodd" />
+                    </svg>
+                    Vincular Jugador
+                    <% if current_user.has_pending_player_request? %>
+                      <span class="ml-auto h-2 w-2 bg-yellow-400 rounded-full"></span>
+                    <% end %>
+                  <% end %>
+                <% end %>
+
+                <!-- Administración (solo admins) -->
+                <% if current_user.admin? %>
+                  <div class="border-t border-slate-600 my-1"></div>
+                  <div class="px-4 py-2">
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Administración</p>
+                  </div>
+                  
+                  <%= link_to admin_user_player_requests_path, 
+                        class: "flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors duration-200" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 2C5.58 2 2 5.58 2 10s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                    Solicitudes
+                    <% if UserPlayerRequest.pending.count > 0 %>
+                      <span class="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <%= UserPlayerRequest.pending.count %>
+                      </span>
+                    <% end %>
+                  <% end %>
+                <% end %>
+
+                <div class="border-t border-slate-600 my-1"></div>
+                
+                <!-- Editar cuenta -->
                 <%= link_to edit_user_registration_path, 
                       class: "flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition-colors duration-200" do %>
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-3" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                   </svg>
-                  Editar Perfil
+                  Configuración
                 <% end %>
+                
+                <!-- Cerrar sesión -->
                 <%= button_to destroy_user_session_path, 
                       method: :delete,
                       data: { turbo: false },
