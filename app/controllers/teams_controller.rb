@@ -1,10 +1,10 @@
 class TeamsController < ApplicationController
-  before_action :authenticate_user!, only: [:new, :create, :edit, :update, :destroy, :add_player, :remove_player, :search_players]
-  before_action :set_team, only: [:show, :edit, :update, :destroy, :add_player, :remove_player, :search_players]
+  before_action :authenticate_user!, only: [ :new, :create, :edit, :update, :destroy, :add_player, :remove_player, :search_players ]
+  before_action :set_team, only: [ :show, :edit, :update, :destroy, :add_player, :remove_player, :search_players ]
 
   def index
     @teams = policy_scope(Team)
-    
+
     @query = params[:query]
     @sort_by = params[:sort_by] || "name_asc"
     @page = params[:page]
@@ -38,6 +38,7 @@ class TeamsController < ApplicationController
 
   def show
     # No necesita autorización especial, todos pueden ver
+    @players = @team.players_with_stats
   end
 
   def search
@@ -47,7 +48,7 @@ class TeamsController < ApplicationController
   def new
     @team = Team.new
     authorize @team
-    
+
     respond_to do |format|
       format.html { render :new }
       format.json { render json: { success: true } }
@@ -57,14 +58,14 @@ class TeamsController < ApplicationController
   def create
     @team = Team.new(team_params)
     authorize @team
-    
+
     if @team.save
       respond_to do |format|
-        format.html { redirect_to @team, notice: 'Equipo creado exitosamente.' }
-        format.json { 
-          render json: { 
-            success: true, 
-            message: 'Equipo creado exitosamente',
+        format.html { redirect_to @team, notice: "Equipo creado exitosamente." }
+        format.json {
+          render json: {
+            success: true,
+            message: "Equipo creado exitosamente",
             team: {
               id: @team.id,
               name: @team.name,
@@ -78,10 +79,10 @@ class TeamsController < ApplicationController
     else
       respond_to do |format|
         format.html { render :new, status: :unprocessable_entity }
-        format.json { 
-          render json: { 
-            success: false, 
-            errors: @team.errors.full_messages 
+        format.json {
+          render json: {
+            success: false,
+            errors: @team.errors.full_messages
           }, status: :unprocessable_entity
         }
       end
@@ -90,7 +91,7 @@ class TeamsController < ApplicationController
 
   def edit
     authorize @team
-    
+
     respond_to do |format|
       format.html { render :edit }
       format.json { render json: { success: true, team: @team } }
@@ -99,22 +100,22 @@ class TeamsController < ApplicationController
 
   def update
     authorize @team
-    
+
     # Manejar eliminación del logo si se solicita
-    if params[:team][:remove_logo] == 'true'
+    if params[:team][:remove_logo] == "true"
       @team.logo_image.purge if @team.logo_image.attached?
     end
-    
+
     # Filtrar el parámetro remove_logo antes de actualizar
     update_params = team_params.except(:remove_logo)
-    
+
     if @team.update(update_params)
       respond_to do |format|
-        format.html { redirect_to @team, notice: 'Equipo actualizado exitosamente.' }
-        format.json { 
-          render json: { 
-            success: true, 
-            message: 'Equipo actualizado exitosamente',
+        format.html { redirect_to @team, notice: "Equipo actualizado exitosamente." }
+        format.json {
+          render json: {
+            success: true,
+            message: "Equipo actualizado exitosamente",
             team: {
               id: @team.id,
               name: @team.name,
@@ -127,10 +128,10 @@ class TeamsController < ApplicationController
     else
       respond_to do |format|
         format.html { render :edit, status: :unprocessable_entity }
-        format.json { 
-          render json: { 
-            success: false, 
-            errors: @team.errors.full_messages 
+        format.json {
+          render json: {
+            success: false,
+            errors: @team.errors.full_messages
           }, status: :unprocessable_entity
         }
       end
@@ -139,19 +140,19 @@ class TeamsController < ApplicationController
 
   def destroy
     authorize @team
-    
+
     team_name = @team.name
     players_count = @team.players_count
-    
+
     if @team.destroy
       respond_to do |format|
-        format.html { 
-          redirect_to teams_path, 
-          notice: "Equipo '#{team_name}' eliminado exitosamente. Se removieron #{players_count} asociaciones de jugadores." 
+        format.html {
+          redirect_to teams_path,
+          notice: "Equipo '#{team_name}' eliminado exitosamente. Se removieron #{players_count} asociaciones de jugadores."
         }
-        format.json { 
-          render json: { 
-            success: true, 
+        format.json {
+          render json: {
+            success: true,
             message: "Equipo '#{team_name}' eliminado exitosamente",
             players_removed: players_count,
             redirect_url: teams_path
@@ -160,28 +161,28 @@ class TeamsController < ApplicationController
       end
     else
       respond_to do |format|
-        format.html { 
-          redirect_to @team, 
-          alert: 'Error al eliminar el equipo.' 
+        format.html {
+          redirect_to @team,
+          alert: "Error al eliminar el equipo."
         }
-        format.json { 
-          render json: { 
-            success: false, 
-            error: 'Error al eliminar el equipo' 
+        format.json {
+          render json: {
+            success: false,
+            error: "Error al eliminar el equipo"
           }, status: :unprocessable_entity
         }
       end
     end
   rescue ActiveRecord::RecordNotFound
     respond_to do |format|
-      format.html { 
-        redirect_to teams_path, 
-        alert: 'Equipo no encontrado.' 
+      format.html {
+        redirect_to teams_path,
+        alert: "Equipo no encontrado."
       }
-      format.json { 
-        render json: { 
-          success: false, 
-          error: 'Equipo no encontrado' 
+      format.json {
+        render json: {
+          success: false,
+          error: "Equipo no encontrado"
         }, status: :not_found
       }
     end
@@ -189,60 +190,61 @@ class TeamsController < ApplicationController
 
   def add_player
     authorize @team
-    
+
     player_id = params[:player_id]
-    is_primary = params[:is_primary] == 'true'
+    is_primary = params[:is_primary] == "true"
 
     if @team.add_player(player_id, is_primary)
-      render json: { 
-        success: true, 
+      render json: {
+        success: true,
         message: "Jugador agregado al equipo correctamente",
         reload_team: true
       }
     else
-      render json: { 
-        success: false, 
-        error: "Error al agregar el jugador al equipo" 
+      render json: {
+        success: false,
+        error: "Error al agregar el jugador al equipo"
       }
     end
   rescue ActiveRecord::RecordNotFound => e
-    render json: { 
-      success: false, 
+    render json: {
+      success: false,
       error: e.message.include?("Team") ? "Equipo no encontrado" : "Jugador no encontrado"
     }
   end
 
   def remove_player
     authorize @team
-    
+
     player_id = params[:player_id]
 
     if @team.remove_player(player_id)
-      render json: { 
-        success: true, 
+      render json: {
+        success: true,
         message: "Jugador removido del equipo correctamente",
         reload_team: true
       }
     else
-      render json: { 
-        success: false, 
-        error: "Error al remover el jugador del equipo" 
+      render json: {
+        success: false,
+        error: "Error al remover el jugador del equipo"
       }
     end
   rescue ActiveRecord::RecordNotFound
-    render json: { 
-      success: false, 
-      error: "Equipo no encontrado" 
+    render json: {
+      success: false,
+      error: "Equipo no encontrado"
     }
   end
 
   def search_players
     authorize @team
-    
+
     search_term = params[:search]
     @available_players = @team.available_players(search_term)
 
     render json: {
+      success: true,
       players: @available_players.map do |player|
         {
           id: player.id,

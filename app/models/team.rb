@@ -1,21 +1,21 @@
 class Team < ApplicationRecord
   has_many :player_teams, dependent: :destroy
   has_many :players, through: :player_teams
-  
+
   # Active Storage para el logo
   has_one_attached :logo_image
 
   validates :name, presence: true, uniqueness: true
   validates :acronym, presence: true, uniqueness: true, length: { in: 2..5 }
   validates :description, length: { maximum: 500 }
-  
+
   # Validación para el logo
   validate :logo_image_format, if: -> { logo_image.attached? }
 
-  scope :with_players_count, -> { 
+  scope :with_players_count, -> {
     left_joins(:player_teams)
       .select("teams.*, COUNT(player_teams.id) AS players_count_data")
-      .group("teams.id") 
+      .group("teams.id")
   }
 
   def players_count
@@ -50,6 +50,34 @@ class Team < ApplicationRecord
           .select("players.*, player_teams.is_primary AS is_primary")
           .where(player_teams: { team_id: id })
           .order("player_teams.is_primary DESC, players.entrant_name ASC")
+  end
+
+  # Método para obtener jugadores con estadísticas completas
+  def players_with_stats
+    players_data = Player.joins(:player_teams)
+                        .left_joins(:event_seeds)
+                        .left_joins(event_seeds: { event: :tournament })
+                        .select(
+                          "players.*",
+                          "player_teams.is_primary",
+                          "COUNT(DISTINCT events.id) as events_count",
+                          "COUNT(DISTINCT tournaments.id) as tournaments_count"
+                        )
+                        .where(player_teams: { team_id: id })
+                        .group("players.id, player_teams.is_primary")
+                        .order("player_teams.is_primary DESC, players.entrant_name ASC")
+
+    # Convertir a hash para facilitar el acceso en las vistas
+    players_data.map do |player|
+      {
+        id: player.id,
+        name: player.name,
+        entrant_name: player.entrant_name,
+        is_primary: player.is_primary ? 1 : 0,
+        events_count: player.events_count || 0,
+        tournaments_count: player.tournaments_count || 0
+      }
+    end
   end
 
   # Agregar un jugador al equipo
@@ -95,16 +123,18 @@ class Team < ApplicationRecord
   # Buscar jugadores que no están en este equipo
   def available_players(search_term = nil)
     excluded_player_ids = player_teams.pluck(:player_id)
-    
+
     query = Player.where.not(id: excluded_player_ids)
-    
+
     if search_term.present?
+      # Usar sintaxis más simple compatible con SQLite
+      search_term_safe = search_term.downcase
       query = query.where(
-        "LOWER(players.name) LIKE LOWER(?) OR LOWER(players.entrant_name) LIKE LOWER(?)",
-        "%#{search_term}%", "%#{search_term}%"
+        "LOWER(name) LIKE :search OR LOWER(entrant_name) LIKE :search",
+        search: "%#{search_term_safe}%"
       )
     end
-    
+
     query.order(:entrant_name).limit(20)
   end
 
@@ -113,12 +143,12 @@ class Team < ApplicationRecord
   def logo_image_format
     return unless logo_image.attached?
 
-    unless logo_image.content_type.in?(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
-      errors.add(:logo_image, 'debe ser un archivo de imagen válido (JPEG, PNG, GIF, WebP)')
+    unless logo_image.content_type.in?([ "image/jpeg", "image/png", "image/gif", "image/webp" ])
+      errors.add(:logo_image, "debe ser un archivo de imagen válido (JPEG, PNG, GIF, WebP)")
     end
 
     if logo_image.byte_size > 5.megabytes
-      errors.add(:logo_image, 'debe ser menor a 5MB')
+      errors.add(:logo_image, "debe ser menor a 5MB")
     end
 
     # Verificar que sea aproximadamente cuadrada
@@ -127,7 +157,7 @@ class Team < ApplicationRecord
       if metadata[:width] && metadata[:height]
         aspect_ratio = metadata[:width].to_f / metadata[:height].to_f
         unless (0.8..1.25).include?(aspect_ratio)
-          errors.add(:logo_image, 'debe ser aproximadamente cuadrada (relación de aspecto entre 0.8 y 1.25)')
+          errors.add(:logo_image, "debe ser aproximadamente cuadrada (relación de aspecto entre 0.8 y 1.25)")
         end
       end
     end

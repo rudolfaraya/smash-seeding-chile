@@ -155,22 +155,29 @@ window.TeamsModule = (function() {
       return;
     }
     
-    playersSearchList.innerHTML = players.map(player => `
-      <div class="p-3 hover:bg-slate-600 cursor-pointer border-b border-slate-600 last:border-b-0 transition-colors"
-           onclick="selectPlayer(${player.id}, '${player.entrant_name.replace(/'/g, "\\'")}', '${player.name.replace(/'/g, "\\'")}')">
-        <div class="flex items-center">
-          <div class="w-8 h-8 rounded-full bg-gradient-to-r from-red-600 to-red-800 flex items-center justify-center border border-red-500 mr-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-100" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-            </svg>
-          </div>
-          <div>
-            <div class="text-sm font-medium text-slate-200">${player.entrant_name}</div>
-            <div class="text-xs text-slate-400">${player.name}</div>
+    playersSearchList.innerHTML = players.map(player => {
+      // Manejar valores null o undefined
+      const entrantName = (player.entrant_name || '').replace(/'/g, "\\'");
+      const playerName = (player.name || '').replace(/'/g, "\\'");
+      const displayName = player.name || player.entrant_name || 'Sin nombre';
+      
+      return `
+        <div class="p-3 hover:bg-slate-600 cursor-pointer border-b border-slate-600 last:border-b-0 transition-colors"
+             onclick="selectPlayer(${player.id}, '${entrantName}', '${playerName}')">
+          <div class="flex items-center">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-red-600 to-red-800 flex items-center justify-center border border-red-500 mr-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-100" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <div class="text-sm font-medium text-slate-200">${player.entrant_name || 'Sin nombre'}</div>
+              <div class="text-xs text-slate-400">${displayName}</div>
+            </div>
           </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   function selectPlayer(playerId, entrantName, name) {
@@ -185,6 +192,10 @@ window.TeamsModule = (function() {
     const addBtn = document.getElementById('addPlayerBtn');
     const searchResults = document.getElementById('searchResults');
     
+    // Manejar valores null o undefined para la visualización
+    const displayEntrantName = entrantName || 'Sin nombre';
+    const displayName = name || entrantName || 'Sin nombre';
+    
     if (selectedDetails) {
       selectedDetails.innerHTML = `
         <div class="flex items-center">
@@ -194,8 +205,8 @@ window.TeamsModule = (function() {
             </svg>
           </div>
           <div>
-            <div class="font-medium text-slate-200">${entrantName}</div>
-            <div class="text-sm text-slate-400">${name}</div>
+            <div class="font-medium text-slate-200">${displayEntrantName}</div>
+            <div class="text-sm text-slate-400">${displayName}</div>
           </div>
         </div>
       `;
