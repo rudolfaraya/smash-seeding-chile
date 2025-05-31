@@ -123,7 +123,7 @@ class Tournament < ApplicationRecord
     # Fallback: calcular participantes únicos de eventos de Smash válidos
     event_seeds.joins(:event)
               .where(events: { videogame_id: Event::SMASH_ULTIMATE_VIDEOGAME_ID })
-              .where('events.team_max_players IS NULL OR events.team_max_players <= 1')
+              .where("events.team_max_players IS NULL OR events.team_max_players <= 1")
               .distinct
               .count(:player_id)
   end
@@ -155,7 +155,7 @@ class Tournament < ApplicationRecord
     includes(events: :event_seeds)
       .joins("LEFT JOIN events AS smash_events ON smash_events.tournament_id = tournaments.id AND smash_events.videogame_id = #{Event::SMASH_ULTIMATE_VIDEOGAME_ID} AND (smash_events.team_max_players IS NULL OR smash_events.team_max_players <= 1)")
       .joins("LEFT JOIN event_seeds AS smash_seeds ON smash_seeds.event_id = smash_events.id")
-      .select("tournaments.*, 
+      .select("tournaments.*,
               COUNT(DISTINCT events.id) AS events_count_data,
               COUNT(DISTINCT event_seeds.id) AS total_event_seeds_count_data,
               COUNT(DISTINCT smash_seeds.player_id) AS smash_attendees_count_data")
@@ -165,7 +165,7 @@ class Tournament < ApplicationRecord
   # Método para determinar qué conteo de asistentes usar (prioriza el calculado sobre el de la API)
   def best_attendees_count
     smash_count = calculated_smash_attendees_count_optimized
-    
+
     # Si tenemos participantes de Smash, usar ese conteo
     if smash_count > 0
       smash_count
@@ -181,6 +181,55 @@ class Tournament < ApplicationRecord
       .left_joins("LEFT JOIN event_seeds AS smash_seeds ON smash_seeds.event_id = smash_events.id")
       .select("tournaments.*, COUNT(DISTINCT smash_seeds.player_id) AS smash_attendees_count_data")
       .group("tournaments.id")
+  end
+
+  # Métodos para manejar imagen de banner
+  def has_banner_image?
+    banner_image_url.present?
+  end
+
+  def banner_image_dimensions
+    return nil unless has_banner_image?
+    "#{banner_image_width}x#{banner_image_height}"
+  end
+
+  def banner_image_responsive_url(width = nil)
+    return nil unless banner_image_url.present?
+
+    # Si start.gg proporciona URLs responsivas, se pueden modificar aquí
+    # Por ahora, devolvemos la URL original
+    banner_image_url
+  end
+
+  # Sincronizar imagen de banner desde start.gg
+  def sync_banner_image_from_start_gg!
+    return false unless slug.present?
+
+    Rails.logger.info "🖼️ Sincronizando imagen de banner para torneo: #{name}"
+
+    begin
+      client = StartGgClient.new
+      images = StartGgQueries.fetch_tournament_images(client, slug)
+
+      if images.any?
+        banner_image = images.first
+        update!(
+          banner_image_url: banner_image["url"],
+          banner_image_width: banner_image["width"]&.to_i,
+          banner_image_height: banner_image["height"]&.to_i,
+          banner_image_ratio: banner_image["ratio"]&.to_f
+        )
+
+        Rails.logger.info "✅ Imagen de banner sincronizada: #{banner_image_url}"
+        true
+      else
+        Rails.logger.info "ℹ️ No se encontraron imágenes de banner para el torneo"
+        false
+      end
+    rescue StandardError => e
+      Rails.logger.error "❌ Error sincronizando imagen de banner: #{e.message}"
+      false
+    end
   end
 
   private

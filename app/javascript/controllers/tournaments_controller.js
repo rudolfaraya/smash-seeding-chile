@@ -2,13 +2,26 @@ import { Controller } from "@hotwired/stimulus"
 
 // Controlador para manejar la funcionalidad de torneos
 export default class extends Controller {
-  static targets = ["eventRow", "toggleButton"]
+  static targets = ["eventRow", "toggleButton", "filterForm", "queryInput", "regionSelect", "citySelect", "eventCount", "seedCount", "attendeeCount", "hasSeedsFilter", "resultCount", "quickFilter"]
   static values = { tournamentId: Number }
 
   connect() {
     console.log("Controlador de torneos conectado")
     // Inicializar el estado de todos los botones de toggle de eventos
     this.initializeEventStates()
+    this.setupImageOptimizations()
+    this.lastQuery = ""
+    this.debounceTimer = null
+
+    if (this.hasQuickFilterTarget) {
+      this.quickFilterTarget.addEventListener('click', this.handleQuickFilter.bind(this))
+    }
+  }
+
+  disconnect() {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer)
+    }
   }
 
   // Método para aplicar filtros automáticamente cuando cambian las fechas
@@ -154,6 +167,203 @@ export default class extends Controller {
       if (span) span.textContent = 'Ver Eventos'
       button.dataset.state = 'closed'
     }
+  }
+
+  // Optimizaciones para imágenes remotas de start.gg
+  setupImageOptimizations() {
+    // Configurar Intersection Observer para lazy loading
+    if ('IntersectionObserver' in window) {
+      const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target
+            this.loadRemoteImage(img)
+            observer.unobserve(img)
+          }
+        })
+      }, {
+        rootMargin: '50px 0px',
+        threshold: 0.1
+      })
+
+      // Observar todas las imágenes remotas
+      document.querySelectorAll('img[data-src]').forEach(img => {
+        imageObserver.observe(img)
+      })
+    }
+
+    // Preload imágenes de torneos visibles
+    this.preloadVisibleBanners()
+  }
+
+  loadRemoteImage(img) {
+    const src = img.dataset.src
+    if (!src) return
+
+    // Crear un nuevo elemento imagen para precargar
+    const tempImg = new Image()
+    
+    tempImg.onload = () => {
+      img.src = src
+      img.classList.remove('image-skeleton')
+      img.classList.add('remote-image')
+      img.style.opacity = '1'
+    }
+
+    tempImg.onerror = () => {
+      // Mostrar fallback si la imagen falla
+      const fallback = img.dataset.fallback || img.alt || '🏆'
+      img.parentElement.innerHTML = `
+        <div class="w-full h-full image-fallback flex items-center justify-center text-xs font-semibold">
+          ${fallback}
+        </div>
+      `
+    }
+
+    // Iniciar la carga
+    tempImg.src = src
+  }
+
+  preloadVisibleBanners() {
+    // Precargar las primeras 5 imágenes de banners para mejorar perceived performance
+    const visibleImages = document.querySelectorAll('.tournament-row img[src*="start.gg"], .tournament-card img[src*="start.gg"]')
+    
+    Array.from(visibleImages).slice(0, 5).forEach(img => {
+      const link = document.createElement('link')
+      link.rel = 'preload'
+      link.as = 'image'
+      link.href = img.src
+      document.head.appendChild(link)
+    })
+  }
+
+  // Cache de imágenes para evitar recargas
+  cacheRemoteImage(url) {
+    if (!this.imageCache) {
+      this.imageCache = new Map()
+    }
+
+    if (!this.imageCache.has(url)) {
+      const img = new Image()
+      img.src = url
+      this.imageCache.set(url, img)
+    }
+
+    return this.imageCache.get(url)
+  }
+
+  // Resto de la funcionalidad existente
+  search(event) {
+    if (event) event.preventDefault()
+
+    const query = this.queryInputTarget.value.trim()
+    
+    if (query === this.lastQuery) return
+
+    this.lastQuery = query
+
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer)
+    }
+
+    this.debounceTimer = setTimeout(() => {
+      this.performSearch()
+    }, 300)
+  }
+
+  async performSearch() {
+    const formData = new FormData(this.filterFormTarget)
+    
+    try {
+      const response = await fetch('/tournaments', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'text/vnd.turbo-stream.html',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+
+      if (response.ok) {
+        const html = await response.text()
+        Turbo.renderStreamMessage(html)
+        
+        // Reconfigurar optimizaciones de imagen después de actualizar contenido
+        setTimeout(() => {
+          this.setupImageOptimizations()
+        }, 100)
+      }
+    } catch (error) {
+      console.error('Error en búsqueda:', error)
+    }
+  }
+
+  clearFilters(event) {
+    event.preventDefault()
+    
+    this.queryInputTarget.value = ""
+    this.regionSelectTarget.value = ""
+    this.citySelectTarget.value = ""
+    this.eventCountTarget.value = ""
+    this.seedCountTarget.value = ""
+    this.attendeeCountTarget.value = ""
+    this.hasSeedsFilterTarget.value = ""
+    
+    this.lastQuery = ""
+    this.performSearch()
+  }
+
+  // Quick filters para usabilidad mejorada
+  handleQuickFilter(event) {
+    const button = event.target.closest('[data-filter]')
+    if (!button) return
+
+    event.preventDefault()
+    
+    const filterType = button.dataset.filter
+    
+    // Limpiar filtros existentes
+    this.clearCurrentFilters()
+    
+    // Aplicar filtro específico
+    switch(filterType) {
+      case 'recent':
+        // Los torneos ya vienen ordenados por fecha reciente
+        break
+      case 'with-seeds':
+        this.hasSeedsFilterTarget.value = 'true'
+        break
+      case 'large':
+        this.attendeeCountTarget.value = '32'
+        break
+      case 'online':
+        this.regionSelectTarget.value = 'Online'
+        break
+    }
+
+    this.performSearch()
+  }
+
+  clearCurrentFilters() {
+    this.regionSelectTarget.value = ""
+    this.citySelectTarget.value = ""
+    this.eventCountTarget.value = ""
+    this.seedCountTarget.value = ""
+    this.attendeeCountTarget.value = ""
+    this.hasSeedsFilterTarget.value = ""
+  }
+
+  regionChanged() {
+    const selectedRegion = this.regionSelectTarget.value
+    
+    if (selectedRegion === "Online") {
+      this.citySelectTarget.value = ""
+      this.citySelectTarget.disabled = true
+    } else {
+      this.citySelectTarget.disabled = false
+    }
+    
+    this.search()
   }
 }
 

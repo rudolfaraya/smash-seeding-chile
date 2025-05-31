@@ -17,15 +17,35 @@
             <!-- Fila del torneo -->
             <tr class="<%= index % 2 == 0 ? 'bg-slate-800' : 'bg-slate-900' %> hover:bg-slate-700 transition-colors duration-150 tournament-row" data-tournament="<%= tournament.id %>">
               <td class="py-3 px-6">
-                <div class="flex items-center">
-                  <div>
-                    <div class="text-sm font-medium text-slate-200 cursor-pointer">
-                      <%= link_to tournament.name, tournament.start_gg_url, target: "_blank", class: "text-blue-400 hover:text-blue-300 transition-colors duration-200" %>
-                    </div>
-                    <div class="text-xs text-slate-400 mt-1">
-                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= tournament.online? ? 'bg-green-900 text-green-200' : 'bg-blue-900 text-blue-200' %>">
+                <div class="flex items-center space-x-6">
+                  <!-- Banner de torneo con optimizaciones CORREGIDAS -->
+                  <div class="relative flex-shrink-0">
+                    <% if tournament.has_banner_image? %>
+                      <div class="tournament-image-container">
+                        <img src="<%= tournament.banner_image_url %>" 
+                             alt="<%= tournament.name %>"
+                             class="remote-image"
+                             loading="lazy"
+                             onerror="this.parentElement.innerHTML='<div class=\\'image-fallback\\'>🏆</div>'"
+                             style="image-rendering: auto;">
+                      </div>
+                    <% else %>
+                      <div class="tournament-image-container image-fallback">
+                        🏆
+                      </div>
+                    <% end %>
+                    
+                    <!-- Overlay de tipo de torneo (Presencial/Online) -->
+                    <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white text-xs px-2 py-1">
+                      <span class="font-medium">
                         <%= tournament.online? ? "🌐 Online" : "📍 Presencial" %>
                       </span>
+                    </div>
+                  </div>
+                  
+                  <div class="flex-1 min-w-0">
+                    <div class="text-sm font-medium text-slate-200 cursor-pointer mb-1">
+                      <%= link_to tournament.name, tournament.start_gg_url, target: "_blank", class: "text-blue-400 hover:text-blue-300 transition-colors duration-200" %>
                     </div>
                   </div>
                 </div>
@@ -180,120 +200,153 @@
   <!-- Vista móvil -->
   <div class="md:hidden space-y-4 tournaments-mobile">
     <% @tournaments.each do |tournament| %>
-      <div class="bg-slate-800 rounded-lg shadow-md border border-slate-600 p-4 tournament-card" data-tournament="<%= tournament.id %>">
-        <div class="flex justify-between items-start mb-3">
-          <div class="flex-1">
-            <h3 class="text-sm font-medium text-slate-200 mb-2">
-              <%= link_to tournament.name, tournament.start_gg_url, target: "_blank", class: "text-blue-400 hover:text-blue-300 transition-colors duration-200" %>
-            </h3>
-            <div class="flex flex-wrap gap-2 mb-2">
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= tournament.online? ? 'bg-green-900 text-green-200' : 'bg-blue-900 text-blue-200' %>">
-                <%= tournament.online? ? "🌐 Online" : "📍 Presencial" %>
-              </span>
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300">
-                <%= tournament.calculated_events_count_optimized %> <%= tournament.calculated_events_count_optimized == 1 ? 'evento' : 'eventos' %>
-              </span>
+      <div class="bg-slate-800 rounded-lg shadow-md border border-slate-600 overflow-hidden tournament-card" data-tournament="<%= tournament.id %>">
+        
+        <!-- Imagen principal que ocupa todo el ancho -->
+        <div class="relative w-full">
+          <% if tournament.has_banner_image? %>
+            <div class="w-full h-48 relative">
+              <img src="<%= tournament.banner_image_url %>" 
+                   alt="<%= tournament.name %>"
+                   class="w-full h-full object-cover"
+                   loading="lazy"
+                   style="image-rendering: auto;">
+              
+              <!-- Overlay de tipo de torneo en la imagen -->
+              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white text-sm px-3 py-2">
+                <span class="font-medium">
+                  <%= tournament.online? ? "🌐 Online" : "📍 Presencial" %>
+                </span>
+              </div>
             </div>
-            
-            <!-- Información de asistentes en móvil -->
-            <div class="mb-2">
-              <% best_count = tournament.best_attendees_count %>
-              <% if best_count.present? && best_count > 0 %>
-                <div class="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span class="text-sm font-medium text-blue-400">
-                    <%= best_count %> <%= best_count == 1 ? 'asistente' : 'asistentes' %>
-                    <% if tournament.calculated_smash_attendees_count_optimized > 0 && tournament.attendees_count.present? && tournament.calculated_smash_attendees_count_optimized != tournament.attendees_count %>
-                      <span class="text-xs text-green-400 ml-1" title="Conteo corregido: solo participantes de Smash">*</span>
-                    <% end %>
-                  </span>
-                </div>
-              <% elsif tournament.calculated_total_event_seeds_count_optimized > 0 %>
-                <div class="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span class="text-sm font-medium text-slate-500">
-                    <%= pluralize(tournament.calculated_total_event_seeds_count_optimized, 'seed') %>
-                  </span>
-                </div>
-              <% end %>
+          <% else %>
+            <div class="w-full h-48 bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center relative">
+              <div class="text-4xl">🏆</div>
+              <!-- Overlay de tipo de torneo -->
+              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white text-sm px-3 py-2">
+                <span class="font-medium">
+                  <%= tournament.online? ? "🌐 Online" : "📍 Presencial" %>
+                </span>
+              </div>
             </div>
-          </div>
+          <% end %>
         </div>
         
-        <div class="text-xs text-slate-400 mb-3">
-          <div class="flex items-center mb-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-            </svg>
-            <span><%= format_date_cl(tournament.start_at) if tournament.start_at %></span>
+        <!-- Contenido del torneo debajo de la imagen -->
+        <div class="p-4">
+          <!-- Título del torneo -->
+          <h3 class="text-lg font-medium text-slate-200 mb-3">
+            <%= link_to tournament.name, tournament.start_gg_url, target: "_blank", class: "text-blue-400 hover:text-blue-300 transition-colors duration-200" %>
+          </h3>
+          
+          <!-- Información del evento -->
+          <div class="flex flex-wrap gap-2 mb-3">
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300">
+              <%= tournament.calculated_events_count_optimized %> <%= tournament.calculated_events_count_optimized == 1 ? 'evento' : 'eventos' %>
+            </span>
           </div>
-          <div class="flex items-center mb-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-            </svg>
-            <span class="truncate"><%= tournament.region %><%= tournament.city.present? ? " - #{tournament.city}" : "" %></span>
-          </div>
-        </div>
         
-        <div class="flex justify-between items-center">
-          <div class="flex space-x-2">
-            <% if tournament.calculated_events_count_optimized > 0 %>
-              <button id="toggle-events-mobile-<%= tournament.id %>" 
-                      data-state="closed"
-                      data-action="click->tournaments#toggleEventsMobile"
-                      data-tournament-id="<%= tournament.id %>"
-                      class="toggle-button-mobile inline-flex items-center px-2 py-1 border border-blue-600 text-xs font-medium rounded text-blue-400 bg-slate-800 hover:bg-slate-700 transition-colors duration-200 cursor-pointer"
-                      type="button">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 toggle-icon-mobile" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          <!-- Información de asistentes -->
+          <div class="mb-3">
+            <% best_count = tournament.best_attendees_count %>
+            <% if best_count.present? && best_count > 0 %>
+              <div class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
                 </svg>
-                <span>Ver Eventos</span>
-              </button>
-            <% end %>
-          </div>
-        </div>
-        
-        <% if tournament.calculated_events_count_optimized > 0 %>
-          <div id="mobile-events-<%= tournament.id %>" class="hidden mt-4 border-t border-slate-600 pt-4">
-            <% tournament.events.sort_by(&:name).each do |event| %>
-              <div class="flex justify-between items-center py-2 border-b border-slate-700 last:border-b-0">
-                <div class="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.799-2.034c-.784-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  <span class="text-xs text-slate-300"><%= event.name %></span>
-                  <span class="ml-2 text-xs text-slate-500">(<%= event.calculated_event_seeds_count %>)</span>
-                </div>
-                <div class="flex space-x-1">
-                  <% if event.has_seeds? %>
-                    <button onclick="toggleMobileSeeds('<%= seeds_tournament_event_path(tournament, event) %>', <%= tournament.id %>, <%= event.id %>)"
-                            class="inline-flex items-center px-2 py-1 border border-red-600 text-xs rounded text-red-400 bg-slate-800 hover:bg-slate-700 transition-colors duration-200 cursor-pointer"
-                            type="button">
-                      <span>Seeds</span>
-                    </button>
-                  <% else %>
-                    <% if user_signed_in? %>
-                      <%= link_to sync_seeds_tournament_event_path(tournament, event), 
-                                  method: :post,
-                                  class: "inline-flex items-center px-2 py-1 border border-yellow-600 text-xs rounded text-yellow-400 bg-slate-800 hover:bg-slate-700 transition-colors duration-200 cursor-pointer",
-                                  data: { turbo_method: :post } do %>
-                        <span>Sync</span>
-                      <% end %>
-                    <% else %>
-                      <span class="inline-flex items-center px-2 py-1 border border-slate-600 text-xs rounded text-slate-500 bg-slate-800 cursor-not-allowed">
-                        <span>Login</span>
-                      </span>
-                    <% end %>
+                <span class="text-sm font-medium text-blue-400">
+                  <%= best_count %> <%= best_count == 1 ? 'asistente' : 'asistentes' %>
+                  <% if tournament.calculated_smash_attendees_count > 0 && tournament.attendees_count.present? && tournament.calculated_smash_attendees_count != tournament.attendees_count %>
+                    <span class="text-xs text-green-400 ml-1" title="Conteo corregido: solo participantes de Smash">*</span>
                   <% end %>
-                </div>
+                </span>
+              </div>
+            <% elsif tournament.calculated_total_event_seeds_count > 0 %>
+              <div class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
+                </svg>
+                <span class="text-sm font-medium text-slate-500">
+                  <%= pluralize(tournament.calculated_total_event_seeds_count, 'seed') %>
+                </span>
               </div>
             <% end %>
           </div>
-        <% end %>
+          
+          <!-- Fecha y ubicación -->
+          <div class="text-sm text-slate-400 mb-4">
+            <div class="flex items-center mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+              </svg>
+              <span><%= format_date_cl(tournament.start_at) if tournament.start_at %></span>
+            </div>
+            <div class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+              </svg>
+              <span class="truncate"><%= tournament.region %><%= tournament.city.present? ? " - #{tournament.city}" : "" %></span>
+            </div>
+          </div>
+          
+          <!-- Botones de acción -->
+          <div class="flex justify-between items-center">
+            <div class="flex space-x-2">
+              <% if tournament.calculated_events_count_optimized > 0 %>
+                <button id="toggle-events-mobile-<%= tournament.id %>" 
+                        data-state="closed"
+                        data-action="click->tournaments#toggleEventsMobile"
+                        data-tournament-id="<%= tournament.id %>"
+                        class="toggle-button-mobile inline-flex items-center px-3 py-2 border border-blue-600 text-sm font-medium rounded text-blue-400 bg-slate-800 hover:bg-slate-700 transition-colors duration-200 cursor-pointer"
+                        type="button">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 toggle-icon-mobile" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                  <span>Ver Eventos</span>
+                </button>
+              <% end %>
+            </div>
+          </div>
+          
+          <!-- Lista de eventos expandible -->
+          <% if tournament.calculated_events_count_optimized > 0 %>
+            <div id="mobile-events-<%= tournament.id %>" class="hidden mt-4 border-t border-slate-600 pt-4">
+              <% tournament.events.sort_by(&:name).each do |event| %>
+                <div class="flex justify-between items-center py-2 border-b border-slate-700 last:border-b-0">
+                  <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-2 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.799-2.034c-.784-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    <span class="text-xs text-slate-300"><%= event.name %></span>
+                    <span class="ml-2 text-xs text-slate-500">(<%= event.calculated_event_seeds_count %>)</span>
+                  </div>
+                  <div class="flex space-x-1">
+                    <% if event.has_seeds? %>
+                      <button onclick="toggleMobileSeeds('<%= seeds_tournament_event_path(tournament, event) %>', <%= tournament.id %>, <%= event.id %>)"
+                              class="inline-flex items-center px-2 py-1 border border-red-600 text-xs rounded text-red-400 bg-slate-800 hover:bg-slate-700 transition-colors duration-200 cursor-pointer"
+                              type="button">
+                        <span>Seeds</span>
+                      </button>
+                    <% else %>
+                      <% if user_signed_in? %>
+                        <%= link_to sync_seeds_tournament_event_path(tournament, event), 
+                                    method: :post,
+                                    class: "inline-flex items-center px-2 py-1 border border-yellow-600 text-xs rounded text-yellow-400 bg-slate-800 hover:bg-slate-700 transition-colors duration-200 cursor-pointer",
+                                    data: { turbo_method: :post } do %>
+                          <span>Sync</span>
+                        <% end %>
+                      <% else %>
+                        <span class="inline-flex items-center px-2 py-1 border border-slate-600 text-xs rounded text-slate-500 bg-slate-800 cursor-not-allowed">
+                          <span>Login</span>
+                        </span>
+                      <% end %>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
       </div>
     <% end %>
   </div>

@@ -201,6 +201,9 @@ class SyncSmashData
         attendees_count: torneo_data["numAttendees"]
       )
 
+      # 🖼️ PROCESAR IMÁGENES DE BANNER AUTOMÁTICAMENTE
+      sync_tournament_banner_image(tournament, torneo_data)
+
       status_emoji = tournament.online? ? "🌐" : "📍"
       location_info = tournament.online? ? "Online" : tournament.venue_address
       Rails.logger.info "✅ Creado torneo #{status_emoji}: #{tournament.name} (#{tournament.start_at}) - #{location_info} - URL: #{tournament.start_gg_url}"
@@ -295,6 +298,25 @@ class SyncSmashData
       Rails.logger.error "Error al obtener eventos para torneo #{slug}: #{e.message}"
       raise
     end
+  end
+
+  # 🖼️ Sincronizar imagen de banner del torneo automáticamente
+  def sync_tournament_banner_image(tournament, torneo_data)
+    return unless torneo_data["images"]&.any?
+
+    banner_images = torneo_data["images"].select { |img| img["type"] == "banner" }
+    return if banner_images.empty?
+
+    # Usar la primera imagen de banner encontrada
+    banner_image = banner_images.first
+    image_url = banner_image["url"]
+
+    if image_url.present?
+      tournament.update_column(:banner_image_url, image_url)
+      Rails.logger.info "  🖼️ Banner sincronizado: #{image_url[0..60]}..."
+    end
+  rescue StandardError => e
+    Rails.logger.warn "  ⚠️ Error al sincronizar banner de #{tournament.name}: #{e.message}"
   end
 
   # Sincronizar placements para todos los eventos de un torneo que tengan start_gg_event_id

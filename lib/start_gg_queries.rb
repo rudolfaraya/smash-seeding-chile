@@ -16,6 +16,14 @@ module StartGgQueries
           endAt
           venueAddress
           numAttendees
+          images(type: "banner") {
+            id
+            url
+            width
+            height
+            ratio
+            type
+          }
         }
         pageInfo { total totalPages }
       }
@@ -42,6 +50,14 @@ module StartGgQueries
           endAt
           venueAddress
           numAttendees
+          images(type: "banner") {
+            id
+            url
+            width
+            height
+            ratio
+            type
+          }
         }
         pageInfo { total totalPages }
       }
@@ -353,6 +369,55 @@ module StartGgQueries
     }
   GRAPHQL
 
+  # Nueva consulta para obtener imágenes de un torneo
+  TOURNAMENT_IMAGES_QUERY = <<~GRAPHQL
+    query TournamentImages($tournamentSlug: String!) {
+      tournament(slug: $tournamentSlug) {
+        id
+        name
+        slug
+        images(type: "banner") {
+          id
+          url
+          width
+          height
+          ratio
+          type
+        }
+      }
+    }
+  GRAPHQL
+
+  # Consulta mejorada de torneos que incluye imágenes
+  TOURNAMENTS_WITH_IMAGES_QUERY = <<~GRAPHQL
+    query TournamentsInChileWithImages($perPage: Int, $page: Int) {
+      tournaments(query: {
+        perPage: $perPage
+        page: $page
+        filter: { countryCode: "CL", videogameIds: [1386] }
+      }) {
+        nodes {
+          id
+          name
+          slug
+          startAt
+          endAt
+          venueAddress
+          numAttendees
+          images(type: "banner") {
+            id
+            url
+            width
+            height
+            ratio
+            type
+          }
+        }
+        pageInfo { total totalPages }
+      }
+    }
+  GRAPHQL
+
   def self.fetch_tournaments(client, per_page = 25)
     tournaments = []
     page = 1
@@ -641,5 +706,85 @@ module StartGgQueries
       Rails.logger.error "Error inesperado obteniendo standings del evento #{event_id}: #{e.message}"
       []
     end
+  end
+
+  # Método para obtener imágenes específicas de un torneo
+  def self.fetch_tournament_images(client, tournament_slug)
+    Rails.logger.info "🖼️ Obteniendo imágenes del torneo: #{tournament_slug}"
+
+    begin
+      response = client.query(TOURNAMENT_IMAGES_QUERY, { tournamentSlug: tournament_slug }, "TournamentImages")
+
+      tournament_data = response["data"]["tournament"]
+      return [] unless tournament_data
+
+      images = tournament_data["images"] || []
+      Rails.logger.info "✅ Encontradas #{images.length} imágenes para el torneo #{tournament_slug}"
+
+      images
+    rescue Faraday::ClientError => e
+      if e.response[:status] == 429
+        Rails.logger.warn "Rate limit excedido para imágenes del torneo #{tournament_slug}. Esperando 60 segundos..."
+        sleep(60)
+        retry
+      else
+        Rails.logger.error "Error obteniendo imágenes del torneo #{tournament_slug}: #{e.message}"
+        []
+      end
+    rescue StandardError => e
+      Rails.logger.error "Error inesperado obteniendo imágenes del torneo #{tournament_slug}: #{e.message}"
+      []
+    end
+  end
+
+  # Método para obtener torneos con sus imágenes incluidas
+  def self.fetch_tournaments_with_images(client, per_page = 25)
+    tournaments = []
+    page = 1
+    total_pages = nil
+
+    Rails.logger.info "🔄 Obteniendo torneos con imágenes desde start.gg..."
+
+    loop do
+      variables = { perPage: per_page, page: page }
+      begin
+        response = client.query(TOURNAMENTS_WITH_IMAGES_QUERY, variables, "TournamentsInChileWithImages")
+        data = response["data"]["tournaments"]
+
+        if data && data["nodes"]
+          # Procesar cada torneo para extraer la imagen principal
+          processed_tournaments = data["nodes"].map do |tournament|
+            # Seleccionar la imagen principal (la primera imagen banner disponible)
+            banner_image = tournament["images"]&.first
+
+            tournament_with_image = tournament.dup
+            tournament_with_image["banner_image"] = banner_image
+            tournament_with_image
+          end
+
+          tournaments.concat(processed_tournaments)
+        end
+
+        total_pages ||= data["pageInfo"]["totalPages"]
+        Rails.logger.info "📄 Página #{page}/#{total_pages}: #{data["nodes"]&.length || 0} torneos obtenidos"
+
+      rescue Faraday::ClientError => e
+        if e.response[:status] == 429
+          Rails.logger.warn "Rate limit excedido para página #{page}. Esperando 60 segundos..."
+          sleep(60)
+          next
+        else
+          Rails.logger.error "Error en la página #{page}: #{e.message}"
+          raise
+        end
+      end
+
+      break if page >= total_pages
+      page += 1
+      sleep 2 # Rate limiting
+    end
+
+    Rails.logger.info "✅ Total de torneos con imágenes obtenidos: #{tournaments.length}"
+    tournaments
   end
 end

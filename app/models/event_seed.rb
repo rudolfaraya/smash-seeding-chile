@@ -132,41 +132,57 @@ class EventSeed < ApplicationRecord
   def calculate_round_from_placement(placement_position)
     return nil if placement_position.nil? || placement_position <= 0
 
-    # En doble eliminación, los placements siguen un patrón específico:
-    # 1° = Ganador (no se elimina)
-    # 2° = Perdió en Grand Finals
-    # 3° = Perdió en Winners/Losers Finals
-    # 4° = Perdió en Winners/Losers Semis
-    # 5°-5° = Perdió en Winners/Losers Quarters
-    # 7°-7° = Perdió en ronda anterior
-    # etc.
+    # Patrón de brackets de eliminación doble real:
+    # 1,2,3,4,5,5,7,7,9,9,9,9,13,13,13,13,17,17,17,17,17,17,17,17,25,25,25,25,25,25,25,25,
+    # 33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33, (16 veces 33)
+    # 49,49,49,49,49,49,49,49,49,49,49,49,49,49,49,49, (16 veces 49)
+    # 65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65, (32 veces 65)
+    # 97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97,97, (32 veces 97)
+    # 129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,
+    # 129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129,129 (64 veces 129)
 
     case placement_position
     when 1
-      # Ganador - asignamos la ronda más alta
-      10  # Valor alto para representar que no se eliminó
+      10  # Ganador (no se elimina)
     when 2
-      9   # Grand Finals
+      9   # Grand Finals (perdió en final)
     when 3
       8   # Winners/Losers Finals
     when 4
       7   # Winners/Losers Semis
     when 5..6
-      6   # Quarters
+      6   # Quarters (2 personas)
     when 7..8
-      5   # Round antes de quarters
+      5   # Round of 16 (2 personas)
     when 9..12
-      4   #
+      4   # Round of 24 (4 personas)
     when 13..16
-      3
+      3   # Round of 32 (4 personas)
     when 17..24
-      2
+      2   # Round of 48 (8 personas)
     when 25..32
-      1
+      1   # Round of 64 (8 personas)
+    when 33..48
+      0   # Round of 96 (16 personas - 33 a 48)
+    when 49..64
+      -1  # Round of 128 (16 personas - 49 a 64)
+    when 65..96
+      -2  # Round of 192 (32 personas - 65 a 96)
+    when 97..128
+      -3  # Round of 256 (32 personas - 97 a 128)
+    when 129..192
+      -4  # Round of 384 (64 personas - 129 a 192)
+    when 193..256
+      -5  # Round of 512 (64 personas - 193 a 256)
+    when 257..384
+      -6  # Round of 768 (128 personas - 257 a 384)
+    when 385..512
+      -7  # Round of 1024 (128 personas - 385 a 512)
     else
-      # Para brackets más grandes, usar logaritmo
-      # Cada "duplicación" de placements = una ronda anterior
-      Math.log2(placement_position).floor
+      # Para brackets aún más grandes, usar fórmula logarítmica
+      # Encuentra el próximo power-of-2 y calcula rondas hacia atrás
+      next_power = (placement_position - 1).bit_length
+      -(next_power - 8)  # Normalizado para que 256+ sea negativo
     end
   end
 end

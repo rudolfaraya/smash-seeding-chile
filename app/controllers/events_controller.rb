@@ -1,7 +1,7 @@
 class EventsController < ApplicationController
   # Requerir autenticación para sync_seeds
-  before_action :authenticate_user!, only: [:sync_seeds]
-  
+  before_action :authenticate_user!, only: [ :sync_seeds ]
+
   before_action :set_tournament, only: [ :index, :show, :seeds, :sync_seeds, :export_seeds, :export_seeds_html ]
   before_action :set_event, only: [ :show, :seeds, :sync_seeds, :export_seeds, :export_seeds_html ]
 
@@ -33,80 +33,96 @@ class EventsController < ApplicationController
 
   def sync_seeds
     authorize @event
-    
+
     Rails.logger.info "=== Sincronización de seeds del evento #{@event.id} iniciada ==="
-
-    # Verificar si el evento fue sincronizado recientemente (últimas 24 horas)
-    if @event.respond_to?(:seeds_last_synced_at) &&
-       @event.seeds_last_synced_at.present? &&
-       @event.seeds_last_synced_at > 24.hours.ago &&
-       @event.event_seeds.exists? &&
-       !params[:force]
-
-      respond_to do |format|
-        # Si ya fue sincronizado recientemente y tiene seeds, redirigir sin volver a sincronizar
-        format.html {
-          redirect_to seeds_tournament_event_path(@tournament, @event),
-                      notice: "Seeds ya sincronizados (última sincronización: #{helpers.format_datetime_cl(@event.seeds_last_synced_at)}). Utiliza el parámetro force=true para forzar la sincronización."
-        }
-        format.turbo_stream {
-          flash.now[:notice] = "Seeds ya sincronizados (última sincronización: #{helpers.format_datetime_cl(@event.seeds_last_synced_at)}). Utiliza el parámetro force=true para forzar la sincronización."
-
-          load_tournaments_with_filters
-
-          render turbo_stream: [
-            turbo_stream.replace("tournaments_results",
-              partial: "tournaments/tournaments_list",
-              locals: { tournaments: @tournaments }),
-            turbo_stream.replace("flash",
-              partial: "shared/flash")
-          ]
-        }
-      end
-      return
-    end
+    Rails.logger.info "Event: #{@event.name} (#{@event.tournament.name})"
 
     begin
       force = params[:force].present?
       update_players = params[:update_players].present?
-      
-      # Encolar job de sincronización de seeds
-      job = SyncEventSeedsJob.perform_later(@event.id, { force: force, update_players: update_players })
+      immediate = params[:immediate].present? # Nueva opción para debugging
 
-      respond_to do |format|
-        format.html {
-          if force
-            redirect_to seeds_tournament_event_path(@tournament, @event), notice: "Sincronización forzada de seeds iniciada en segundo plano. Job ID: #{job.job_id}"
-          else
-            redirect_to seeds_tournament_event_path(@tournament, @event), notice: "Sincronización de seeds iniciada en segundo plano. Job ID: #{job.job_id}"
-          end
-        }
-        format.turbo_stream {
-          if force
-            flash.now[:notice] = "Sincronización forzada de seeds de #{@event.name} iniciada en segundo plano. Puedes monitorear el progreso en Mission Control."
-          else
-            flash.now[:notice] = "Sincronización de seeds de #{@event.name} iniciada en segundo plano. Puedes monitorear el progreso en Mission Control."
-          end
+      Rails.logger.info "Parámetros recibidos:"
+      Rails.logger.info "  Force: #{force}"
+      Rails.logger.info "  Update Players: #{update_players}"
+      Rails.logger.info "  Immediate: #{immediate}"
 
-          load_tournaments_with_filters
+      if immediate
+        # Ejecutar inmediatamente para debugging
+        Rails.logger.info "🔥 EJECUCIÓN INMEDIATA (DEBUGGING)"
+        result = SyncEventSeedsJob.perform_now(@event.id, { force: force, update_players: update_players })
+        Rails.logger.info "Resultado inmediato: #{result}"
 
-          render turbo_stream: [
-            turbo_stream.replace("tournaments_results",
-              partial: "tournaments/tournaments_list",
-              locals: { tournaments: @tournaments }),
-            turbo_stream.replace("flash",
-              partial: "shared/flash")
-          ]
-        }
+        # Recargar datos
+        @event.reload
+
+        respond_to do |format|
+          format.html {
+            redirect_to seeds_tournament_event_path(@tournament, @event),
+                       notice: "✅ Sincronización inmediata completada. Seeds: #{@event.event_seeds.count}"
+          }
+          format.turbo_stream {
+            flash.now[:notice] = "✅ Sincronización inmediata de #{@event.name} completada. Seeds capturados: #{@event.event_seeds.count}"
+            load_tournaments_with_filters
+
+            render turbo_stream: [
+              turbo_stream.replace("tournaments_results",
+                partial: "tournaments/tournaments_list",
+                locals: { tournaments: @tournaments }),
+              turbo_stream.replace("flash",
+                partial: "shared/flash")
+            ]
+          }
+        end
+      else
+        # Ejecutar en background (comportamiento original)
+        job = SyncEventSeedsJob.perform_later(@event.id, { force: force, update_players: update_players })
+        Rails.logger.info "Job encolado con ID: #{job.job_id}"
+
+        respond_to do |format|
+          format.html {
+            if force
+              redirect_to seeds_tournament_event_path(@tournament, @event), notice: "Sincronización forzada de seeds iniciada en segundo plano. Job ID: #{job.job_id}"
+            else
+              redirect_to seeds_tournament_event_path(@tournament, @event), notice: "Sincronización de seeds iniciada en segundo plano. Job ID: #{job.job_id}"
+            end
+          }
+          format.turbo_stream {
+            if force
+              flash.now[:notice] = "Sincronización forzada de seeds de #{@event.name} iniciada en segundo plano. Puedes monitorear el progreso en Mission Control."
+            else
+              flash.now[:notice] = "Sincronización de seeds de #{@event.name} iniciada en segundo plano. Puedes monitorear el progreso en Mission Control."
+            end
+
+            load_tournaments_with_filters
+
+            render turbo_stream: [
+              turbo_stream.replace("tournaments_results",
+                partial: "tournaments/tournaments_list",
+                locals: { tournaments: @tournaments }),
+              turbo_stream.replace("flash",
+                partial: "shared/flash")
+            ]
+          }
+        end
       end
+
     rescue StandardError => e
+      Rails.logger.error "❌ ERROR al iniciar sincronización de seeds del evento #{@event.id}"
+      Rails.logger.error "Error: #{e.message}"
+      Rails.logger.error "Backtrace: #{e.backtrace.first(10).join('\n')}"
+
+      error_message = if immediate
+                       "❌ Error en sincronización inmediata: #{e.message}"
+      else
+                       "❌ Error al iniciar sincronización: #{e.message}"
+      end
+
       respond_to do |format|
-        format.html { redirect_to seeds_tournament_event_path(@tournament, @event), alert: "Error al iniciar sincronización: #{e.message}" }
+        format.html { redirect_to seeds_tournament_event_path(@tournament, @event), alert: error_message }
         format.turbo_stream {
-          flash.now[:alert] = "Error al iniciar sincronización de seeds: #{e.message}"
-
+          flash.now[:alert] = error_message
           load_tournaments_with_filters
-
           render turbo_stream: [
             turbo_stream.replace("tournaments_results",
               partial: "tournaments/tournaments_list",
@@ -120,11 +136,11 @@ class EventsController < ApplicationController
   end
 
   def export_seeds
-    @seeds = @event.event_seeds.includes(player: [:teams]).order(seed_num: :asc)
-    
+    @seeds = @event.event_seeds.includes(player: [ :teams ]).order(seed_num: :asc)
+
     # Verificar que hay seeds para exportar
     if @seeds.empty?
-      redirect_to seeds_tournament_event_path(@tournament, @event), 
+      redirect_to seeds_tournament_event_path(@tournament, @event),
                   alert: "No hay seeds disponibles para exportar. Sincroniza primero el evento."
       return
     end
@@ -134,24 +150,24 @@ class EventsController < ApplicationController
   end
 
   def export_seeds_html
-    @seeds = @event.event_seeds.includes(player: [:teams]).order(seed_num: :asc)
-    
+    @seeds = @event.event_seeds.includes(player: [ :teams ]).order(seed_num: :asc)
+
     # Verificar que hay seeds para exportar
     if @seeds.empty?
-      redirect_to seeds_tournament_event_path(@tournament, @event), 
+      redirect_to seeds_tournament_event_path(@tournament, @event),
                   alert: "No hay seeds disponibles para exportar. Sincroniza primero el evento."
       return
     end
 
     # Generar el HTML standalone
-    html_content = render_to_string('events/export_seeds_standalone', layout: false)
-    
+    html_content = render_to_string("events/export_seeds_standalone", layout: false)
+
     # Configurar headers para descarga
     filename = "#{@tournament.name.parameterize}-#{@event.name.parameterize}-seeds.html"
-    
+
     send_data html_content,
-              type: 'text/html',
-              disposition: 'attachment',
+              type: "text/html",
+              disposition: "attachment",
               filename: filename
   end
 

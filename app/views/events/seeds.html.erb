@@ -177,6 +177,20 @@
             </svg>
             Sincronizar Seeds
           <% end %>
+          
+          <!-- Botón de debugging inmediato -->
+          <%= link_to sync_seeds_tournament_event_path(@event.tournament, @event, immediate: true), 
+                      method: :post,
+                      class: "ml-3 inline-flex items-center px-4 py-2 border border-yellow-600 text-sm font-medium rounded-md shadow-sm text-yellow-400 bg-slate-800 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors duration-200 cursor-pointer",
+                      data: { 
+                        confirm: "¿Ejecutar sincronización inmediata para debugging? Esto puede tardar unos minutos.",
+                        turbo_method: :post
+                      } do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+            Debug Inmediato
+          <% end %>
         <% else %>
           <div class="text-center">
             <p class="text-slate-400 mb-3">Debes iniciar sesión para sincronizar seeds</p>

@@ -1,12 +1,13 @@
 Rails.application.routes.draw do
+  get "image_test/index"
   get "email_viewer", to: "email_viewer#index"
   get "email_viewer/:id", to: "email_viewer#show", as: :email_viewer_show
   get "email_test/send_test"
   post "email_test/send_test"
   devise_for :users
-  
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-  resources :tournaments do
+  resources :tournaments, except: [ :show ] do
     collection do
       post :sync # Ruta para sincronizar torneos y eventos
       post :sync_new_tournaments # Nueva ruta para sincronizar solo nuevos torneos
@@ -76,7 +77,7 @@ Rails.application.routes.draw do
   get "stats" => "stats#index", as: :stats
 
   # Solicitudes de vinculación de jugadores
-  resources :user_player_requests, except: [:edit, :update, :destroy] do
+  resources :user_player_requests, except: [ :edit, :update, :destroy ] do
     collection do
       get :search_players
       get :debug # Ruta temporal para debug
@@ -87,16 +88,16 @@ Rails.application.routes.draw do
   end
 
   # Perfil de usuario
-  get '/profile', to: 'profile#show', as: :profile
-  get '/profile/edit', to: 'profile#edit', as: :edit_profile
-  patch '/profile', to: 'profile#update'
-  get '/profile/player', to: 'profile#player', as: :profile_player
-  get '/profile/player/edit', to: 'profile#edit_player', as: :edit_profile_player
-  patch '/profile/player', to: 'profile#update_player'
+  get "/profile", to: "profile#show", as: :profile
+  get "/profile/edit", to: "profile#edit", as: :edit_profile
+  patch "/profile", to: "profile#update"
+  get "/profile/player", to: "profile#player", as: :profile_player
+  get "/profile/player/edit", to: "profile#edit_player", as: :edit_profile_player
+  patch "/profile/player", to: "profile#update_player"
 
   # Rutas de administración
   namespace :admin do
-    resources :user_player_requests, only: [:index, :show] do
+    resources :user_player_requests, only: [ :index, :show ] do
       member do
         patch :approve
         patch :reject

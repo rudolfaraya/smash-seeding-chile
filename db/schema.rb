@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_30_184200) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_31_001708) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -70,6 +70,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_30_184200) do
     t.integer "team_max_players"
     t.integer "attendees_count"
     t.datetime "placements_last_synced_at"
+    t.string "profile_image_url"
+    t.integer "profile_image_width"
+    t.integer "profile_image_height"
+    t.float "profile_image_ratio"
     t.index ["tournament_id", "id"], name: "index_events_on_tournament_and_id"
     t.index ["tournament_id", "videogame_id", "team_max_players"], name: "index_events_on_tournament_videogame_team_max", where: "videogame_id = 1386"
     t.index ["tournament_id", "videogame_id"], name: "index_events_on_tournament_videogame"
@@ -145,6 +149,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_30_184200) do
     t.string "region"
     t.string "start_gg_url"
     t.integer "attendees_count"
+    t.string "banner_image_url"
+    t.integer "banner_image_width"
+    t.integer "banner_image_height"
+    t.float "banner_image_ratio"
     t.index "LOWER(name)", name: "index_tournaments_on_name_lower"
     t.index ["attendees_count", "start_at"], name: "index_tournaments_on_attendees_start_at"
     t.index ["city"], name: "index_tournaments_on_city"

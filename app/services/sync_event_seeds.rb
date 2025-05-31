@@ -2,30 +2,21 @@ require_relative "../../lib/start_gg_queries"
 require "set"
 
 class SyncEventSeeds
-  def initialize(event, force: false, update_players: false)
+  def initialize(event, update_players: false)
     @event = event
     @client = StartGgClient.new
-    @force = force
     @update_players = update_players
     @target_event_id = @event.id
   end
 
   def call
-    Rails.logger.info "🎯 INICIANDO SINCRONIZACIÓN - Evento: #{@event.name} (ID: #{@event.id}) - Torneo: #{@event.tournament.name} (force: #{@force})"
+    Rails.logger.info "🎯 INICIANDO SINCRONIZACIÓN - Evento: #{@event.name} (ID: #{@event.id}) - Torneo: #{@event.tournament.name}"
 
-    # NUEVA LÓGICA: Si es forzado, eliminar TODOS los seeds y empezar desde cero
-    if @force
-      existing_count = @event.event_seeds.count
-      Rails.logger.info "🧹 SINCRONIZACIÓN FORZADA: Eliminando TODOS los #{existing_count} seeds existentes para evento #{@event.name} (ID: #{@event.id})"
-      @event.event_seeds.destroy_all
-      Rails.logger.info "✅ Seeds eliminados correctamente para evento #{@event.name}"
-    else
-      # Si no es forzado y ya hay seeds, no hacer nada
-      if @event.event_seeds.any?
-        Rails.logger.info "ℹ️ El evento #{@event.name} ya tiene seeds. Saltando sincronización (usar force: true para forzar)"
-        return
-      end
-    end
+    # NUEVA LÓGICA: SIEMPRE eliminar TODOS los seeds existentes y empezar desde cero
+    existing_count = @event.event_seeds.count
+    Rails.logger.info "🧹 SINCRONIZACIÓN: Eliminando TODOS los #{existing_count} seeds existentes para evento #{@event.name} (ID: #{@event.id})"
+    @event.event_seeds.destroy_all
+    Rails.logger.info "✅ Seeds eliminados correctamente para evento #{@event.name}"
 
     Rails.logger.info "🔍 Obteniendo seeds ÚNICAMENTE para evento: #{@event.name} (slug: #{@event.slug})"
 
@@ -129,12 +120,14 @@ class SyncEventSeeds
 
           event_seed = @event.event_seeds.build(
             player: player,
-            seed_num: seed_data[:seed_num]
+            seed_num: seed_data[:seed_num],
+            placement: seed_data[:placement]
           )
 
           if event_seed.save
             created_count += 1
-            Rails.logger.info "  [#{index + 1}/#{resolved_seeds.length}] ✅ Agregado: #{seed_data[:player_name]} (Seed: #{seed_data[:seed_num]})"
+            placement_text = seed_data[:placement] ? " → #{seed_data[:placement]}°" : ""
+            Rails.logger.info "  [#{index + 1}/#{resolved_seeds.length}] ✅ Agregado: #{seed_data[:player_name]} (Seed: #{seed_data[:seed_num]}#{placement_text})"
           else
             Rails.logger.error "  [#{index + 1}/#{resolved_seeds.length}] ❌ Error al guardar seed para #{seed_data[:player_name]}: #{event_seed.errors.full_messages.join(', ')}"
           end
@@ -157,17 +150,42 @@ class SyncEventSeeds
   private
 
   def fetch_seeds_with_strict_validation
-    Rails.logger.info "🔍 FETCH_SEEDS_WITH_STRICT_VALIDATION - Evento ID: #{@event.id}, Nombre: #{@event.name}"
+    Rails.logger.info "🔍 FETCH_SEEDS_WITH_STRICT_VALIDATION - Evento ID: #{@event.id}, start_gg_event_id: #{@event.start_gg_event_id}, Nombre: #{@event.name}"
 
     all_seeds = []
+    placement_map = {}
     page = 1
     attendees_count = 0
 
+    # PASO 1: Obtener TODOS los standings en una consulta separada
+    Rails.logger.info "🏆 PASO 1: Obteniendo standings del evento..."
+    begin
+      standings_data = fetch_event_standings
+      standings_data.each do |standing|
+        entrant = standing["entrant"]
+        next unless entrant
+
+        placement = standing["placement"]
+        entrant_id = entrant["id"]
+
+        if placement && entrant_id
+          placement_map[entrant_id] = placement
+        end
+      end
+      Rails.logger.info "🗺️ Mapa de placements creado con #{placement_map.keys.length} entradas"
+    rescue => e
+      Rails.logger.warn "⚠️ No se pudieron obtener standings: #{e.message}"
+      Rails.logger.info "📝 Continuando sin placements..."
+    end
+
+    # PASO 2: Obtener entrants paginados (sin standings para evitar complejidad)
+    Rails.logger.info "👥 PASO 2: Obteniendo entrants paginados..."
+
     loop do
-      Rails.logger.info "📡 Página #{page} - Obteniendo TODOS los entrants del evento: #{@event.id}"
+      Rails.logger.info "📡 Página #{page} - Obteniendo entrants del evento start.gg ID: #{@event.start_gg_event_id}"
 
       variables = {
-        eventId: @event.id,
+        eventId: @event.start_gg_event_id,
         perPage: 100,
         page: page
       }
@@ -176,13 +194,13 @@ class SyncEventSeeds
 
       # Validar que la respuesta tenga la estructura esperada
       unless response&.dig("data", "event")
-        Rails.logger.error "❌ Respuesta inválida de la API - no se encontró evento con ID #{@event.id}"
+        Rails.logger.error "❌ Respuesta inválida de la API - no se encontró evento con start_gg_event_id #{@event.start_gg_event_id}"
         break
       end
 
       event_data = response["data"]["event"]
       Rails.logger.info "✅ EVENTO ENCONTRADO: #{event_data['name']} (ID: #{event_data['id']})"
-      
+
       # Obtener el número total de entrants del evento
       attendees_count = event_data["numEntrants"] if attendees_count == 0
 
@@ -204,6 +222,10 @@ class SyncEventSeeds
         player_data = participant["player"]
         user_data = player_data["user"] # Puede ser nil
 
+        # Obtener placement del mapa
+        entrant_id = entrant["id"]
+        placement = placement_map[entrant_id]
+
         if user_data
           # Entrant con cuenta de start.gg
           seed_data = {
@@ -221,7 +243,8 @@ class SyncEventSeeds
             state: user_data.dig("location", "state"),
             country: user_data.dig("location", "country"),
             twitter: user_data.dig("authorizations")&.first&.dig("externalUsername"),
-            has_user_account: true
+            has_user_account: true,
+            placement: placement
           }
         else
           # Entrant SIN cuenta de start.gg - usar solo datos del entrant
@@ -240,9 +263,10 @@ class SyncEventSeeds
             state: nil,
             country: nil,
             twitter: nil,
-            has_user_account: false
+            has_user_account: false,
+            placement: placement
           }
-          Rails.logger.info "👤 Entrant sin cuenta: #{entrant['name']} (Seed: #{entrant['initialSeedNum']})"
+          Rails.logger.info "👤 Entrant sin cuenta: #{entrant['name']} (Seed: #{entrant['initialSeedNum']}, Placement: #{placement || 'N/A'})"
         end
 
         all_seeds << seed_data
@@ -266,8 +290,10 @@ class SyncEventSeeds
       Rails.logger.info "📊 Actualizado attendees_count del evento: #{attendees_count}"
     end
 
+    seeds_with_placement = all_seeds.count { |s| s[:placement].present? }
     Rails.logger.info "📊 Total seeds obtenidos del evento #{@event.id}: #{all_seeds.length}"
     Rails.logger.info "📊 Con cuenta: #{all_seeds.count { |s| s[:has_user_account] }}, Sin cuenta: #{all_seeds.count { |s| !s[:has_user_account] }}"
+    Rails.logger.info "🏆 Con placement: #{seeds_with_placement}/#{all_seeds.length}"
     all_seeds
   end
 
@@ -276,7 +302,7 @@ class SyncEventSeeds
     if seed_data[:user_id].nil?
       # Buscar por start_gg_id (que corresponde al player_id)
       player = Player.find_by(start_gg_id: seed_data[:player_id])
-      
+
       if player
         # Actualizar el entrant_name si es necesario
         if @update_players && player.entrant_name != seed_data[:player_name]
@@ -284,7 +310,7 @@ class SyncEventSeeds
         end
         return player
       end
-      
+
       # Crear nuevo jugador sin cuenta
       new_player = Player.new(
         start_gg_id: seed_data[:player_id],
@@ -441,5 +467,52 @@ class SyncEventSeeds
     Rails.logger.debug "     Detalles: #{historical_seeds.count} participaciones (#{valid_seeds_count} válidas), mejor seed: #{best_seed || 'N/A'}, score promedio: #{average_score.round(2)}, bonus experiencia: #{experience_bonus}"
 
     final_score
+  end
+
+  # Método auxiliar para obtener standings en consulta separada
+  def fetch_event_standings
+    Rails.logger.info "🏆 Obteniendo standings para evento #{@event.start_gg_event_id}..."
+
+    standings = []
+    page = 1
+
+    loop do
+      variables = {
+        eventId: @event.start_gg_event_id,
+        perPage: 50, # Reducido de 100 a 50 para evitar complejidad excesiva
+        page: page
+      }
+
+      response = @client.query(StartGgQueries::EVENT_STANDINGS_QUERY, variables, "EventStandings")
+
+      unless response&.dig("data", "event")
+        Rails.logger.warn "⚠️ No se encontró evento o no tiene standings"
+        break
+      end
+
+      event_data = response["data"]["event"]
+      standings_data = event_data.dig("standings", "nodes") || []
+
+      if standings_data.empty?
+        Rails.logger.info "ℹ️ No hay más standings en página #{page}"
+        break
+      end
+
+      standings.concat(standings_data)
+
+      page_info = event_data.dig("standings", "pageInfo")
+      total_pages = page_info&.dig("totalPages") || 1
+
+      Rails.logger.info "📄 Standings página #{page}/#{total_pages}: #{standings_data.length} obtenidos"
+
+      break if page >= total_pages
+      page += 1
+
+      # Rate limiting entre páginas para eventos grandes
+      sleep(1) if page <= total_pages
+    end
+
+    Rails.logger.info "✅ Total standings obtenidos: #{standings.length}"
+    standings
   end
 end

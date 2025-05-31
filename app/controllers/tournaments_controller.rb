@@ -1,13 +1,13 @@
 class TournamentsController < ApplicationController
   # Requerir autenticación para acciones de sincronización
-  before_action :authenticate_user!, only: [:sync, :sync_new_tournaments, :sync_events, :sync_latest_tournaments]
-  before_action :set_tournament, only: [:show, :sync_events]
+  before_action :authenticate_user!, only: [ :sync, :sync_new_tournaments, :sync_events, :sync_latest_tournaments ]
+  before_action :set_tournament, only: [ :sync_events ]
 
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
 
   def index
     @tournaments = policy_scope(Tournament)
-    
+
     Rails.logger.info "=== Tournaments#index called with query: '#{params[:query]}', region: '#{params[:region]}', city: '#{params[:city]}', status: '#{params[:status]}', sort: '#{params[:sort]}', page: '#{params[:page]}', format: #{request.format} ==="
 
     # Si no hay parámetros de filtros, limpiar la sesión (clear all)
@@ -31,7 +31,7 @@ class TournamentsController < ApplicationController
 
     # Configurar opciones de filtros primero
     set_filter_options
-    
+
     # Usar el servicio para obtener los torneos filtrados
     @tournaments = TournamentsFilterService.new(params, session).call
 
@@ -49,13 +49,9 @@ class TournamentsController < ApplicationController
     end
   end
 
-  def show
-    # No necesita autorización especial, todos pueden ver
-  end
-
   def sync
     authorize Tournament
-    
+
     Rails.logger.info "=== Sincronización manual de TODOS los torneos iniciada ==="
 
     begin
@@ -96,7 +92,7 @@ class TournamentsController < ApplicationController
 
   def sync_new_tournaments
     authorize Tournament
-    
+
     Rails.logger.info "=== Sincronización de NUEVOS torneos iniciada ==="
 
     begin
@@ -137,7 +133,7 @@ class TournamentsController < ApplicationController
 
   def sync_events
     authorize @tournament
-    
+
     Rails.logger.info "=== Sincronización de eventos del torneo #{@tournament.id} iniciada ==="
 
     begin
@@ -178,7 +174,7 @@ class TournamentsController < ApplicationController
 
   def sync_latest_tournaments
     authorize Tournament
-    
+
     Rails.logger.info "=== Sincronización de ÚLTIMOS torneos iniciada ==="
 
     begin
